@@ -1,5 +1,5 @@
 """
-Implementation of the parallel bandit algorithm introduced in the paper:
+Implementation of the parallel bandit algorithm (Algorithm 1) introduced in the paper:
 Lattimore, F., Lattimore, T., & Reid, M. D. (2016).
 Causal bandits: Learning good interventions via causal inference.
 In Advances in Neural Information Processing Systems (Vol. 29).
@@ -45,8 +45,7 @@ assert model.check_model()
 # Get a daft object and save the figure
 model_daft = model.to_daft()
 model_daft.render()
-if not os.path.exists(save_dir):
-    os.makedirs(save_dir)
+os.makedirs(save_dir, exist_ok=True)
 model_daft.savefig(os.path.join(save_dir, 'parallel_bandit_graph.png'))
 
 # Define possible actions
