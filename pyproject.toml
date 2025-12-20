@@ -6,6 +6,11 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "daft-pgm>=0.1.4",
+    "ipykernel>=7.0.1",
     "matplotlib>=3.10.5",
     "pgmpy>=1.0.0",
 ]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
