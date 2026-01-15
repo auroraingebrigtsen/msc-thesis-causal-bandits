@@ -1,6 +1,8 @@
 # Base class for all bandit algorithms
 
 from abc import ABC, abstractmethod
+import numpy as np
+import matplotlib.pyplot as plt
 
 class BaseBanditAlgorithm(ABC):
     def __init__(self, n_arms):
@@ -11,9 +13,9 @@ class BaseBanditAlgorithm(ABC):
         pass
 
     @abstractmethod
-    def update(self, chosen_arm, reward):
+    def _update(self, chosen_arm, reward):
         pass
-
+    
     @abstractmethod
     def reset(self):
         pass
