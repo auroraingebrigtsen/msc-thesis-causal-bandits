@@ -5,9 +5,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class BaseBanditAlgorithm(ABC):
-    def __init__(self, n_arms):
-        self.n_arms = n_arms
-
     @abstractmethod
     def select_arm(self):
         pass

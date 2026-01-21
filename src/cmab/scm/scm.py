@@ -3,9 +3,10 @@ from typing import Dict, Any, FrozenSet, Mapping
 from .pmf.base import BasePmf as Pmf
 from .mechanism.base import BaseMechanism as Mechanism
 from .domain.base import FiniteDiscreteDomain
+from .causal_diagram import CausalDiagram
 from cmab.typing import  InterventionSet
 import numpy as np
-
+from cmab.utils.graphs.topological_sort import topological_sort
 
 class SCM:
     def __init__(self, 
@@ -21,37 +22,16 @@ class SCM:
         self.domains = domains  # Domain for each variable
         self.P_u_marginals = P_u_marginals  # Marginal distributions for exogenous variables
         self.F = F  # Mechanisms for each endogenous variable
-        self.V_topological_order = self._topological_sort()  # Topological order of endogenous variables
+        self.V_topological_order = topological_sort(V, [(parent, v) for v in V for parent in F[v].v_parents])  # Topological order of endogenous variables
         self.seed = seed
         self.rng = np.random.default_rng(seed=seed)
 
-    # Function to perform Kahn's Algorithm (somewhat stolen from geeksfromgeeks, may implement myself later??)
-    def _topological_sort(self):
-        parents = {node: self.F[node].v_parents for node in self.V}
-        in_degree = {node: len(parents) for node, parents in parents.items()}
+    def sample(self, intervention_set: InterventionSet = set(), expected: bool = False) -> Dict[str, Any]:
 
-        children = {node: [] for node in self.V}
-        for node, parents in parents.items():
-            for parent in parents:
-                children[parent].append(node)
+        # Sample exogenous variables
+        u_values = {u: self.P_u_marginals[u].mean(self.rng) if expected else self.P_u_marginals[u].sample(self.rng) for u in self.U}
 
-        # Queue for vertices with 0 in-degree
-        queue = deque([i for i in list(self.V) if in_degree[i] == 0])
-        topo_order = []
-
-        while queue:
-            u = queue.popleft()
-            topo_order.append(u)
-
-            # Decrease in-degree for adjacent vertices
-            for v in children[u]:
-                in_degree[v] -= 1
-                if in_degree[v] == 0:
-                    queue.append(v)
-
-        return topo_order
-
-    def sample(self, intervention_set: InterventionSet = set(), use_mean:bool=False) -> Dict[str, Any]:
+        # Go over endogenous variables in topological order and compute their values
         values = {}
         for node in self.V_topological_order:
             if any(intervention[0] == node for intervention in intervention_set):
@@ -60,14 +40,14 @@ class SCM:
                 v_parents = self.F[node].v_parents
                 u_parents = self.F[node].u_parents
 
-                # Collect parent values and sample exogenous values
+                # Collect parent values and exogenous values
                 v_vals = {parent: values[parent] for parent in v_parents}
-                if use_mean:
-                    u_vals = {u_parent: self.P_u_marginals[u_parent].mean() for u_parent in u_parents}
-                else:
-                    u_vals = {u_parent: self.P_u_marginals[u_parent].sample(self.rng) for u_parent in u_parents}
+                u_vals = {u_parent: u_values[u_parent] for u_parent in u_parents}
 
-                value = self.F[node](v_vals, u_vals)
+                if expected:
+                        value = self.F[node].expected(v_vals, u_vals)
+                else:
+                    value = self.F[node](v_vals, u_vals)
 
             values[node] = value
 
@@ -78,6 +58,21 @@ class SCM:
         print(f"Shifting distribution of latent variable {u_to_shift}. Values before shift: {self.P_u_marginals[u_to_shift].p}")
         self.P_u_marginals[u_to_shift].distribution_shift(rng=self.rng, max_delta=max_delta)
         print(f"Values after shift: {self.P_u_marginals[u_to_shift].p}")
+
+
+    def get_causal_diagram(self) -> CausalDiagram:
+        directed_edges = []
+        bidirected_edges = []
+        for v in self.V:
+            for parent in self.F[v].v_parents:
+                directed_edges.append((parent, v))
+        for u in self.U:
+            children = [v for v in self.V if u in self.F[v].u_parents]
+            if len(children) >= 2:
+                for i in range(len(children)):
+                    for j in range(i + 1, len(children)):
+                        bidirected_edges.append((children[i], children[j], u))
+        return CausalDiagram(nodes=self.V, directed_edges=directed_edges, bidirected_edges=bidirected_edges)
 
     def reset(self):
         self.seed += 1

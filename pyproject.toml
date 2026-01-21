@@ -10,6 +10,7 @@ dependencies = [
     "ipykernel>=7.0.1",
     "matplotlib>=3.10.5",
     "pgmpy>=1.0.0",
+    "pytest>=9.0.2",
 ]
 
 [build-system]

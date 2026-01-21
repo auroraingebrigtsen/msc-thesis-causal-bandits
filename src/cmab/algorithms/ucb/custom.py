@@ -1,13 +1,13 @@
 from cmab.algorithms.base import BaseBanditAlgorithm
 import numpy as np
 
-class UCBAgent(BaseBanditAlgorithm):
+class MyFirstAgent(BaseBanditAlgorithm):
     """
     Args:
     c: float, degree of exploration
     """
     def __init__(self, n_arms:int, c:float=2):
-        self.n_arms = n_arms
+        super().__init__(n_arms)
         self.c = c
         self.estimates = np.zeros(self.n_arms)
         self.action_samples = np.zeros(self.n_arms)
@@ -31,6 +31,15 @@ class UCBAgent(BaseBanditAlgorithm):
         num_samples = self.action_samples[action]
         prev_reward = self.estimates[action]
         self.estimates[action] = prev_reward + 1/(num_samples)*(reward - prev_reward)
+
+    def _is_change_point(self) -> bool:
+        # Placeholder for change point detection logic
+        return False
+    
+    def _infer_changed_arms(self) -> list[int]:
+        # Placeholder for inferring which arms have changed
+        return []
+    
     
     def reset(self):
         self.t = 0

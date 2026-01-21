@@ -5,7 +5,7 @@ from cmab.algorithms.base import BaseBanditAlgorithm
 
 class SlidingWindowUCBAgent(BaseBanditAlgorithm):
     def __init__(self,n_arms, c:float=2.0, window_size:int=50):
-        super().__init__(n_arms)
+        self.n_arms = n_arms
         self.c =c
         self.estimates=np.zeros(self.n_arms)
         self.W=window_size

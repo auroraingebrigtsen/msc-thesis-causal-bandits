@@ -1,4 +1,4 @@
-from cmab.scm.domain.interval import IntervalDomain
+from cmab.scm.intervention_domain.interval import IntervalInterventionDomain
 from cmab.scm.pmf.bernoulli import BernoulliPmf
 from cmab.scm.mechanism.linear import LinearMechanism
 from cmab.scm.scm import SCM
@@ -7,72 +7,59 @@ from cmab.algorithms.ucb import UCBAgent, SlidingWindowUCBAgent
 from cmab.utils.plotting import  plot_regrets
 from cmab.metrics.cumulative_regret import CumulativeRegret
 import numpy as np
+from cmab.algorithms.ucb.pomis_kl_ucb import PomisKLUCBAgent
+from cmab.scm.causal_diagram import CausalDiagram
+from cmab.algorithms.pomis.pomis_sets import POMISs, MUCT, IB
+
+from npsem.model import CausalDiagram as NPSEM_CausalDiagram
+from npsem.where_do import MUCT as NPSEM_MUCT
+from npsem.where_do import IB as NPSEM_IB
+from npsem.where_do import POMISs as NPSEM_POMISs
 
 def main():
-    SEED = 44
 
-    V = frozenset({'X', 'Z', 'Y'})
-    U = frozenset({'U_X', 'U_Z', 'U_Y'})
-
-    domains = {
-        'X': IntervalDomain(0,1),
-        'Z': IntervalDomain(0,1),
-        'Y': IntervalDomain(0,1)
-    }
-
-    P_X = BernoulliPmf(p=0.1)
-    P_Z = BernoulliPmf(p=0.9)
-    P_Y = BernoulliPmf(p=0.5)
-
-    linear_mechanism_X = LinearMechanism(parents=[], u_parents=['U_X'], weights=[])
-    linear_mechanism_Z = LinearMechanism(parents=['X'], u_parents=['U_Z'], weights=[0.8])
-    linear_mechanism_Y = LinearMechanism(parents=['Z'], u_parents=['U_Y'], weights=[0.9])
-
-    scm = SCM(
-        U=U,
-        V=V,
-        domains=domains,
-        P_u_marginals={
-            'U_X': P_X,
-            'U_Z': P_Z,
-            'U_Y': P_Y
-        },
-        F={
-            'X': linear_mechanism_X,
-            'Z': linear_mechanism_Z,
-            'Y': linear_mechanism_Y
-        },
-        seed=SEED
+    ### FROM GITHUB NPSEM PACKAGE
+    npsem_cd = NPSEM_CausalDiagram(
+        vs=['S', 'T', 'W', 'Z', 'X', 'Y'],
+        directed_edges=[('S', 'W'),
+               ('T', 'X'),
+               ('T', 'Y'),
+               ('W', 'Y'),
+               ('Z', 'X'),
+               ('X', 'Y',)],    
+        bidirected_edges=[('W', 'X', 'U_WX'), ('Z', 'Y', 'U_ZY')]
     )
 
-    env = NSCausalBanditEnv(scm=scm, reward_node='Y', prob_distribution_shift=0.001, max_delta=0.2, seed=SEED)
-    print(env.action_space)
-    print(f"optimal action is {env.get_optimal_action()}")
+    npsem_muct = NPSEM_MUCT(npsem_cd, 'Y')
+    print(f"NPSEM MUCT: {npsem_muct}")
 
-    ucb_agent = UCBAgent(n_arms=len(env.action_space), c=2)
-    #ucb_agent = SlidingWindowUCBAgent(n_arms=len(env.action_space), c=2, window_size=100)
+    npsem_ib = IB(npsem_cd, 'Y')
+    print(f"NPSEM IB: {npsem_ib}")
 
-    T= 1000  # number of steps in each run
-    n = 1000  # number of runs to average over
+    npsem_pomis = NPSEM_POMISs(npsem_cd, 'Y')
+    print(f"NPSEM POMISs: {npsem_pomis}")
 
-    regret = CumulativeRegret(env=env, T=T)  # regret metric: cumulative regret
 
-    averaged_regrets = np.zeros(T)
-    for _ in range(n):
-        ucb_agent.reset()
-        regret.reset()
-        env.reset()
-        for _ in range(T):
-            action_index = ucb_agent.select_arm()
-            action =  env.action_space[action_index]
-            _, reward, _, _, _ = env.step(action)
-            ucb_agent._update(action_index, reward)
-            regret.update(reward)
-        
-        averaged_regrets += regret.get_regrets() / n
+    ### MY IMPLEMENTATION
+    causal_diagram = CausalDiagram(
+        nodes=frozenset({'S', 'T', 'W', 'Z', 'X', 'Y'}),
+        directed_edges=[('S', 'W'),
+               ('T', 'X'),
+               ('T', 'Y'),
+               ('W', 'Y'),
+               ('Z', 'X'),
+               ('X', 'Y',)],
+        bidirected_edges=[('W', 'X', 'U_WX'), ('Z', 'Y', 'U_ZY')]
+    )
 
-    plot_regrets(regrets=[averaged_regrets], labels=["UCB Agent"], title="UCB Agent Averaged Cumulative Regret")
+    muct = MUCT(causal_diagram, 'Y')
+    print(f"MUCT: {muct}")
 
+    ib = IB(causal_diagram, 'Y')
+    print(f"IB: {ib}")
+
+    pomis = POMISs(causal_diagram, 'Y')
+    print(f"POMISs: {pomis}")
 
 if __name__ == "__main__":
     main()

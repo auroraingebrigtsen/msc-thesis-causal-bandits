@@ -5,28 +5,28 @@ import itertools
 from abc import ABC, abstractmethod
 
 class BaseCausalBanditEnv(ABC):
-    def __init__(self, scm: SCM, reward_node: str, seed:int=42):
+    def __init__(self, scm: SCM, reward_node: str, seed:int=42, atomic: bool = False, non_intervenable: list[str] = []):
         self.scm = scm
         self.reward_node = reward_node
         self._step = 0
         self.rng = np.random.default_rng(seed=seed)
         self.state = None
-        self.action_space: list[InterventionSet] = self._init_action_space()
+        self.action_space: list[InterventionSet] = self._init_action_space(atomic=atomic, non_intervenable=non_intervenable)
 
     @staticmethod
     def _action_sort_key(action: InterventionSet):
         return (len(action), tuple(sorted(action)))
 
-    def _init_action_space(self, atomic: bool = False, allow_empty: bool = True) -> list[InterventionSet]:
+    def _init_action_space(self, atomic: bool, non_intervenable: list[str]) -> list[InterventionSet]:
         """Adds all combinations of possible interventions except for the reward node.
         If atomic is True, only single node interventions are added. 
-        If allow_empty is True, the empty intervention is also added.
+        The list of non_intervenable nodes are excluded from the action space.
         """
         action_space = set()
         variables = [v for v in self.scm.V if v != self.reward_node]
 
-        if allow_empty:
-            action_space.add(frozenset())  
+        if len(non_intervenable) > 0:
+            variables = [v for v in variables if v not in non_intervenable]
 
         if atomic:  # add to the action set: {(var, val)} for each var and val
             for var in variables:
@@ -63,7 +63,7 @@ class BaseCausalBanditEnv(ABC):
             expected_reward = self.scm.sample(intervention_set=action, use_mean=True)[self.reward_node]
             expected_rewards[action] = expected_reward
         
-        return max(expected_rewards, key=expected_rewards.get)
+        return max(expected_rewards, key=expected_rewards.get)  # Return the key with the highest expected reward
 
     def get_optimal_expected_reward(self):
         optimal_action = self.get_optimal_action()
