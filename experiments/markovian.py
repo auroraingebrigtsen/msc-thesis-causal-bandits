@@ -1,5 +1,5 @@
 from cmab.scm.domain.binary import BinaryDomain
-from cmab.scm.pmf.bernoulli import BernoulliPmf
+from cmab.scm.distribution.bernoulli import Bernoulli
 from cmab.scm.mechanism.linear import LinearMechanism
 from cmab.scm.mechanism.custom import CustomMechanism
 from cmab.scm.mechanism.xor import XORMechanism
@@ -27,12 +27,12 @@ def main():
         'Y': BinaryDomain()
     }
 
-    P_X_1 = BernoulliPmf(p=0.54)
-    P_X_2 = BernoulliPmf(p=0.67)
-    P_Z_1 = BernoulliPmf(p=0.54)
-    P_Z_2 = BernoulliPmf(p=0.44)
-    P_Y = BernoulliPmf(p=0.58)
-
+    P_X_1 = Bernoulli(p=0.54)
+    P_X_2 = Bernoulli(p=0.67)
+    P_Z_1 = Bernoulli(p=0.54)
+    P_Z_2 = Bernoulli(p=0.44)
+    P_Y = Bernoulli(p=0.58)
+    
     mechanism_X_1 = XORMechanism(v_parents=['Z_1', 'Z_2'], u_parents=['U_X_1'])
     mechanism_X_2 = CustomMechanism(v_parents=['Z_1', 'Z_2'], u_parents=['U_X_2'], 
                                     f=lambda v, u: 1 ^ v['Z_1'] ^ v['Z_2'] ^ u['U_X_2'])
@@ -66,13 +66,14 @@ def main():
     #env = NSCausalBanditEnv(scm=scm, reward_node='Y', prob_distribution_shift=0.0, max_delta=0.2, seed=SEED)
     env = CausalBanditEnv(scm=scm, reward_node='Y', seed=SEED)
     print(env.action_space)
-    print(f"optimal action is {env.get_optimal_action()}")
+    optimal_action, optimal_value = env.get_optimal(binary=True, discrete=True)
+    print(f"optimal action is {optimal_action} with value {optimal_value}")
 
     G = env.scm.get_causal_diagram()
 
     agents = {
-        "UCB": UCBAgent(n_arms=len(env.action_space), c=2),
-        "SW-UCB": SlidingWindowUCBAgent(n_arms=len(env.action_space), c=2, window_size=100),
+        "UCB": UCBAgent(arms=env.action_space, c=2),
+        "SW-UCB": SlidingWindowUCBAgent(arms=env.action_space, c=2, window_size=100),
         "POMIS-UCB": PomisUCBAgent(G=G, Y='Y', c=2)
     }
 
@@ -80,25 +81,24 @@ def main():
     n = 1000  # number of runs to average over
 
 
-    regrets = {name: CumulativeRegret(env=env, T=T) for name in agents.keys()}
+    regret = CumulativeRegret(optimal_expected_reward=optimal_value, T=T)
 
     averaged_regrets = {name: np.zeros(T) for name in agents.keys()}
-    for _ in range(n):
-        for agent in agents.values():
+    for name, agent in agents.items():
+        print(f"Running agent: {name}")
+        for _ in range(n):
+            if _ % 100 == 0:
+                print(f"  Run {_}/{n}")
             agent.reset()
-        for regret in regrets.values():
             regret.reset()
-        env.reset()
-        for _ in range(T):
-            for name, agent in agents.items():
-                action_index = agent.select_arm()
-                action =  env.action_space[action_index]
+            env.reset()
+            for _ in range(T):
+                action = agent.select_arm()
                 _, reward, _, _, _ = env.step(action)
-                agent._update(action_index, reward)
-                regrets[name].update(reward)
-        
-        for name in agents.keys():
-            averaged_regrets[name] += regrets[name].get_regrets() / n
+                agent._update(action, reward)
+                regret.update(reward)
+            
+            averaged_regrets[name] += regret.get_regrets() / n
 
     plot_regrets(regrets=averaged_regrets.values(), labels=averaged_regrets.keys(), title="Averaged Cumulative Regret")
 

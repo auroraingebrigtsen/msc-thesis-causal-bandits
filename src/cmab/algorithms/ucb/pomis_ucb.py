@@ -3,7 +3,6 @@ import numpy as np
 
 from cmab.algorithms.base import BaseBanditAlgorithm
 
-from typing import Set, List, Tuple, FrozenSet, AbstractSet
 from cmab.scm.scm import SCM
 from cmab.scm.causal_diagram import CausalDiagram
 from cmab.algorithms.pomis.pomis_sets import POMISs
@@ -17,33 +16,33 @@ class PomisUCBAgent(BaseBanditAlgorithm):
         self.G = G
         self.Y = Y
         self.c = c
-        self.actions = POMISs(G, Y)
-        self.n_arms = len(self.actions)
+        self.arms = list(POMISs(G, Y))
+        self.n_arms = len(self.arms)
         self.estimates = np.zeros(self.n_arms)
-        self.action_samples = np.zeros(self.n_arms)
+        self.arm_samples = np.zeros(self.n_arms)
         self.t = 0
-        print(f"POMISs found: {self.actions}")
+        print(f"POMISs found: {self.arms}")
 
     def select_arm(self):
         for i in range(self.n_arms):   # ensure each arm is tried once
-            if self.action_samples[i] == 0:
-                return i
+            if self.arm_samples[i] == 0:
+                return self.arms[i]
 
         ucb_values = []
-        for action in range(self.n_arms): 
-            n_i = self.action_samples[action]
+        for arm in range(self.n_arms): 
+            n_i = self.arm_samples[arm]
             bound = np.sqrt(np.log(self.t)/n_i)
-            ucb_values.append(self.estimates[action] + self.c*bound)
-        return np.argmax(ucb_values)
+            ucb_values.append(self.estimates[arm] + self.c*bound)
+        return self.arms[np.argmax(ucb_values)]
     
-    def _update(self, action, reward):
+    def _update(self, arm, reward):
         self.t += 1
-        self.action_samples[action] += 1
-        num_samples = self.action_samples[action]
-        prev_reward = self.estimates[action]
-        self.estimates[action] = prev_reward + 1/(num_samples)*(reward - prev_reward)
+        self.arm_samples[arm] += 1
+        num_samples = self.arm_samples[arm]
+        prev_reward = self.estimates[arm]
+        self.estimates[arm] = prev_reward + 1/(num_samples)*(reward - prev_reward)
     
     def reset(self):
         self.t = 0
         self.estimates = np.zeros(self.n_arms)
-        self.action_samples = np.zeros(self.n_arms)
+        self.arm_samples = np.zeros(self.n_arms)

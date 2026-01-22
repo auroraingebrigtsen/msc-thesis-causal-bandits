@@ -10,7 +10,7 @@ class BaseBanditAlgorithm(ABC):
         pass
 
     @abstractmethod
-    def _update(self, chosen_arm, reward):
+    def _update(self, arm, reward):
         pass
     
     @abstractmethod

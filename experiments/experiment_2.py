@@ -1,5 +1,5 @@
 from cmab.scm.intervention_domain.interval import IntervalInterventionDomain
-from cmab.scm.pmf.bernoulli import BernoulliPmf
+from cmab.scm.dis.bernoulli import BernoulliPmf
 from cmab.scm.mechanism.linear import LinearMechanism
 from cmab.scm.scm import SCM
 from cmab.environments import CausalBanditEnv, NSCausalBanditEnv

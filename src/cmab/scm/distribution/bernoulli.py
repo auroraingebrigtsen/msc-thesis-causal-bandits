@@ -1,7 +1,6 @@
-from .base import BasePmf
-import numpy as np
+from .base import BaseDistribution
 
-class BernoulliPmf(BasePmf):
+class Bernoulli(BaseDistribution):
     def __init__(self, p: float,):
         super().__init__()
         self.p0 = float(p)
@@ -10,8 +9,16 @@ class BernoulliPmf(BasePmf):
     def sample(self, rng) -> int:
         return int(rng.binomial(1, self.p))
 
-    def mean(self) -> float:
+    def expected(self):
         return self.p
+    
+    def prob(self, x: int) -> float:
+        if x == 1:
+            return self.p
+        elif x == 0:
+            return 1 - self.p
+        else:
+            return 0.0
 
     def distribution_shift(self, rng, max_delta: float) -> None:
         delta = rng.uniform(-max_delta, max_delta)

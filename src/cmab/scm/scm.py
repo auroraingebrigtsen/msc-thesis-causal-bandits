@@ -1,19 +1,20 @@
 from collections import deque
 from typing import Dict, Any, FrozenSet, Mapping
-from .pmf.base import BasePmf as Pmf
+from .distribution.base import BasePMF, BasePDF, BaseDistribution
 from .mechanism.base import BaseMechanism as Mechanism
 from .domain.base import FiniteDiscreteDomain
 from .causal_diagram import CausalDiagram
 from cmab.typing import  InterventionSet
 import numpy as np
 from cmab.utils.graphs.topological_sort import topological_sort
+from itertools import product
 
 class SCM:
     def __init__(self, 
                  U: FrozenSet[str], 
                  V: FrozenSet[str], 
                  domains: Mapping[str, FiniteDiscreteDomain], 
-                 P_u_marginals: Mapping[str, Pmf], 
+                 P_u_marginals: Mapping[str, BaseDistribution], 
                  F: Mapping[str, Mechanism],
                 seed: int = 42
                  ):
@@ -26,14 +27,15 @@ class SCM:
         self.seed = seed
         self.rng = np.random.default_rng(seed=seed)
 
-    def sample(self, intervention_set: InterventionSet = set(), expected: bool = False) -> Dict[str, Any]:
+    def sample(self, intervention_set: InterventionSet = set(), u_values: Dict[str, Any] = None) -> Dict[str, Any]:
 
         # Sample exogenous variables
-        u_values = {u: self.P_u_marginals[u].mean(self.rng) if expected else self.P_u_marginals[u].sample(self.rng) for u in self.U}
+        if u_values is None:
+            u_values = {u:  self.P_u_marginals[u].sample(self.rng) for u in self.U}
 
         # Go over endogenous variables in topological order and compute their values
         values = {}
-        for node in self.V_topological_order:
+        for node in self.V_topological_order:  # TODO: is general topological order valid under intervention?
             if any(intervention[0] == node for intervention in intervention_set):
                 value = next(intervention[1] for intervention in intervention_set if intervention[0] == node)
             else:
@@ -44,14 +46,65 @@ class SCM:
                 v_vals = {parent: values[parent] for parent in v_parents}
                 u_vals = {u_parent: u_values[u_parent] for u_parent in u_parents}
 
-                if expected:
-                        value = self.F[node].expected(v_vals, u_vals)
-                else:
-                    value = self.F[node](v_vals, u_vals)
+                value = self.F[node](v_vals, u_vals)
 
             values[node] = value
 
         return values
+    
+    def expected_value_binary(self, variable:str, intervention_set: InterventionSet = set()) -> float:
+        """Compute the expected values of a binary variable Y given an intervention set, that is, E[Y | do(X=x)], when all exogenous variables are binary."""
+
+        us = list(self.U)
+
+        # Small helper: probability mass for one exogenous assignment
+        def p_u(u_values: Dict[str, Any]) -> float:
+            p = 1.0
+            for u in us:
+                val = u_values[u]
+                if val not in (0, 1):
+                    raise ValueError(f"Expected binary exogenous value for {u}, got {val}")
+                # BaseDistribution must provide prob(x) for PMFs
+                p *= float(self.P_u_marginals[u].prob(val))
+            return p
+
+        expected = 0.0
+
+        # Enumerate all 2^{|U|} assignments
+        for u_bits in product((0, 1), repeat=len(us)):
+            u_values = dict(zip(us, u_bits))
+            prob = p_u(u_values)
+
+            if prob == 0.0:
+                continue
+
+            v_values = self.sample(intervention_set=intervention_set, u_values=u_values)
+            y = v_values[variable]
+
+            if y not in (0, 1):
+                raise ValueError(f"`{variable}` must be binary (0/1) under the model, got value {y}")
+
+            expected += prob * float(y)
+
+        return float(expected)
+
+    def expected_value_of_discrete_u(self, variable:str, intervention_set: InterventionSet = set()) -> float:
+        """Compute the expected values of a variable Y given an intervention set, that is, E[Y | do(X=x)]"""
+        
+        expected = 0
+        us = list(self.U)
+
+        u_domains = [self.P_u_marginals[u].support() for u in us]
+        for u_values in product(*u_domains):  # all combinations of u values
+            u_assignment = {u: val for u, val in zip(us, u_values)}  # create assignment dict
+            prob_u = 1.0  # probability of this u assignment
+            for u, val in u_assignment.items():  # compute probability of this specific assignment
+                prob_u *= self.P_u_marginals[u].prob(val)
+            sample = self.sample(intervention_set=intervention_set, u_values=u_assignment)  # sample given intervention and u assignment
+            expected += sample[variable] * prob_u  # add to expected value the value weighted by its probability
+        return expected
+
+
 
     def exogenous_distribution_shift(self, max_delta: float = 0.2) -> None:
         u_to_shift = self.rng.choice(list(self.U))

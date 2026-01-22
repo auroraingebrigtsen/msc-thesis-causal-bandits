@@ -7,9 +7,6 @@
 # Licensed under the MIT License.
 # See the LICENSE file in the repository root for the full license text.
 #
-# Modifications:
-# - 
-# - 
 
 from cmab.scm.causal_diagram import CausalDiagram
 from typing import FrozenSet, Set, List, Tuple, AbstractSet, Any

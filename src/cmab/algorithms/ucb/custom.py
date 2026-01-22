@@ -1,47 +1,22 @@
-from cmab.algorithms.base import BaseBanditAlgorithm
+from cmab.algorithms.ucb.pomis_ucb import PomisUCBAgent
 import numpy as np
+from typing import override
 
-class MyFirstAgent(BaseBanditAlgorithm):
-    """
-    Args:
-    c: float, degree of exploration
-    """
-    def __init__(self, n_arms:int, c:float=2):
-        super().__init__(n_arms)
-        self.c = c
-        self.estimates = np.zeros(self.n_arms)
-        self.action_samples = np.zeros(self.n_arms)
-        self.t = 0
+class MyFirstAgent(PomisUCBAgent):
+    def __init__(self, G, Y, c:float=2):
+        super().__init__(G, Y, c)
+        self.cpds = {}
 
-    def select_arm(self):
-        for i in range(self.n_arms):   # ensure each arm is tried once
-            if self.action_samples[i] == 0:
-                return i
+    @override
+    def _update(self, arm_index: int, reward: float) -> None:
+        super()._update(arm_index, reward)
+        for arm in range(self.n_arms):
+            if self._is_change_point(arm):
+                self._update_on_change_point()
 
-        ucb_values = []
-        for action in range(self.n_arms): 
-            n_i = self.action_samples[action]
-            bound = np.sqrt(np.log(self.t)/n_i)
-            ucb_values.append(self.estimates[action] + self.c*bound)
-        return np.argmax(ucb_values)
-    
-    def _update(self, action, reward):
-        self.t += 1
-        self.action_samples[action] += 1
-        num_samples = self.action_samples[action]
-        prev_reward = self.estimates[action]
-        self.estimates[action] = prev_reward + 1/(num_samples)*(reward - prev_reward)
 
-    def _is_change_point(self) -> bool:
-        # Placeholder for change point detection logic
+    def _is_change_point(self, arm: int) -> bool:
         return False
-    
-    def _infer_changed_arms(self) -> list[int]:
-        # Placeholder for inferring which arms have changed
-        return []
-    
-    
-    def reset(self):
-        self.t = 0
-        self.estimates = np.zeros(self.n_arms)
-        self.action_samples = np.zeros(self.n_arms)
+
+    def _update_on_change_point(self):
+        

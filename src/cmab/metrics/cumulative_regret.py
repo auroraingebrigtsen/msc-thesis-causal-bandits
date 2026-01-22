@@ -1,10 +1,9 @@
-from cmab.environments.base import BaseCausalBanditEnv
 import numpy as np
 from .base import BaseMetric
 
 class CumulativeRegret(BaseMetric):
-    def __init__(self, env: BaseCausalBanditEnv, T:int):
-        self.optimal_expected_reward = env.get_optimal_expected_reward()
+    def __init__(self, optimal_expected_reward: float, T:int):
+        self.optimal_expected_reward = optimal_expected_reward
         self.T = T
         self.cumulative_regret = 0.0
         self.cumulative_regrets = np.zeros(T)

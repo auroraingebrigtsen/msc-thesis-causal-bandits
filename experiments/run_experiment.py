@@ -1,5 +1,5 @@
-from cmab.scm.intervention_domain.interval import IntervalInterventionDomain
-from cmab.scm.pmf.bernoulli import BernoulliPmf
+from cmab.scm.domain.interval import IntervalDomain
+from cmab.scm.distribution.bernoulli import Bernoulli
 from cmab.scm.mechanism.linear import LinearMechanism
 from cmab.scm.scm import SCM
 from cmab.environments import CausalBanditEnv, NSCausalBanditEnv
@@ -16,14 +16,14 @@ def main():
     U = frozenset({'U_X', 'U_Z', 'U_Y'})
 
     intervention_domains = {
-        'X': IntervalInterventionDomain(0,1),
-        'Z': IntervalInterventionDomain(0,1),
-        'Y': IntervalInterventionDomain(0,1)
+        'X': IntervalDomain(0,1),
+        'Z': IntervalDomain(0,1),
+        'Y': IntervalDomain(0,1)
     }
 
-    P_X = BernoulliPmf(p=0.1)
-    P_Z = BernoulliPmf(p=0.9)
-    P_Y = BernoulliPmf(p=0.5)
+    P_X = Bernoulli(p=0.1)
+    P_Z = Bernoulli(p=0.9)
+    P_Y = Bernoulli(p=0.5)
 
     linear_mechanism_X = LinearMechanism(v_parents=[], u_parents=['U_X'], weights=[])
     linear_mechanism_Z = LinearMechanism(v_parents=['X'], u_parents=['U_Z'], weights=[0.8])
@@ -74,10 +74,9 @@ def main():
         env.reset()
         for _ in range(T):
             for name, agent in agents.items():
-                action_index = agent.select_arm()
-                action =  env.action_space[action_index]
+                action= agent.select_arm()
                 _, reward, _, _, _ = env.step(action)
-                agent._update(action_index, reward)
+                agent._update(action, reward)
                 regrets[name].update(reward)
         
         for name in agents.keys():

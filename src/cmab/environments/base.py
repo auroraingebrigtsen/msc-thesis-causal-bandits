@@ -56,18 +56,20 @@ class BaseCausalBanditEnv(ABC):
     
     def _get_info(self):
         return {"steps": self._step}
-    
-    def get_optimal_action(self):
-        expected_rewards = {}
-        for action in self.action_space:
-            expected_reward = self.scm.sample(intervention_set=action, use_mean=True)[self.reward_node]
-            expected_rewards[action] = expected_reward
-        
-        return max(expected_rewards, key=expected_rewards.get)  # Return the key with the highest expected reward
 
-    def get_optimal_expected_reward(self):
-        optimal_action = self.get_optimal_action()
-        return self.scm.sample(intervention_set=optimal_action, use_mean=True)[self.reward_node]
+    def get_optimal(self, binary: bool = True, discrete: bool = True):
+        """Returns the optimal arm, and the expected reward of that arm"""
+        expected_rewards = np.zeros(len(self.action_space))
+        for idx, action in enumerate(self.action_space):
+            if binary:
+                expected_rewards[idx] = self.scm.expected_value_binary(variable=self.reward_node, intervention_set=action)
+            elif discrete:
+                expected_rewards[idx] = self.scm.expected_value_of_discrete_u(variable=self.reward_node, intervention_set=action)
+            else:
+                raise NotImplementedError("Only binary and discrete expected value computations are implemented.")
+
+        best_arm_idx = np.argmax(expected_rewards)
+        return self.action_space[best_arm_idx], expected_rewards[best_arm_idx]
 
     @abstractmethod
     def step(self, action: InterventionSet):
