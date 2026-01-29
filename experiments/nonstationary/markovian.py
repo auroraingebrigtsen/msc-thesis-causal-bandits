@@ -63,22 +63,21 @@ def main():
         seed=SEED
     )
 
-    #env = NSCausalBanditEnv(scm=scm, reward_node='Y', prob_distribution_shift=0.0, max_delta=0.2, seed=SEED)
-    env = CausalBanditEnv(scm=scm, reward_node='Y', seed=SEED)
-    print(env.action_space)
-    optimal_action, optimal_value = env.get_optimal(binary=True, discrete=True)
+    env = NSCausalBanditEnv(scm=scm, reward_node='Y', prob_distribution_shift=0.0, max_delta=0.2, seed=SEED)
+    print(f"Number of actions: {len(env.action_space)}")
+    optimal_action, optimal_value = env.get_optimal(binary=True, discrete=True)  # Should be X_1=1, X_2=1
     print(f"optimal action is {optimal_action} with value {optimal_value}")
 
     G = env.scm.get_causal_diagram()
 
     agents = {
         "UCB": UCBAgent(arms=env.action_space, c=2),
-        "SW-UCB": SlidingWindowUCBAgent(arms=env.action_space, c=2, window_size=100),
-        "POMIS-UCB": PomisUCBAgent(G=G, Y='Y', c=2)
+        #"SW-UCB": SlidingWindowUCBAgent(arms=env.action_space, c=2, window_size=100),
+        "POMIS-UCB": PomisUCBAgent(G=G, arms=env.action_space, Y='Y', c=2)
     }
 
     T= 1000  # number of steps in each run
-    n = 1000  # number of runs to average over
+    n = 1  # number of runs to average over
 
 
     regret = CumulativeRegret(optimal_expected_reward=optimal_value, T=T)
@@ -94,6 +93,7 @@ def main():
             env.reset()
             for _ in range(T):
                 action = agent.select_arm()
+                print(f"Selected action: {action}")
                 _, reward, _, _, _ = env.step(action)
                 agent._update(action, reward)
                 regret.update(reward)

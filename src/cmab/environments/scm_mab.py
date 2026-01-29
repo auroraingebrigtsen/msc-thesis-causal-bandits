@@ -5,13 +5,17 @@ import itertools
 from .base import BaseCausalBanditEnv
 
 class  CausalBanditEnv(BaseCausalBanditEnv):
-    def __init__(self, scm, reward_node, seed = 42):
-        super().__init__(scm, reward_node, seed)
+    def __init__(self, scm: SCM, reward_node: str, side_observations: bool = True, seed=42, atomic: bool = False, non_intervenable: list[str] = []):
+        super().__init__(scm, reward_node, side_observations, seed, atomic, non_intervenable)
 
     def step(self, action: InterventionSet):
         self._step += 1
-        reward = self.scm.sample(intervention_set=action)[self.reward_node]
-        return self._get_obs(), reward, False, False, self._get_info()  # observation, reward, terminated, truncated, info
+        values = self.scm.sample(intervention_set=action)
+        
+        if self.side_observations:
+            return self._get_obs(), values, False, False, self._get_info()  # observation, reward, terminated, truncated, info
+        
+        return self._get_obs(), values[self.reward_node], False, False, self._get_info()  # observation, reward, terminated, truncated, info
 
     def reset(self):
         self._step = 0

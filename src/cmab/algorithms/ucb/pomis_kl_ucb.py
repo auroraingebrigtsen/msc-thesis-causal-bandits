@@ -1,12 +1,10 @@
 from cmab.algorithms.base import BaseBanditAlgorithm
 
-from typing import Set, List, Tuple, FrozenSet, AbstractSet
-from cmab.scm.scm import SCM
 from cmab.scm.causal_diagram import CausalDiagram
 from cmab.algorithms.pomis.pomis_sets import POMISs
 
 class PomisKLUCBAgent(BaseBanditAlgorithm):
-    """ POMIS based KL-UCB """
+    """ TODO: POMIS based KL-UCB """
 
     def __init__(self, G: CausalDiagram, Y: str, f, T):
         self.G = G

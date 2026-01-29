@@ -1,12 +1,14 @@
 from cmab.algorithms.base import BaseBanditAlgorithm
 import numpy as np
+from cmab.typing import InterventionSet, Observation
 
 class UCBAgent(BaseBanditAlgorithm):
     """
     Args:
     c: float, degree of exploration
     """
-    def __init__(self, arms, c:float=2):
+    def __init__(self, reward_node:str, arms: list[InterventionSet], c:float=2):
+        super().__init__(reward_node)
         self.arms = arms
         self.n_arms = len(arms)
         self.c = c
@@ -14,7 +16,7 @@ class UCBAgent(BaseBanditAlgorithm):
         self.arm_samples = np.zeros(self.n_arms)
         self.t = 0
 
-    def select_arm(self):
+    def select_arm(self) -> InterventionSet:
         for i in range(self.n_arms):   # ensure each arm is tried once
             if self.arm_samples[i] == 0:
                 return self.arms[i]
@@ -26,7 +28,8 @@ class UCBAgent(BaseBanditAlgorithm):
             ucb_values.append(self.estimates[arm] + self.c*bound)
         return self.arms[np.argmax(ucb_values)]
     
-    def _update(self, arm, reward):
+    def _update(self, arm: InterventionSet, observation: Observation) -> None:
+        reward = observation[self.reward_node]
         self.t += 1
         arm_index = self.arms.index(arm)
         self.arm_samples[arm_index] += 1

@@ -5,9 +5,10 @@ import itertools
 from abc import ABC, abstractmethod
 
 class BaseCausalBanditEnv(ABC):
-    def __init__(self, scm: SCM, reward_node: str, seed:int=42, atomic: bool = False, non_intervenable: list[str] = []):
+    def __init__(self, scm: SCM, reward_node: str, side_observations: bool, seed, atomic: bool, non_intervenable: list[str]):
         self.scm = scm
         self.reward_node = reward_node
+        self.side_observations = side_observations  
         self._step = 0
         self.rng = np.random.default_rng(seed=seed)
         self.state = None
@@ -17,25 +18,22 @@ class BaseCausalBanditEnv(ABC):
     def _action_sort_key(action: InterventionSet):
         return (len(action), tuple(sorted(action)))
 
-    def _init_action_space(self, atomic: bool, non_intervenable: list[str]) -> list[InterventionSet]:
+    def _init_action_space(self, atomic: bool, non_intervenable: set[str]) -> list[InterventionSet]:
         """Adds all combinations of possible interventions except for the reward node.
         If atomic is True, only single node interventions are added. 
         The list of non_intervenable nodes are excluded from the action space.
         """
-        action_space = set()
-        variables = [v for v in self.scm.V if v != self.reward_node]
-
-        if len(non_intervenable) > 0:
-            variables = [v for v in variables if v not in non_intervenable]
+        action_space = {frozenset() }  # includes the empty intervention
+        intervenable_vars = [v for v in self.scm.V if v != self.reward_node and v not in non_intervenable]
 
         if atomic:  # add to the action set: {(var, val)} for each var and val
-            for var in variables:
+            for var in intervenable_vars:
                 for val in self.scm.domains[var].support():
                     action_space.add(frozenset({(var, val)}))
 
         else:  # add to the action set: {(var,1 val1), (var1, val2), ... }
-            for k in range(1, len(variables) + 1):
-                for subset in itertools.combinations(variables, k):
+            for k in range(1, len(intervenable_vars) + 1):
+                for subset in itertools.combinations(intervenable_vars, k):
                     assignments = [()]
                     for var in subset:
                         new_assignments = []

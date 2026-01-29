@@ -1,21 +1,21 @@
-from typing import Set, List, Tuple, FrozenSet, Dict, Optional
 from cmab.utils.graphs.topological_sort import topological_sort
-
+from collections import defaultdict
+import networkx as nx
 
 class CausalDiagram:
     """Causal Diagram represented as a DAG."""
 
     def __init__(
         self,
-        nodes: Set[str],
-        directed_edges: List[Tuple[str, str]],
-        bidirected_edges: Optional[List[Tuple[str, str, str]]] = None,
+        nodes: set[str],
+        directed_edges: list[tuple[str, str]],
+        bidirected_edges: list[tuple[str, str, str]] = [],
     ):
         self.nodes = nodes
         self.directed_edges = directed_edges
-        self.bidirected_edges = bidirected_edges or []
-        self.parents: Dict[str, Set[str]] = {node: set() for node in nodes}
-        self.children: Dict[str, Set[str]] = {node: set() for node in nodes}
+        self.bidirected_edges = bidirected_edges
+        self.parents: dict[str, set[str]] = defaultdict(set)
+        self.children: dict[str, set[str]] = defaultdict(set)
         for u, v in directed_edges:
             self.parents[v].add(u)
             self.children[u].add(v)
@@ -23,17 +23,17 @@ class CausalDiagram:
         self.descendants = self._compute_descendants()
 
         self.confounder_dict = {u: frozenset({x, y}) for x, y, u in self.bidirected_edges}
-        self.bidirected_neighbors: Dict[str, Set[str]] = {n: set() for n in self.nodes}
+        self.bidirected_neighbors = defaultdict(set)
         for x, y, _u in self.bidirected_edges:
             self.bidirected_neighbors[x].add(y)
             self.bidirected_neighbors[y].add(x)
 
-    def _compute_ancestors(self) -> Dict[str, Set[str]]:
+    def _compute_ancestors(self) -> dict[str, set[str]]:
         """For each node v, return all nodes that have a directed path into v."""
-        ancestors: Dict[str, Set[str]] = {v: set() for v in self.nodes}
+        ancestors: dict[str, set[str]] = defaultdict(set)
 
-        def dfs_up(start: str) -> Set[str]:
-            seen: Set[str] = set()
+        def dfs_up(start: str) -> set[str]:
+            seen: set[str] = set()
             stack = list(self.parents[start])
             while stack:
                 p = stack.pop()
@@ -48,12 +48,12 @@ class CausalDiagram:
 
         return ancestors
 
-    def _compute_descendants(self) -> Dict[str, Set[str]]:
+    def _compute_descendants(self) -> dict[str, set[str]]:
         """For each node v, return all nodes reachable by a directed path out of v."""
-        descendants: Dict[str, Set[str]] = {v: set() for v in self.nodes}
+        descendants: dict[str, set[str]] = defaultdict(set)
 
-        def dfs_down(start: str) -> Set[str]:
-            seen: Set[str] = set()
+        def dfs_down(start: str) -> set[str]:
+            seen: set[str] = set()
             stack = list(self.children[start])
             while stack:
                 c = stack.pop()
@@ -68,20 +68,20 @@ class CausalDiagram:
 
         return descendants
 
-    def Pa(self, nodes: Set[str], include_self:bool=True) -> Set[str]:
+    def Pa(self, nodes: set[str], include_self:bool=True) -> set[str]:
         """Parents of a set of nodes."""
         parents = set().union(*(self.parents[n] for n in nodes))
         if include_self:
             return parents.union(nodes)
         return parents - nodes
 
-    def An(self, Y: str, include_self:bool=True) -> Set[str]:
+    def An(self, Y: str, include_self:bool=True) -> set[str]:
         """Ancestors of Y."""
         if include_self:
             return self.ancestors[Y].union({Y})
         return self.ancestors[Y]
 
-    def  De(self, nodes: Set[str], include_self:bool=True) -> Set[str]:
+    def  De(self, nodes: set[str], include_self:bool=True) -> set[str]:
         """Descendants of a set of nodes."""
         descendants = set().union(*(self.descendants[n] for n in nodes))
         if include_self:
@@ -89,12 +89,12 @@ class CausalDiagram:
         return descendants
     
 
-    def c_component(self, node: str) -> Set[str]:
+    def c_component(self, node: str) -> set[str]:
         """Confounding component (bidirected-connected component) containing node."""
         if node not in self.nodes:
             raise KeyError(f"{node} not in graph")
 
-        comp: Set[str] = set()
+        comp: set[str] = set()
         stack = [node]
 
         while stack:
@@ -104,13 +104,13 @@ class CausalDiagram:
             comp.add(v)
 
             # add bidirected neighbors (observed nodes)
-            for nbr in self.bidirected_neighbors.get(v, ()):
+            for nbr in self.bidirected_neighbors[v]:
                 if nbr not in comp:
                     stack.append(nbr)
 
         return comp
     
-    def do(self, intervention_set: Set[str]) -> "CausalDiagram":
+    def do(self, intervention_set: set[str]) -> "CausalDiagram":
         """Return a new CausalDiagram after performing do(intervention_set)."""
         new_directed_edges = [
             (u, v) for (u, v) in self.directed_edges if v not in intervention_set
@@ -126,14 +126,25 @@ class CausalDiagram:
             bidirected_edges=new_bidirected_edges,
         )
 
-    def causal_order(self, backward=False) -> Tuple:
+    def causal_order(self, backward=False) -> tuple:
         top_to_bottom = topological_sort(self.nodes, self.directed_edges)
         if backward:
             return tuple(reversed(top_to_bottom))
         else:
             return tuple(top_to_bottom)
+        
+
+    def d_separated(self, X: set[str], Y: set[str], Z: set[str]) -> bool:
+        """Check if X and Y are d-separated given Z using networx"""
+        G = nx.DiGraph()
+        G.add_nodes_from(self.nodes)
+        G.add_edges_from(self.directed_edges)
+        for x, y, _u in self.bidirected_edges:
+            G.add_edge(x, y)
+            G.add_edge(y, x)
+        return nx.d_separated(G, X, Y, Z)
     
-    def __getitem__(self, nodes: Set[str]) -> "CausalDiagram":
+    def __getitem__(self, nodes: set[str]) -> "CausalDiagram":
         """Subgraph induced by given nodes."""
         sub_directed_edges = [(u, v) for (u, v) in self.directed_edges if u in nodes and v in nodes]
         sub_bidirected_edges = [(x, y, u) for (x, y, u) in self.bidirected_edges if x in nodes and y in nodes]

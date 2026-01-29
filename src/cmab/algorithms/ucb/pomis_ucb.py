@@ -1,29 +1,53 @@
-from cmab.algorithms.base import BaseBanditAlgorithm
 import numpy as np
-
 from cmab.algorithms.base import BaseBanditAlgorithm
-
-from cmab.scm.scm import SCM
 from cmab.scm.causal_diagram import CausalDiagram
 from cmab.algorithms.pomis.pomis_sets import POMISs
+from cmab.typing import InterventionSet, Observation
+from collections import defaultdict
 
 class PomisUCBAgent(BaseBanditAlgorithm):
-    """
-    Args:
-    c: float, degree of exploration
-    """
-    def __init__(self, G: CausalDiagram, Y: str, c:float=2):
+    def __init__(self, reward_node:str, G: CausalDiagram, arms: list[InterventionSet], c: float = 2):
+        super().__init__(reward_node)
         self.G = G
-        self.Y = Y
+        self.all_arms = arms
         self.c = c
-        self.arms = list(POMISs(G, Y))
+
+        self.arms = self._get_arms_from_pomis_sets()
+        print(f"Selected arms from POMISs: {self.arms}")
+        print(f"Total: {len(self.arms)}")
         self.n_arms = len(self.arms)
+
+        self.arm_to_index = {arm: i for i, arm in enumerate(self.arms)}
+
         self.estimates = np.zeros(self.n_arms)
         self.arm_samples = np.zeros(self.n_arms)
         self.t = 0
-        print(f"POMISs found: {self.arms}")
 
-    def select_arm(self):
+    def _update(self, arm: InterventionSet, observation: Observation) -> None:
+        reward = observation[self.reward_node]
+        self.t += 1
+        arm_index = self.arm_to_index[arm]
+        self.arm_samples[arm_index] += 1
+        n = self.arm_samples[arm_index]
+        prev = self.estimates[arm_index]
+        self.estimates[arm_index] = prev + (reward - prev) / n
+
+
+    def _get_arms_from_pomis_sets(self) -> list[InterventionSet]:
+        """Select arms that correspond to POMISs."""
+        pomiss: list[frozenset[str]] = POMISs(self.G, self.reward_node) 
+
+        temp: dict[frozenset[str], list[InterventionSet]] = defaultdict(list)
+        for arm in self.all_arms:
+            varset = frozenset(var for var, _ in arm)
+            temp[varset].append(arm)
+
+        arms: list[InterventionSet] = []
+        for pomis in pomiss:
+            arms.extend(temp[pomis])
+        return arms
+
+    def select_arm(self) -> InterventionSet:
         for i in range(self.n_arms):   # ensure each arm is tried once
             if self.arm_samples[i] == 0:
                 return self.arms[i]
@@ -35,12 +59,6 @@ class PomisUCBAgent(BaseBanditAlgorithm):
             ucb_values.append(self.estimates[arm] + self.c*bound)
         return self.arms[np.argmax(ucb_values)]
     
-    def _update(self, arm, reward):
-        self.t += 1
-        self.arm_samples[arm] += 1
-        num_samples = self.arm_samples[arm]
-        prev_reward = self.estimates[arm]
-        self.estimates[arm] = prev_reward + 1/(num_samples)*(reward - prev_reward)
     
     def reset(self):
         self.t = 0

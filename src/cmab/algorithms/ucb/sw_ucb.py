@@ -2,9 +2,11 @@
 import numpy as np
 from collections import deque
 from cmab.algorithms.base import BaseBanditAlgorithm
+from cmab.typing import InterventionSet, Observation
 
 class SlidingWindowUCBAgent(BaseBanditAlgorithm):
-    def __init__(self, arms, c:float=2.0, window_size:int=50):
+    def __init__(self, reward_node:str, arms, c:float=2.0, window_size:int=50):
+        super().__init__(reward_node)
         self.arms = arms
         self.n_arms = len(arms)
         self.c = c
@@ -13,7 +15,7 @@ class SlidingWindowUCBAgent(BaseBanditAlgorithm):
         self.t=0
         self.buffers=[deque(maxlen=self.W) for _ in range(self.n_arms)]
 
-    def select_arm(self):
+    def select_arm(self) -> InterventionSet:
         for i in range(self.n_arms):   # ensure each arm is tried once
             if len(self.buffers[i]) == 0:
                 return self.arms[i]
@@ -26,7 +28,8 @@ class SlidingWindowUCBAgent(BaseBanditAlgorithm):
             ucb_values.append(self.estimates[i] + bound)
         return self.arms[np.argmax(ucb_values)]
 
-    def _update(self, arm, reward):
+    def _update(self, arm: InterventionSet, observation: Observation) -> None:
+        reward = observation[self.reward_node]
         self.t += 1
         arm_index = self.arms.index(arm)
         buf = self.buffers[arm_index]

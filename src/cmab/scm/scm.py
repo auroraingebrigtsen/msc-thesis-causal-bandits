@@ -62,8 +62,6 @@ class SCM:
             p = 1.0
             for u in us:
                 val = u_values[u]
-                if val not in (0, 1):
-                    raise ValueError(f"Expected binary exogenous value for {u}, got {val}")
                 # BaseDistribution must provide prob(x) for PMFs
                 p *= float(self.P_u_marginals[u].prob(val))
             return p
@@ -80,9 +78,6 @@ class SCM:
 
             v_values = self.sample(intervention_set=intervention_set, u_values=u_values)
             y = v_values[variable]
-
-            if y not in (0, 1):
-                raise ValueError(f"`{variable}` must be binary (0/1) under the model, got value {y}")
 
             expected += prob * float(y)
 

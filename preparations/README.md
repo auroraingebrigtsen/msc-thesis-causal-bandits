@@ -1,0 +1,1 @@
+This folder contains implementations of algorithms from papers, and notebooks where I test different libraries etc.

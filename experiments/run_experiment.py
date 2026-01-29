@@ -48,7 +48,7 @@ def main():
 
     #env = NSCausalBanditEnv(scm=scm, reward_node='Y', prob_distribution_shift=0.0, max_delta=0.2, seed=SEED)
     env = CausalBanditEnv(scm=scm, reward_node='Y', seed=SEED)
-    print(env.action_space)
+    print(f"Number of actions: {len(env.action_space)}")
     print(f"optimal action is {env.get_optimal_action()}")
 
     G = env.scm.get_causal_diagram()
