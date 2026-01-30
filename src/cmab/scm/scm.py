@@ -1,6 +1,5 @@
-from collections import deque
-from typing import Dict, Any, FrozenSet, Mapping
-from .distribution.base import BasePMF, BasePDF, BaseDistribution
+from typing import Any, FrozenSet, Mapping
+from .distribution.base import BaseDistribution
 from .mechanism.base import BaseMechanism as Mechanism
 from .domain.base import FiniteDiscreteDomain
 from .causal_diagram import CausalDiagram
@@ -11,15 +10,15 @@ from itertools import product
 
 class SCM:
     def __init__(self, 
-                 U: FrozenSet[str], 
-                 V: FrozenSet[str], 
+                 U: list[str], 
+                 V: list[str], 
                  domains: Mapping[str, FiniteDiscreteDomain], 
                  P_u_marginals: Mapping[str, BaseDistribution], 
                  F: Mapping[str, Mechanism],
                 seed: int = 42
                  ):
-        self.U = U   # Set of exogenous variables
-        self.V = V  # Set of endogenous variables
+        self.U = U   # List of exogenous variables
+        self.V = V  # List of endogenous variables
         self.domains = domains  # Domain for each variable
         self.P_u_marginals = P_u_marginals  # Marginal distributions for exogenous variables
         self.F = F  # Mechanisms for each endogenous variable
@@ -27,7 +26,7 @@ class SCM:
         self.seed = seed
         self.rng = np.random.default_rng(seed=seed)
 
-    def sample(self, intervention_set: InterventionSet = set(), u_values: Dict[str, Any] = None) -> Dict[str, Any]:
+    def sample(self, intervention_set: InterventionSet = set(), u_values: dict[str, float] = None) -> dict[str, float]:
 
         # Sample exogenous variables
         if u_values is None:
@@ -35,7 +34,7 @@ class SCM:
 
         # Go over endogenous variables in topological order and compute their values
         values = {}
-        for node in self.V_topological_order:  # TODO: is general topological order valid under intervention?
+        for node in self.V_topological_order:  
             if any(intervention[0] == node for intervention in intervention_set):
                 value = next(intervention[1] for intervention in intervention_set if intervention[0] == node)
             else:
@@ -55,12 +54,10 @@ class SCM:
     def expected_value_binary(self, variable:str, intervention_set: InterventionSet = set()) -> float:
         """Compute the expected values of a binary variable Y given an intervention set, that is, E[Y | do(X=x)], when all exogenous variables are binary."""
 
-        us = list(self.U)
-
         # Small helper: probability mass for one exogenous assignment
-        def p_u(u_values: Dict[str, Any]) -> float:
+        def p_u(u_values: dict[str, float]) -> float:
             p = 1.0
-            for u in us:
+            for u in self.U:
                 val = u_values[u]
                 # BaseDistribution must provide prob(x) for PMFs
                 p *= float(self.P_u_marginals[u].prob(val))
@@ -69,8 +66,8 @@ class SCM:
         expected = 0.0
 
         # Enumerate all 2^{|U|} assignments
-        for u_bits in product((0, 1), repeat=len(us)):
-            u_values = dict(zip(us, u_bits))
+        for u_bits in product((0, 1), repeat=len(self.U)):
+            u_values = dict(zip(self.U, u_bits))
             prob = p_u(u_values)
 
             if prob == 0.0:
@@ -101,27 +98,41 @@ class SCM:
 
 
 
-    def exogenous_distribution_shift(self, max_delta: float = 0.2) -> None:
-        u_to_shift = self.rng.choice(list(self.U))
-        print(f"Shifting distribution of latent variable {u_to_shift}. Values before shift: {self.P_u_marginals[u_to_shift].p}")
-        self.P_u_marginals[u_to_shift].distribution_shift(rng=self.rng, max_delta=max_delta)
-        print(f"Values after shift: {self.P_u_marginals[u_to_shift].p}")
+    def exogenous_distribution_shift(self, max_delta: float = 0.2, rng=None) -> None:
+        """Perform a distribution shift on one randomly chosen exogenous variable.
+        RNG can be provided to be able to keep same change points accross runs, but still
+        change the sampling randomness accross runs.
+        """
+        if rng is None:
+            rng = self.rng
 
+        u_to_shift = rng.choice(self.U)
+        self.P_u_marginals[u_to_shift].distribution_shift(rng=rng, max_delta=max_delta)
+        print(f"Distribution shift applied to exogenous variable {u_to_shift}.")
 
     def get_causal_diagram(self) -> CausalDiagram:
+        """Get the causal diagram (with bidirected edges for UCs) and no exogenous nodes."""
         directed_edges = []
+        noise_vars = []
         bidirected_edges = []
         for v in self.V:
             for parent in self.F[v].v_parents:
                 directed_edges.append((parent, v))
         for u in self.U:
             children = [v for v in self.V if u in self.F[v].u_parents]
-            if len(children) >= 2:
-                for i in range(len(children)):
-                    for j in range(i + 1, len(children)):
-                        bidirected_edges.append((children[i], children[j], u))
-        return CausalDiagram(nodes=self.V, directed_edges=directed_edges, bidirected_edges=bidirected_edges)
+            if len(children) == 0:
+                continue
 
-    def reset(self):
-        self.seed += 1
-        self.rng = np.random.default_rng(seed=self.seed)
+            if len(children) == 1:
+                noise_vars.append((u, children[0]))
+                continue
+
+            for i in range(len(children)):
+                for j in range(i + 1, len(children)):
+                    bidirected_edges.append((children[i], children[j], u))
+
+        return CausalDiagram(nodes=set(self.V), directed_edges=directed_edges, bidirected_edges=bidirected_edges, noise_vars=noise_vars)
+
+    def reset(self, seed:int) -> None:
+        self.seed = seed
+        self.rng = np.random.default_rng(seed=seed)

@@ -1,3 +1,4 @@
+from cmab.algorithms.ucb.custom import MyFirstAgent
 from cmab.scm.domain.binary import BinaryDomain
 from cmab.scm.distribution.bernoulli import Bernoulli
 from cmab.scm.mechanism.linear import LinearMechanism
@@ -16,8 +17,8 @@ import numpy as np
 def main():
     SEED = 42
 
-    V = frozenset({'X_1', 'X_2', 'Z_1', 'Z_2', 'Y'})
-    U = frozenset({'U_X_1', 'U_X_2', 'U_Z_1', 'U_Z_2', 'U_Y'})
+    V = ['X_1', 'X_2', 'Z_1', 'Z_2', 'Y']
+    U = ['U_X_1', 'U_X_2', 'U_Z_1', 'U_Z_2', 'U_Y']
 
     domains = {
         'X_1': BinaryDomain(),
@@ -63,7 +64,8 @@ def main():
         seed=SEED
     )
 
-    env = NSCausalBanditEnv(scm=scm, reward_node='Y', prob_distribution_shift=0.0, max_delta=0.2, seed=SEED)
+    reward_node = 'Y'
+    env = NSCausalBanditEnv(scm=scm, reward_node=reward_node, seed=SEED)
     print(f"Number of actions: {len(env.action_space)}")
     optimal_action, optimal_value = env.get_optimal(binary=True, discrete=True)  # Should be X_1=1, X_2=1
     print(f"optimal action is {optimal_action} with value {optimal_value}")
@@ -71,35 +73,41 @@ def main():
     G = env.scm.get_causal_diagram()
 
     agents = {
-        "UCB": UCBAgent(arms=env.action_space, c=2),
-        #"SW-UCB": SlidingWindowUCBAgent(arms=env.action_space, c=2, window_size=100),
-        "POMIS-UCB": PomisUCBAgent(G=G, arms=env.action_space, Y='Y', c=2)
+        "UCB": UCBAgent(reward_node=reward_node, arms=env.action_space, c=2),
+        #"POMIS-UCB": PomisUCBAgent(reward_node=reward_node, G=G, arms=env.action_space, c=2),
+        #"Custom-UCB": MyFirstAgent(reward_node=reward_node, G=G, arms=env.action_space, c=2)
     }
 
     T= 1000  # number of steps in each run
-    n = 1  # number of runs to average over
+    n = 1000  # number of runs to average over
 
 
     regret = CumulativeRegret(optimal_expected_reward=optimal_value, T=T)
 
     averaged_regrets = {name: np.zeros(T) for name in agents.keys()}
     for name, agent in agents.items():
+        run_seed = SEED 
         print(f"Running agent: {name}")
         for _ in range(n):
             if _ % 100 == 0:
                 print(f"  Run {_}/{n}")
             agent.reset()
             regret.reset()
-            env.reset()
+            # If we want to fix change points accross different runs, 
+            # Use scm.reset(seed=run_seed). Then the change point seeding will be the same accross runs.
+            # If we want different change points accross runs, call env.reset(seed=run_seed) instead.
+            env.reset(seed=SEED)
+            scm.reset(seed=run_seed)
             for _ in range(T):
                 action = agent.select_arm()
-                print(f"Selected action: {action}")
-                _, reward, _, _, _ = env.step(action)
-                agent._update(action, reward)
+                _, observation, _, _, _ = env.step(action)
+                agent._update(action, observation)
+                reward = observation[reward_node]
                 regret.update(reward)
             
             averaged_regrets[name] += regret.get_regrets() / n
-
+            run_seed += 1
+        
     plot_regrets(regrets=averaged_regrets.values(), labels=averaged_regrets.keys(), title="Averaged Cumulative Regret")
 
 

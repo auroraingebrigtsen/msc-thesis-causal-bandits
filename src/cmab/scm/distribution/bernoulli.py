@@ -3,8 +3,8 @@ from .base import BaseDistribution
 class Bernoulli(BaseDistribution):
     def __init__(self, p: float,):
         super().__init__()
-        self.p0 = float(p)
-        self.p = float(p)
+        self.p0 = p
+        self.p = p
 
     def sample(self, rng) -> int:
         return int(rng.binomial(1, self.p))

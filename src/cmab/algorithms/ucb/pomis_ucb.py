@@ -35,17 +35,13 @@ class PomisUCBAgent(BaseBanditAlgorithm):
 
     def _get_arms_from_pomis_sets(self) -> list[InterventionSet]:
         """Select arms that correspond to POMISs."""
-        pomiss: list[frozenset[str]] = POMISs(self.G, self.reward_node) 
+        pomis_sets = set(POMISs(self.G, self.reward_node))  # membership test
 
-        temp: dict[frozenset[str], list[InterventionSet]] = defaultdict(list)
-        for arm in self.all_arms:
-            varset = frozenset(var for var, _ in arm)
-            temp[varset].append(arm)
-
-        arms: list[InterventionSet] = []
-        for pomis in pomiss:
-            arms.extend(temp[pomis])
-        return arms
+        return [
+            arm
+            for arm in self.all_arms
+            if frozenset(var for var, _ in arm) in pomis_sets
+        ]
 
     def select_arm(self) -> InterventionSet:
         for i in range(self.n_arms):   # ensure each arm is tried once

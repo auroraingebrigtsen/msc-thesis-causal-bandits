@@ -77,7 +77,7 @@ def main():
     optimal_action, optimal_value = env.get_optimal(binary=True, discrete=True)  # Should be X_1=1, X_2=1
     print(f"optimal action is {optimal_action} with value {optimal_value}")
 
-    G = env.scm.get_causal_diagram()
+    G = env.scm.get_augmented_causal_diagram()
 
     agents = {
         "UCB": UCBAgent(reward_node=reward_node, arms=env.action_space, c=2),

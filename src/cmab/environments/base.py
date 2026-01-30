@@ -5,11 +5,12 @@ import itertools
 from abc import ABC, abstractmethod
 
 class BaseCausalBanditEnv(ABC):
-    def __init__(self, scm: SCM, reward_node: str, side_observations: bool, seed, atomic: bool, non_intervenable: list[str]):
+    def __init__(self, scm: SCM, reward_node: str, side_observations: bool, seed: int, atomic: bool, non_intervenable: list[str]):
         self.scm = scm
         self.reward_node = reward_node
         self.side_observations = side_observations  
         self._step = 0
+        self.seed = seed
         self.rng = np.random.default_rng(seed=seed)
         self.state = None
         self.action_space: list[InterventionSet] = self._init_action_space(atomic=atomic, non_intervenable=non_intervenable)

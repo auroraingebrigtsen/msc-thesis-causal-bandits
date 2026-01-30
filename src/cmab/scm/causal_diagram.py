@@ -10,10 +10,12 @@ class CausalDiagram:
         nodes: set[str],
         directed_edges: list[tuple[str, str]],
         bidirected_edges: list[tuple[str, str, str]] = [],
+        noise_vars: list[tuple[str, str]] = [],
     ):
         self.nodes = nodes
         self.directed_edges = directed_edges
         self.bidirected_edges = bidirected_edges
+        self.noise_vars = noise_vars
         self.parents: dict[str, set[str]] = defaultdict(set)
         self.children: dict[str, set[str]] = defaultdict(set)
         for u, v in directed_edges:
@@ -120,10 +122,19 @@ class CausalDiagram:
             for (x, y, u) in self.bidirected_edges
             if x not in intervention_set and y not in intervention_set
         ]
+
+        new_noise_vars = []
+        for (u,v) in self.noise_vars:
+            if v in intervention_set:
+                new_noise_vars.append((u, None))
+            else:
+                new_noise_vars.append((u, v))
+
         return CausalDiagram(
             nodes=self.nodes,
             directed_edges=new_directed_edges,
             bidirected_edges=new_bidirected_edges,
+            noise_vars=new_noise_vars
         )
 
     def causal_order(self, backward=False) -> tuple:
@@ -135,17 +146,31 @@ class CausalDiagram:
         
 
     def d_separated(self, X: set[str], Y: set[str], Z: set[str]) -> bool:
-        """Check if X and Y are d-separated given Z using networx"""
+        """Check if X and Y are d-separated given Z using networx. 
+        Uses the augmented graph with exogenous noise variables"""
         G = nx.DiGraph()
         G.add_nodes_from(self.nodes)
         G.add_edges_from(self.directed_edges)
-        for x, y, _u in self.bidirected_edges:
-            G.add_edge(x, y)
-            G.add_edge(y, x)
-        return nx.d_separated(G, X, Y, Z)
-    
+
+        for u, v in self.noise_vars:
+            G.add_node(u)
+            if v is not None:
+                 G.add_edge(u, v)
+
+        for x, y, u in self.bidirected_edges:
+            G.add_node(u)
+            G.add_edge(u, x)
+            G.add_edge(u, y)
+        return nx.is_d_separator(G, X, Y, Z)
+
     def __getitem__(self, nodes: set[str]) -> "CausalDiagram":
         """Subgraph induced by given nodes."""
         sub_directed_edges = [(u, v) for (u, v) in self.directed_edges if u in nodes and v in nodes]
         sub_bidirected_edges = [(x, y, u) for (x, y, u) in self.bidirected_edges if x in nodes and y in nodes]
-        return CausalDiagram(nodes=set(nodes), directed_edges=sub_directed_edges, bidirected_edges=sub_bidirected_edges)
+        sub_noise_vars = [(u, v) for (u, v) in self.noise_vars if u in nodes and (v in nodes or v is None)]
+        return CausalDiagram(
+            nodes=nodes,
+            directed_edges=sub_directed_edges,
+            bidirected_edges=sub_bidirected_edges,
+            noise_vars=sub_noise_vars
+        )

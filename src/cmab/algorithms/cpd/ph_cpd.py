@@ -6,7 +6,7 @@ from .base import BaseCPD
 class PageHinkleyCPD(BaseCPD):
     """Very simple CPD estimator + naive change detection for binary SCMs."""
 
-    def __init__(self, node: str, parents: list[str], delta: float = 0.005, lambda_: float = 50, min_samples_for_detection: int = 10):
+    def __init__(self, node: str, parents: list[str], delta: float = 0.05, lambda_: float = 5, min_samples_for_detection: int = 10):
         # PH test parameters
         self.delta = delta  # tolerance for PH test
         self.lambda_ = lambda_  # threshold for PH test

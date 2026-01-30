@@ -10,7 +10,6 @@ class LinearMechanism(BaseMechanism):
             u_parents (list[str]): List of exogenous parent variable names
             weights (list[float]): Weights for each parent variable
             bias (float): Bias term
-            seed (int): Random seed for reproducibility
         """
         super().__init__(v_parents=v_parents, u_parents=u_parents)
         self.weights = weights
