@@ -9,6 +9,7 @@ from cmab.environments import CausalBanditEnv, NSCausalBanditEnv
 from cmab.algorithms.ucb import UCBAgent, SlidingWindowUCBAgent
 from cmab.algorithms.ucb.pomis_ucb import PomisUCBAgent
 from cmab.algorithms.ucb.custom import MyFirstAtomicAgent
+from cmab.algorithms.ucb.ph_ucb import PageHinkleyUCBAgent
 from cmab.utils.plotting import  plot_regrets
 from cmab.metrics.cumulative_regret import CumulativeRegret
 import numpy as np
@@ -64,8 +65,10 @@ def main():
     G = env.scm.get_causal_diagram()
 
     agents = {
-        #"UCB": UCBAgent(reward_node=reward_node, arms=env.action_space, c=2),
-        "Custom-UCB": MyFirstAtomicAgent(reward_node=reward_node, G=G, arms=env.action_space, c=2)
+        # Arm level CPD
+        'PH-UCB': PageHinkleyUCBAgent(reward_node=reward_node, arms=env.action_space, c=2, delta=0.5, lambda_=5.0, min_samples_for_detection=10),
+        # Node level CPD
+        'Custom-UCB': MyFirstAtomicAgent(reward_node=reward_node, G=G, arms=env.action_space, c=2)
     }
 
     T= 1000  # number of steps in each run
