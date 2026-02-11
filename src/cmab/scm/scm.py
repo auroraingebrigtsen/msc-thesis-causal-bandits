@@ -98,17 +98,36 @@ class SCM:
 
 
 
-    def exogenous_distribution_shift(self, max_delta: float = 0.2, rng=None) -> None:
+    def exogenous_distribution_shift(self, max_delta: float, rng, exogenous_to_shift:str=None, new_prob:float=None) -> None:
         """Perform a distribution shift on one randomly chosen exogenous variable.
         RNG can be provided to be able to keep same change points accross runs, but still
         change the sampling randomness accross runs.
         """
+        if exogenous_to_shift is not None and new_prob is not None:
+            self.controlled_distribution_shift(exogenous_to_shift, new_prob)
+            return
+
         if rng is None:
             rng = self.rng
 
         u_to_shift = rng.choice(self.U)
-        self.P_u_marginals[u_to_shift].distribution_shift(rng=rng, max_delta=max_delta)
         print(f"Distribution shift applied to exogenous variable {u_to_shift}.")
+        prev = self.P_u_marginals[u_to_shift].p
+        self.P_u_marginals[u_to_shift].distribution_shift(rng=rng, max_delta=max_delta)
+        new = self.P_u_marginals[u_to_shift].p
+        print(f" - Previous parameter: {prev}, new parameter: {new}.")
+
+
+    def controlled_distribution_shift(self, exogenous, new_param) -> None:
+        """Perform a distribution shift on one specified exogenous variable.
+        RNG can be provided to be able to keep same change points accross runs, but still
+        change the sampling randomness accross runs.
+        """
+        print(f"\nControlled distribution shift applied to exogenous variable {exogenous}.")
+        print(f"P before controlled shift: {[self.P_u_marginals[exogenous].p]}")
+        self.P_u_marginals[exogenous].p = new_param
+        print(f"New parameter {new_param}.")
+
 
     def get_causal_diagram(self) -> CausalDiagram:
         """Get the causal diagram (with bidirected edges for UCs) and no exogenous nodes."""
@@ -136,3 +155,5 @@ class SCM:
     def reset(self, seed:int) -> None:
         self.seed = seed
         self.rng = np.random.default_rng(seed=seed)
+        for u in self.U:
+            self.P_u_marginals[u].reset()

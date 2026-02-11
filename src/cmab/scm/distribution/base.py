@@ -9,7 +9,7 @@ class BaseDistribution(ABC):
         pass
 
     @abstractmethod
-    def reset(self, seed: int):
+    def reset(self):
         pass
 
 

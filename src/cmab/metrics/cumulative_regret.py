@@ -2,16 +2,15 @@ import numpy as np
 from .base import BaseMetric
 
 class CumulativeRegret(BaseMetric):
-    def __init__(self, optimal_expected_reward: float, T:int):
-        self.optimal_expected_reward = optimal_expected_reward
+    def __init__(self, T:int):
         self.T = T
         self.cumulative_regret = 0.0
         self.cumulative_regrets = np.zeros(T)
         self.step = 0
 
-    def update(self, reward: float) -> None:
+    def update(self, reward: float, optimal_expected_reward: float) -> None:
         """Updates the cumulative regret with the received reward."""
-        instant_regret = self.optimal_expected_reward - reward
+        instant_regret = optimal_expected_reward - reward
         self.cumulative_regret += instant_regret
         self.cumulative_regrets[self.step] = self.cumulative_regret
         self.step += 1

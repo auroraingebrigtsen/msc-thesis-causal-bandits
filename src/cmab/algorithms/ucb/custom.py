@@ -7,11 +7,13 @@ from cmab.typing import InterventionSet, Observation
 
 
 class MyFirstAgent(PomisUCBAgent):
-    def __init__(self, reward_node:str, G: CausalDiagram, arms: list[InterventionSet], c:float=2):
+    def __init__(self, reward_node:str, G: CausalDiagram, arms: list[InterventionSet], c:float, delta:float, lambda_:float, min_samples_for_detection:int):
         super().__init__(reward_node, G, arms, c)
         self.nodes = list(G.nodes - {reward_node})
 
-        self.cpds = {node: PageHinkleyCPD(node, G.Pa({node}, include_self=False)) for node in self.nodes}
+        self.cpds = {node: PageHinkleyCPD(node, G.Pa({node}, include_self=False), 
+                                          delta=delta, lambda_=lambda_, min_samples_for_detection=min_samples_for_detection) 
+                                          for node in self.nodes}
 
     @override
     def _update(self, arm: InterventionSet, observation: Observation) -> None:
@@ -69,12 +71,18 @@ class MyFirstAgent(PomisUCBAgent):
 
 
 class MyFirstAtomicAgent(UCBAgent):
-    def __init__(self, reward_node:str, G: CausalDiagram, arms: list[InterventionSet], c:float=2):
+    def __init__(self, reward_node:str, G: CausalDiagram, arms: list[InterventionSet], c:float=2, 
+                 delta:float=0.5, lambda_:float=5.0, min_samples_for_detection:int=10):
         super().__init__(reward_node, arms, c)
         self.G = G
-        self.nodes = list(G.nodes - {reward_node})
+        self.nodes = list(G.nodes)
 
-        self.cpds = {node: PageHinkleyCPD(node, G.Pa({node}, include_self=False)) for node in self.nodes}
+        self.delta = delta
+        self.lambda_ = lambda_
+        self.min_samples_for_detection = min_samples_for_detection
+
+        self.cpds = {node: PageHinkleyCPD(node, G.Pa({node}, include_self=False), delta=self.delta, lambda_=self.lambda_, 
+                                          min_samples_for_detection=self.min_samples_for_detection) for node in self.nodes}
 
     @override
     def _update(self, arm: InterventionSet, observation: Observation) -> None:

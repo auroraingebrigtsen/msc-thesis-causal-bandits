@@ -4,7 +4,8 @@ from .base import BaseCPD
 
 
 class PageHinkleyCPD(BaseCPD):
-    """Very simple CPD estimator + naive change detection for binary SCMs."""
+    """Very simple CPD estimator + naive change detection for binary SCMs. 
+    Made for node-level CPD."""
 
     def __init__(self, node: str, parents: list[str], delta: float = 0.05, lambda_: float = 5, min_samples_for_detection: int = 10):
         # PH test parameters
@@ -55,4 +56,45 @@ class PageHinkleyCPD(BaseCPD):
     def reset(self) -> None:
         """Resets the PH state."""
         self.ph_state = self._initialize_ph_state()
+        
+
+
+class ArmLevelPageHinkleyCPD(BaseCPD):
+    """Very simple CPD estimator + naive change detection for binary SCMs. 
+    Made for arm-level CPD with two sided PH test"""
+
+    def __init__(self, delta: float, lambda_:float, min_samples_for_detection: int):
+        # PH test parameters
+        self.delta = delta  # tolerance for PH test
+        self.lambda_ = lambda_  # threshold for PH test
+        self.min_samples_for_detection = min_samples_for_detection
+        self.ph_state = {'t': 0, 'mean': 0.0, 'm_pos': 0.0, 'M_pos': 0.0, 'm_neg': 0.0, 'M_neg': 0.0}
+
+
+    def update(self, reward: float) -> bool:
+            # Online PH update
+            self.ph_state['t'] += 1
+            prev_mean = self.ph_state['mean']
+            mean = prev_mean + (reward - prev_mean) / self.ph_state['t'] # running mean
+            self.ph_state['mean'] = mean
+
+            deviation = reward - mean 
+
+            self.ph_state['m_pos'] += deviation - self.delta # cumulative positive deviation
+            self.ph_state['M_pos'] = min(self.ph_state['M_pos'], self.ph_state['m_pos'])  # minimum positive deviation
+            self.ph_state['m_neg'] += -(deviation) + self.delta # cumulative negative deviation
+            self.ph_state['M_neg'] = min(self.ph_state['M_neg'], self.ph_state['m_neg'])  # minimum negative deviation
+
+            # compute PH statistic
+            ph_pos = self.ph_state['m_pos'] - self.ph_state['M_pos']
+            ph_neg = self.ph_state['m_neg'] - self.ph_state['M_neg']
+            if self.ph_state['t'] >= self.min_samples_for_detection and (ph_pos > self.lambda_ or ph_neg > self.lambda_):
+                return True
+        
+            return False
+    
+
+    def reset(self) -> None:
+        """Resets the PH state."""
+        self.ph_state = {'t': 0, 'mean': 0.0, 'm_pos': 0.0, 'M_pos': 0.0, 'm_neg': 0.0, 'M_neg': 0.0}
         
