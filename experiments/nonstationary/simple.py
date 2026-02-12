@@ -10,6 +10,7 @@ from cmab.algorithms.ucb import UCBAgent, SlidingWindowUCBAgent
 from cmab.algorithms.ucb.pomis_ucb import PomisUCBAgent
 from cmab.algorithms.ucb.custom import MyFirstAtomicAgent
 from cmab.algorithms.ucb.ph_ucb import PageHinkleyUCBAgent
+from cmab.environments.ns.scheduling.controlled_schedule import ControlledSchedule
 from cmab.utils.plotting import  plot_regrets
 from cmab.metrics.cumulative_regret import CumulativeRegret
 import numpy as np
@@ -51,11 +52,9 @@ def main():
         seed=SEED
     )
 
-    exogenous_to_shift = ['U_X', 'U_Z', 'U_Z', 'U_X', 'U_Z']
-    new_probs = [0.6, 0.3, 0.8, 0.9, 0.4] 
-
     reward_node = 'Y'
-    env = NSCausalBanditEnv(scm=scm, reward_node=reward_node, seed=SEED, atomic=True, exogenous_to_shift=exogenous_to_shift, new_probs=new_probs)
+    schedule = ControlledSchedule(exogenous=['U_X', 'U_Z', 'U_Z', 'U_X', 'U_Y'], new_params=[0.6, 0.2, 0.8, 0.9, 0.6], every=200)
+    env = NSCausalBanditEnv(scm=scm, reward_node=reward_node, seed=SEED, atomic=True, shift_schedule=schedule)
     print(f"Number of actions: {len(env.action_space)}")
     print(f"Action space: {env.action_space}")
 
@@ -71,7 +70,7 @@ def main():
         'PH-UCB': PageHinkleyUCBAgent(reward_node=reward_node, arms=env.action_space, c=c, delta=delta, lambda_=lambda_, min_samples_for_detection=min_samples_for_detection),
         'SW-UCB': SlidingWindowUCBAgent(reward_node=reward_node, arms=env.action_space, c=c, window_size=100),
         # Node level CPD
-        #'Custom-UCB': MyFirstAtomicAgent(reward_node=reward_node, G=G, arms=env.action_space, c=c, delta=delta, lambda_=lambda_, min_samples_for_detection=min_samples_for_detection)
+        'Custom-UCB': MyFirstAtomicAgent(reward_node=reward_node, G=G, arms=env.action_space, c=c, delta=delta, lambda_=lambda_, min_samples_for_detection=min_samples_for_detection)
     }
 
     T= 1000  # number of steps in each run
@@ -101,7 +100,7 @@ def main():
                 reward = observation[reward_node]
                 optimal_arm, opt_exp_reward = env.get_optimal(binary=True, discrete=True)
                 if optimal_arm != current_optimal:
-                    print(f"  Optimal arm changed from {current_optimal} to {optimal_arm} at step {env._step}")
+                    #print(f"  Optimal arm changed from {current_optimal} to {optimal_arm} at step {env._step}")
                     current_optimal = optimal_arm
                 regret.update(reward, opt_exp_reward)
             

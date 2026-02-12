@@ -1,4 +1,6 @@
-from typing import Any, FrozenSet, Mapping
+from typing import Mapping
+
+from cmab.typing import ShiftEvent
 from .distribution.base import BaseDistribution
 from .mechanism.base import BaseMechanism as Mechanism
 from .domain.base import FiniteDiscreteDomain
@@ -15,7 +17,7 @@ class SCM:
                  domains: Mapping[str, FiniteDiscreteDomain], 
                  P_u_marginals: Mapping[str, BaseDistribution], 
                  F: Mapping[str, Mechanism],
-                seed: int = 42
+                seed: int = 42,
                  ):
         self.U = U   # List of exogenous variables
         self.V = V  # List of endogenous variables
@@ -97,38 +99,11 @@ class SCM:
         return expected
 
 
-
-    def exogenous_distribution_shift(self, max_delta: float, rng, exogenous_to_shift:str=None, new_prob:float=None) -> None:
-        """Perform a distribution shift on one randomly chosen exogenous variable.
-        RNG can be provided to be able to keep same change points accross runs, but still
-        change the sampling randomness accross runs.
-        """
-        if exogenous_to_shift is not None and new_prob is not None:
-            self.controlled_distribution_shift(exogenous_to_shift, new_prob)
-            return
-
-        if rng is None:
-            rng = self.rng
-
-        u_to_shift = rng.choice(self.U)
-        print(f"Distribution shift applied to exogenous variable {u_to_shift}.")
-        prev = self.P_u_marginals[u_to_shift].p
-        self.P_u_marginals[u_to_shift].distribution_shift(rng=rng, max_delta=max_delta)
-        new = self.P_u_marginals[u_to_shift].p
-        print(f" - Previous parameter: {prev}, new parameter: {new}.")
-
-
-    def controlled_distribution_shift(self, exogenous, new_param) -> None:
-        """Perform a distribution shift on one specified exogenous variable.
-        RNG can be provided to be able to keep same change points accross runs, but still
-        change the sampling randomness accross runs.
-        """
-        print(f"\nControlled distribution shift applied to exogenous variable {exogenous}.")
-        print(f"P before controlled shift: {[self.P_u_marginals[exogenous].p]}")
-        self.P_u_marginals[exogenous].p = new_param
-        print(f"New parameter {new_param}.")
-
-
+    def apply_shift(self, event: ShiftEvent):
+        """Apply a shift event to the SCM by updating the relevant exogenous distribution."""
+        dist = self.P_u_marginals[event.exogenous]
+        dist.update_parameters(event.param_updates)
+        
     def get_causal_diagram(self) -> CausalDiagram:
         """Get the causal diagram (with bidirected edges for UCs) and no exogenous nodes."""
         directed_edges = []

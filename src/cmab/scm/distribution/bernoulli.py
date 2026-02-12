@@ -19,11 +19,11 @@ class Bernoulli(BaseDistribution):
             return 1 - self.p
         else:
             return 0.0
-
-    def distribution_shift(self, rng, max_delta: float) -> None:
-        delta = rng.uniform(-max_delta, max_delta)
-        new_p = self.p + delta
-        self.p = min(1.0, max(0.0, new_p))
+        
+    def update_parameters(self, param_updates: dict[str, float]) -> None:
+        """Update the parameters of the distribution based on the provided updates."""
+        if "p" in param_updates:
+            self.p = param_updates["p"]
 
     def reset(self) -> None:
         self.p = self.p0
