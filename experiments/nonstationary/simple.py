@@ -1,4 +1,3 @@
-from cmab.algorithms.ucb.custom import MyFirstAgent
 from cmab.scm.domain.binary import BinaryDomain
 from cmab.scm.distribution.bernoulli import Bernoulli
 from cmab.scm.mechanism.linear import LinearMechanism

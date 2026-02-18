@@ -2,8 +2,7 @@
 from cmab.algorithms.ucb.ucb_base import UCBAgent
 import numpy as np
 from cmab.typing import InterventionSet, Observation
-from cmab.algorithms.cpd.ph_cpd import PageHinkleyCPD, ArmLevelPageHinkleyCPD
-from collections import defaultdict
+from river import drift
 
 class PageHinkleyUCBAgent(UCBAgent):
     def __init__(
@@ -26,13 +25,7 @@ class PageHinkleyUCBAgent(UCBAgent):
         self.min_samples_for_detection = min_samples_for_detection
         self.reset_all = reset_all
 
-        self.cpds = defaultdict(
-            lambda: ArmLevelPageHinkleyCPD(
-                delta=self.delta,
-                lambda_=self.lambda_,
-                min_samples_for_detection=self.min_samples_for_detection
-            )
-        )
+        self.cpds = [drift.PageHinkley(delta=self.delta, threshold=self.lambda_, min_instances=self.min_samples_for_detection) for _ in range(self.n_arms)]
 
     def select_arm(self) -> InterventionSet:
         # Ensure each arm tried once
@@ -54,23 +47,25 @@ class PageHinkleyUCBAgent(UCBAgent):
         arm_index = self.arms.index(arm)
         reward = observation[self.reward_node]
 
-        if self.cpds[arm_index].update(reward):
+        self.cpds[arm_index].update(reward)
+
+        if self.cpds[arm_index].drift_detected:
             print(f"Step {self.t}: Change point detected for arm {arm}!")
             if self.reset_all:
                 # Reset estimates and samples 
                 self.estimates = np.zeros(self.n_arms)
                 self.arm_samples = np.zeros(self.n_arms)
                 # Reset CPDs
-                self.cpds.clear() 
+                self.cpds = [drift.PageHinkley(delta=self.delta, threshold=self.lambda_, min_instances=self.min_samples_for_detection) for _ in range(self.n_arms)]
             
             else:
                 # Reset only the affected arm
                 self.estimates[arm_index] = 0.0
                 self.arm_samples[arm_index] = 0
-                self.cpds[arm_index].reset()
+                self.cpds[arm_index] = drift.PageHinkley(delta=self.delta, threshold=self.lambda_, min_instances=self.min_samples_for_detection)
     
 
     def reset(self) -> None:
         super().reset()
-        self.cpds.clear()
+        self.cpds = [drift.PageHinkley(delta=self.delta, threshold=self.lambda_, min_instances=self.min_samples_for_detection) for _ in range(self.n_arms)]
         
