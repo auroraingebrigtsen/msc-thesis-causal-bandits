@@ -22,19 +22,21 @@ class PageHinkleyCPD(BaseCPD):
 
     def _initialize_ph_state(self) -> dict[tuple[int, ...], dict[str, float]]:
         ph_state = {}
+        ph = {}
         parent_cfgs = list(product([0, 1], repeat=len(self.parents)))  # Currently only binary variables, TODO: extend to use domains
         for cfg in parent_cfgs:
-            ph_state[cfg] = drift.PageHinkley(delta=self.delta, threshold=self.lambda_, min_instances=self.min_samples_for_detection)
+            ph_state[cfg] = {'t': 0, 'mean': 0.0, 'm_pos': 0.0, 'M_pos': 0.0, 'm_neg': 0.0, 'M_neg': 0.0}
+            ph[cfg] = drift.PageHinkley()
         return ph_state
     
-    # def update(self, observation: Observation) -> bool:
-    #      cfg = tuple(int(observation[p]) for p in self.parents)
-    #     print(f"Updating CPD for node {self.node} with parent configuration {cfg} and observation {observation[self.node]}")  # Debug print
-    #      self.ph_state[cfg].update(observation[self.node])
-    #      return self.ph_state[cfg].drift_detected
+    def update(self, observation: Observation) -> bool:
+         cfg = tuple(int(observation[p]) for p in self.parents)
+         self.ph[cfg].update(observation[self.node])
+         return self.ph[cfg].drift_detected
 
     def _update(self, observation: Observation) -> bool:
             cfg = tuple(int(observation[p]) for p in self.parents)
+            print(f"Updating CPD for node {self.node} with parent configuration {cfg} and observation {observation[self.node]}")  # Debug print
 
             x = observation[self.node]
 
