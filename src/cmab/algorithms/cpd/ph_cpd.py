@@ -1,6 +1,7 @@
 from itertools import product
 from cmab.typing import InterventionSet, Observation
 from .base import BaseCPD
+from river import drift
 
 
 class PageHinkleyCPD(BaseCPD):
@@ -16,7 +17,6 @@ class PageHinkleyCPD(BaseCPD):
         self.node = node
         self.parents = parents
 
-        # parent config-> Dict of PH state: {'t': int, 'mean': float, 'm_t': float, 'M_t': float}
         self.ph_state = self._initialize_ph_state()
 
 
@@ -24,11 +24,16 @@ class PageHinkleyCPD(BaseCPD):
         ph_state = {}
         parent_cfgs = list(product([0, 1], repeat=len(self.parents)))  # Currently only binary variables, TODO: extend to use domains
         for cfg in parent_cfgs:
-            ph_state[cfg] = {'t': 0, 'mean': 0.0, 'm_t': 0.0, 'M_t': 0.0}
+            ph_state[cfg] = drift.PageHinkley(delta=self.delta, threshold=self.lambda_, min_instances=self.min_samples_for_detection)
         return ph_state
+    
+    # def update(self, observation: Observation) -> bool:
+    #      cfg = tuple(int(observation[p]) for p in self.parents)
+    #     print(f"Updating CPD for node {self.node} with parent configuration {cfg} and observation {observation[self.node]}")  # Debug print
+    #      self.ph_state[cfg].update(observation[self.node])
+    #      return self.ph_state[cfg].drift_detected
 
-
-    def update(self, observation: Observation) -> bool:
+    def _update(self, observation: Observation) -> bool:
             cfg = tuple(int(observation[p]) for p in self.parents)
 
             x = observation[self.node]
@@ -39,19 +44,23 @@ class PageHinkleyCPD(BaseCPD):
             state['t'] += 1
             prev_mean = state['mean']
             mean = prev_mean + (x - prev_mean) / state['t'] # running mean
-
             state['mean'] = mean
-            state['m_t'] += (x - mean - self.delta) # cumulative deviation
-            state['M_t'] = min(state['M_t'], state['m_t'])  # minimum deviation
+
+            state['m_pos'] += x - mean + self.delta # cumulative positive deviation
+            state['M_pos'] = min(state['M_pos'], state['m_pos'])  # minimum positive deviation
+            state['m_neg'] += mean - x + self.delta # cumulative negative deviation
+            state['M_neg'] = max(state['M_neg'], state['m_neg'])  # minimum negative deviation
 
             # compute PH statistic
-            ph_t = state['m_t'] - state['M_t']
+            ph_pos = state['m_pos'] - state['M_pos']
+            ph_neg = state['m_neg'] - state['M_neg']
 
-            if state['t'] >= self.min_samples_for_detection and ph_t > self.lambda_:
+            print(f"PH state for node {self.node}, cfg {cfg}: t={state['t']}, mean={state['mean']}, m_pos={state['m_pos']}, M_pos={state['M_pos']}, m_neg={state['m_neg']}, M_neg={state['M_neg']}, ph_pos={ph_pos}, ph_neg={ph_neg}")  # Debug print
+
+            if state['t'] >= self.min_samples_for_detection and (ph_pos > self.lambda_ or ph_neg > self.lambda_):
                 return True
         
             return False
-    
 
     def reset(self) -> None:
         """Resets the PH state."""
@@ -78,16 +87,15 @@ class ArmLevelPageHinkleyCPD(BaseCPD):
             mean = prev_mean + (reward - prev_mean) / self.ph_state['t'] # running mean
             self.ph_state['mean'] = mean
 
-            deviation = reward - mean 
-
-            self.ph_state['m_pos'] += deviation - self.delta # cumulative positive deviation
+            self.ph_state['m_pos'] += (reward - mean ) - self.delta # cumulative positive deviation
             self.ph_state['M_pos'] = min(self.ph_state['M_pos'], self.ph_state['m_pos'])  # minimum positive deviation
-            self.ph_state['m_neg'] += -(deviation) + self.delta # cumulative negative deviation
+            self.ph_state['m_neg'] += (mean - reward) - self.delta # cumulative negative deviation
             self.ph_state['M_neg'] = min(self.ph_state['M_neg'], self.ph_state['m_neg'])  # minimum negative deviation
 
             # compute PH statistic
             ph_pos = self.ph_state['m_pos'] - self.ph_state['M_pos']
             ph_neg = self.ph_state['m_neg'] - self.ph_state['M_neg']
+
             if self.ph_state['t'] >= self.min_samples_for_detection and (ph_pos > self.lambda_ or ph_neg > self.lambda_):
                 return True
         

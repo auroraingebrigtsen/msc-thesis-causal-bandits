@@ -157,10 +157,11 @@ class CausalDiagram:
             if v is not None:
                  G.add_edge(u, v)
 
-        for x, y, u in self.bidirected_edges:
+        for x, y, u in self.bidirected_edges: 
             G.add_node(u)
             G.add_edge(u, x)
             G.add_edge(u, y)
+        
         return nx.is_d_separator(G, X, Y, Z)
 
     def __getitem__(self, nodes: set[str]) -> "CausalDiagram":

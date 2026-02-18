@@ -4,6 +4,7 @@ from typing import override
 from cmab.algorithms.cpd.ph_cpd import PageHinkleyCPD
 from cmab.scm .causal_diagram import CausalDiagram
 from cmab.typing import InterventionSet, Observation
+from collections import defaultdict
 
 
 class MyFirstAgent(PomisUCBAgent):
@@ -26,7 +27,7 @@ class MyFirstAgent(PomisUCBAgent):
             change_point = cpd.update(observation)
 
             if change_point:
-                print(f"Change point detected at node {node}!")
+                print(f"Step {self.t}: Change point detected for node {node}!")
                 detected.add(node)
         
         if detected:
@@ -87,42 +88,56 @@ class MyFirstAtomicAgent(UCBAgent):
     @override
     def _update(self, arm: InterventionSet, observation: Observation) -> None:
         super()._update(arm, observation)
+        print(f"\n\nStep {self.t}: Selected arm {arm}")
+        print(f"Observation: {observation}")
+
+
         detected = set()
         for node in self.nodes:
             if any(var == node for var, _ in arm): # Dont update cpd for intervened nodes
                 continue
-            cpd = self.cpds[node]
-            change_point = cpd.update(observation)
-
-            if change_point:
-                print(f"Change point detected at node {node}!")
+            
+            if self.cpds[node].update(observation):
+                print(f"Step {self.t}: Change point detected for node {node}!")
                 detected.add(node)
+                self.cpds[node].reset()  # Reset CPD state for this node
+            
         
         if detected:
             self._update_on_change_point(detected)
 
     def _update_on_change_point(self, detected: set[str]) -> None:
 
-        # We know which variable was alarmed, it must be the exogenous variabe
-        # of this one that shifted. 
+        # We know which variable was alarmed, it must be the exogenous variabe of this one that shifted. 
         shifted = set()
+        print(f"Detected change points for nodes: {detected}" f" at step {self.t}")
+        # Find exogenous variables of detected nodes
         for node in detected:
             exogenous = {u for (u, v) in self.G.noise_vars if v == node}
             shifted.update(exogenous)
         # TODO: In this first situation we assume markovianity. Extend, but need to think more how this will work
-
+        print(f"Shifted exogenous variables: {shifted}" )
+        # Find affected variables: those that are not d-separated from the shifted exogenous variables after intervening on themselves.
         affected_vars = set()
         for node in self.nodes:
             sub = self.G.do(intervention_set={node})
             for shifted_u in shifted:
-                if not sub.d_separated({node}, {shifted_u}, set()):
+                print(f"D-separation test for node {self.reward_node} and shifted exogenous {shifted_u}: {sub.d_separated({self.reward_node}, {shifted_u}, set())}")
+                if not sub.d_separated({self.reward_node}, {shifted_u}, set()): # If not d-separated, node is affected
                     affected_vars.add(node)
         
+        print(f"Affected variables: {affected_vars}\n\n")
+        
         for node in affected_vars:
-            arm_index = self.arms.index({(node, None)})  # atomic interventions
-            self.estimates[arm_index] = 0.0
-            self.arm_samples[arm_index] = 0
-            self.cpds[node].reset()
+            # find all arms that involve this node
+            for arm in self.arms:
+                if any(var == node for var, _ in arm):
+                    # reset UCB estimates
+                    arm_index = self.arms.index(arm)
+                    print(f"Resetting arm {arm} (with index {arm_index}) due to change point in node {node}")
+                    self.estimates[arm_index] = 0.0
+                    self.arm_samples[arm_index] = 0
+            
 
     @override
     def reset(self):

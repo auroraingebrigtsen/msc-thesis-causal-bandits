@@ -14,17 +14,17 @@ class PageHinkleyUCBAgent(UCBAgent):
         delta: float,  # a small positive value (tolerance) to prevent overreacting to small fluctuations
         lambda_: float,  # the threshold for change detection
         min_samples_for_detection,
+        reset_all: bool = True  # whether to reset all arms or just the one that triggered the change point
     ):
         super().__init__(reward_node, arms, c)
         self.n_arms = len(arms)
         self.estimates = np.zeros(self.n_arms, dtype=float)
         self.arm_samples = np.zeros(self.n_arms, dtype=int)
-        self.t = 0
-        self.total_steps = 0
 
         self.delta = delta
         self.lambda_ = lambda_
         self.min_samples_for_detection = min_samples_for_detection
+        self.reset_all = reset_all
 
         self.cpds = defaultdict(
             lambda: ArmLevelPageHinkleyCPD(
@@ -49,27 +49,28 @@ class PageHinkleyUCBAgent(UCBAgent):
         return self.arms[int(np.argmax(ucb_values))]
 
     def _update(self, arm: InterventionSet, observation: Observation) -> None:
-        reward = float(observation[self.reward_node])
-        self.t += 1
-        self.total_steps += 1
+        super()._update(arm, observation)
 
         arm_index = self.arms.index(arm)
-        self.arm_samples[arm_index] += 1
-        n = self.arm_samples[arm_index]
-
-        self.estimates[arm_index] += (reward - self.estimates[arm_index]) / n
+        reward = observation[self.reward_node]
 
         if self.cpds[arm_index].update(reward):
-            print(f"Step {self.total_steps}: Change point detected for arm {arm}!")
-            self.reset_arms()
-        
-    def reset_arms(self) -> None:
-        """Resets the estimates and samples for all arms."""
-        self.t = 0
-        self.estimates[:] = 0.0
-        self.arm_samples[:] = 0
-        self.cpds.clear()
+            print(f"Step {self.t}: Change point detected for arm {arm}!")
+            if self.reset_all:
+                # Reset estimates and samples 
+                self.estimates = np.zeros(self.n_arms)
+                self.arm_samples = np.zeros(self.n_arms)
+                # Reset CPDs
+                self.cpds.clear() 
+            
+            else:
+                # Reset only the affected arm
+                self.estimates[arm_index] = 0.0
+                self.arm_samples[arm_index] = 0
+                self.cpds[arm_index].reset()
+    
 
     def reset(self) -> None:
-        self.reset_arms()
-        self.total_steps = 0
+        super().reset()
+        self.cpds.clear()
+        

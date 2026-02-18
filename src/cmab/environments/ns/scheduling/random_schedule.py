@@ -19,6 +19,13 @@ class RandomSchedule(ShiftSchedule):
         delta = rng.uniform(-self.max_delta, self.max_delta)
         new_p = min(1.0, max(0.0, dist.p + delta))
         return ShiftEvent(exogenous=u, param_updates={"p": new_p})
+    
+    def get_change_points(self, T:int, rng: np.random.Generator) -> list[int]:
+        change_points = []
+        for t in range(T):
+            if rng.uniform(0, 1) < self.prob_shift:
+                change_points.append(t)
+        return change_points
 
     def reset(self) -> None:
         pass

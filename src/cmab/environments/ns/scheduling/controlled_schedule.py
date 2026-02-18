@@ -23,5 +23,8 @@ class ControlledSchedule(ShiftSchedule):
         self._idx += 1
         return event
     
+    def get_change_points(self, T:int, rng: np.random.Generator = None) -> list[int]:
+        return [t for t in range(1, T) if t % self.every == 0]
+    
     def reset(self) -> None:
         self._idx = 0

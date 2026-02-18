@@ -11,8 +11,8 @@ from cmab.algorithms.ucb.pomis_ucb import PomisUCBAgent
 from cmab.algorithms.ucb.custom import MyFirstAtomicAgent
 from cmab.algorithms.ucb.ph_ucb import PageHinkleyUCBAgent
 from cmab.environments.ns.scheduling.controlled_schedule import ControlledSchedule
-from cmab.utils.plotting import  plot_regrets
-from cmab.metrics.cumulative_regret import CumulativeRegret
+from cmab.utils.plotting import  plot_regrets, plot_regrets_and_change_points
+from cmab.metrics.dynamic_regret import DynamicRegret
 import numpy as np
 
 def main():
@@ -53,7 +53,7 @@ def main():
     )
 
     reward_node = 'Y'
-    schedule = ControlledSchedule(exogenous=['U_X', 'U_Z', 'U_Z', 'U_X', 'U_Y'], new_params=[0.6, 0.2, 0.8, 0.9, 0.6], every=200)
+    schedule = ControlledSchedule(exogenous=['U_X', 'U_Z', 'U_Z', 'U_Y'], new_params=[0.6, 0.2, 0.8, 0.6], every=200)
     env = NSCausalBanditEnv(scm=scm, reward_node=reward_node, seed=SEED, atomic=True, shift_schedule=schedule)
     print(f"Number of actions: {len(env.action_space)}")
     print(f"Action space: {env.action_space}")
@@ -62,22 +62,23 @@ def main():
 
     c = 2.0  # UCB exploration parameter
     delta = 0.01  # CPD tolerance parameter. 
-    lambda_ = 2.0  # CPD threshold parameter
-    min_samples_for_detection = 20  # Minimum samples before CPD starts detecting change points
+    lambda_ = 8.0  # CPD threshold parameter
+    min_samples_for_detection = 30  # Minimum samples before CPD starts detecting change points
 
     agents = {
         # Arm level CPD
-        'PH-UCB': PageHinkleyUCBAgent(reward_node=reward_node, arms=env.action_space, c=c, delta=delta, lambda_=lambda_, min_samples_for_detection=min_samples_for_detection),
-        'SW-UCB': SlidingWindowUCBAgent(reward_node=reward_node, arms=env.action_space, c=c, window_size=100),
+        #'PH-UCB': PageHinkleyUCBAgent(reward_node=reward_node, arms=env.action_space, c=c, delta=delta, lambda_=lambda_, min_samples_for_detection=min_samples_for_detection, reset_all=True),
+        #'PH-UCB-arm': PageHinkleyUCBAgent(reward_node=reward_node, arms=env.action_space, c=c, delta=delta, lambda_=lambda_, min_samples_for_detection=min_samples_for_detection, reset_all=False),
+        #'SW-UCB': SlidingWindowUCBAgent(reward_node=reward_node, arms=env.action_space, c=c, window_size=100),
         # Node level CPD
         'Custom-UCB': MyFirstAtomicAgent(reward_node=reward_node, G=G, arms=env.action_space, c=c, delta=delta, lambda_=lambda_, min_samples_for_detection=min_samples_for_detection)
     }
 
     T= 1000  # number of steps in each run
-    n = 1000  # number of runs to average over
+    n = 100  # number of runs to average over
 
 
-    regret = CumulativeRegret(T=T)
+    regret = DynamicRegret(T=T)
 
     averaged_regrets = {name: np.zeros(T) for name in agents.keys()}
     for name, agent in agents.items():
@@ -106,8 +107,9 @@ def main():
             
             averaged_regrets[name] += regret.get_regrets() / n
 
-    plot_regrets(regrets=averaged_regrets.values(), labels=averaged_regrets.keys(), title="Averaged Cumulative Regret")
-
+    #plot_regrets(regrets=averaged_regrets.values(), labels=averaged_regrets.keys(), title="Averaged Cumulative Regret")
+    cps = schedule.get_change_points(T=T, rng=np.random.default_rng(SEED))
+    plot_regrets_and_change_points(regrets=averaged_regrets.values(), labels=averaged_regrets.keys(), title="Averaged Cumulative Regret with Change Points", change_points=cps, T=T)
 
 if __name__ == "__main__":
     main()
