@@ -1,8 +1,7 @@
-from sympy import product
 from cmab.algorithms.ucb.pomis_ucb import PomisUCBAgent
 from cmab.algorithms.ucb.ucb_base import UCBAgent
 from typing import override
-from cmab.scm .causal_diagram import CausalDiagram
+from cmab.scm.causal_diagram import CausalDiagram
 from cmab.typing import InterventionSet, Observation
 from collections import defaultdict
 from river import drift
@@ -67,25 +66,22 @@ class MyFirstAtomicAgent(UCBAgent):
         # TODO: In this first situation we assume markovianity. Extend, but need to think more how this will work
         print(f"Shifted exogenous variables: {shifted}" )
         # Find affected variables: those that are not d-separated from the shifted exogenous variables after intervening on themselves.
-        affected_vars = set()
-        for node in self.nodes:
-            sub = self.G.do(intervention_set={node})
-            for shifted_u in shifted:
-                print(f"D-separation test for node {self.reward_node} and shifted exogenous {shifted_u}: {sub.d_separated({self.reward_node}, {shifted_u}, set())}")
-                if not sub.d_separated({self.reward_node}, {shifted_u}, set()): # If not d-separated, node is affected
-                    affected_vars.add(node)
-        
-        print(f"Affected variables: {affected_vars}\n\n")
-        
-        for node in affected_vars:
-            # find all arms that involve this node
-            for arm in self.arms:
-                if any(var == node for var, _ in arm):
-                    # reset UCB estimates
-                    arm_index = self.arms.index(arm)
-                    print(f"Resetting arm {arm} (with index {arm_index}) due to change point in node {node}")
-                    self.estimates[arm_index] = 0.0
-                    self.arm_samples[arm_index] = 0
+        for arm_index, arm in enumerate(self.arms):
+            intervention_set = {var for var, _ in arm}
+            sub = self.G.do(intervention_set=intervention_set)
+
+            # If reward is not d-separated from any shifted exogenous var, reset this arm
+            reset_arm = any(
+                not sub.d_separated({self.reward_node}, {u}, set())
+                for u in shifted
+            )
+
+            if reset_arm:
+                print(f"Resetting arm {arm} (index {arm_index}) due to detected shift")
+                self.estimates[arm_index] = 0.0
+                self.arm_samples[arm_index] = 0
+
+            
             
 
     @override

@@ -25,6 +25,12 @@ wheels = [
 ]
 
 [[package]]
+name = "bayesian-changepoint-detection"
+version = "0.2.dev1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/c4/34/3d1d9aba8335b4bb7c1d6f2245e868cf4a6893bdfc802cb2f2cf35e6cf09/bayesian_changepoint_detection-0.2.dev1.tar.gz", hash = "sha256:97ca291d47f0cdd03e7f76739d8edc538cd7305a78df93e12a002ef51100f644", size = 4160, upload-time = "2019-08-12T07:48:10.566Z" }
+
+[[package]]
 name = "causal-learn"
 version = "0.1.4.4"
 source = { registry = "https://pypi.org/simple" }
@@ -769,6 +775,7 @@ name = "msc-thesis-causal-bandits"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "bayesian-changepoint-detection" },
     { name = "daft-pgm" },
     { name = "dowhy" },
     { name = "ipykernel" },
@@ -776,10 +783,13 @@ dependencies = [
     { name = "pgmpy" },
     { name = "pytest" },
     { name = "river" },
+    { name = "scipy", version = "1.15.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.13'" },
+    { name = "scipy", version = "1.16.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.13'" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "bayesian-changepoint-detection", specifier = ">=0.2.dev1" },
     { name = "daft-pgm", specifier = ">=0.1.4" },
     { name = "dowhy", specifier = ">=0.14" },
     { name = "ipykernel", specifier = ">=7.0.1" },
@@ -787,6 +797,7 @@ requires-dist = [
     { name = "pgmpy", specifier = ">=1.0.0" },
     { name = "pytest", specifier = ">=9.0.2" },
     { name = "river", specifier = ">=0.23.0" },
+    { name = "scipy", specifier = ">=1.15.3" },
 ]
 
 [[package]]

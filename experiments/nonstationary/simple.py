@@ -52,7 +52,7 @@ def main():
     )
 
     reward_node = 'Y'
-    schedule = ControlledSchedule(exogenous=['U_X', 'U_Z', 'U_Z', 'U_Y'], new_params=[0.6, 0.2, 0.8, 0.6], every=200)
+    schedule = ControlledSchedule(exogenous=['U_X', 'U_Z', 'U_Z', 'U_Y'], new_params=[0.6, 0.45, 0.8, 0.5], every=200)
     env = NSCausalBanditEnv(scm=scm, reward_node=reward_node, seed=SEED, atomic=True, shift_schedule=schedule)
     print(f"Number of actions: {len(env.action_space)}")
     print(f"Action space: {env.action_space}")
@@ -60,14 +60,14 @@ def main():
     G = env.scm.get_causal_diagram()
 
     c = 2.0  # UCB exploration parameter
-    delta = 0.01  # CPD tolerance parameter. 
-    lambda_ = 8.0  # CPD threshold parameter
+    delta = 0.005  # CPD tolerance parameter. 
+    lambda_ = 20.0  # CPD threshold parameter
     min_samples_for_detection = 30  # Minimum samples before CPD starts detecting change points
 
     agents = {
         # Arm level CPD
         'PH-UCB': PageHinkleyUCBAgent(reward_node=reward_node, arms=env.action_space, c=c, delta=delta, lambda_=lambda_, min_samples_for_detection=min_samples_for_detection, reset_all=True),
-        #'PH-UCB-arm': PageHinkleyUCBAgent(reward_node=reward_node, arms=env.action_space, c=c, delta=delta, lambda_=lambda_, min_samples_for_detection=min_samples_for_detection, reset_all=False),
+        'PH-UCB-arm': PageHinkleyUCBAgent(reward_node=reward_node, arms=env.action_space, c=c, delta=delta, lambda_=lambda_, min_samples_for_detection=min_samples_for_detection, reset_all=False),
         #'SW-UCB': SlidingWindowUCBAgent(reward_node=reward_node, arms=env.action_space, c=c, window_size=100),
         # Node level CPD
         'Custom-UCB': MyFirstAtomicAgent(reward_node=reward_node, G=G, arms=env.action_space, c=c, delta=delta, lambda_=lambda_, min_samples_for_detection=min_samples_for_detection)
@@ -80,6 +80,7 @@ def main():
     regret = DynamicRegret(T=T)
 
     averaged_regrets = {name: np.zeros(T) for name in agents.keys()}
+    change_points = {name: [] for name in agents.keys()}
     for name, agent in agents.items():
         print(f"Running agent: {name}")
         for i in range(n):
