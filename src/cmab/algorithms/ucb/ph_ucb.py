@@ -54,7 +54,7 @@ class PageHinkleyUCBAgent(UCBAgent):
     def _update(self, arm: InterventionSet, observation: Observation) -> None:
         super()._update(arm, observation)
 
-        arm_index = self.arms.index(arm)
+        arm_index = self.arm_to_index[arm]
         reward = observation[self.reward_node]
 
         self.cpds[arm_index].update(reward)

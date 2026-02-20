@@ -56,18 +56,17 @@ class SCM:
     def expected_value_binary(self, variable:str, intervention_set: InterventionSet = set()) -> float:
         """Compute the expected values of a binary variable Y given an intervention set, that is, E[Y | do(X=x)], when all exogenous variables are binary."""
 
-        # Small helper: probability mass for one exogenous assignment
         def p_u(u_values: dict[str, float]) -> float:
+            """Compute the probability of a given assignment to the exogenous variables Ex: {'U_X_1': 0, 'U_X_2': 1, 'U_Z_1': 0, 'U_Z_2': 1, 'U_Y': 0}"""
             p = 1.0
             for u in self.U:
                 val = u_values[u]
-                # BaseDistribution must provide prob(x) for PMFs
                 p *= float(self.P_u_marginals[u].prob(val))
             return p
 
         expected = 0.0
 
-        # Enumerate all 2^{|U|} assignments
+        # Iterate over all possible assignments to exogenous variables
         for u_bits in product((0, 1), repeat=len(self.U)):
             u_values = dict(zip(self.U, u_bits))
             prob = p_u(u_values)
@@ -81,23 +80,6 @@ class SCM:
             expected += prob * float(y)
 
         return float(expected)
-
-    def expected_value_of_discrete_u(self, variable:str, intervention_set: InterventionSet = set()) -> float:
-        """Compute the expected values of a variable Y given an intervention set, that is, E[Y | do(X=x)]"""
-        
-        expected = 0
-        us = list(self.U)
-
-        u_domains = [self.P_u_marginals[u].support() for u in us]
-        for u_values in product(*u_domains):  # all combinations of u values
-            u_assignment = {u: val for u, val in zip(us, u_values)}  # create assignment dict
-            prob_u = 1.0  # probability of this u assignment
-            for u, val in u_assignment.items():  # compute probability of this specific assignment
-                prob_u *= self.P_u_marginals[u].prob(val)
-            sample = self.sample(intervention_set=intervention_set, u_values=u_assignment)  # sample given intervention and u assignment
-            expected += sample[variable] * prob_u  # add to expected value the value weighted by its probability
-        return expected
-
 
     def apply_shift(self, event: ShiftEvent):
         """Apply a shift event to the SCM by updating the relevant exogenous distribution."""

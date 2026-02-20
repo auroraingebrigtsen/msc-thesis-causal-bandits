@@ -56,14 +56,12 @@ class BaseCausalBanditEnv(ABC):
     def _get_info(self):
         return {"steps": self._step}
 
-    def get_optimal(self, binary: bool = True, discrete: bool = True):
+    def get_optimal(self, binary: bool = True):
         """Returns the optimal arm, and the expected reward of that arm"""
         expected_rewards = np.zeros(len(self.action_space))
         for idx, action in enumerate(self.action_space):
             if binary:
                 expected_rewards[idx] = self.scm.expected_value_binary(variable=self.reward_node, intervention_set=action)
-            elif discrete:
-                expected_rewards[idx] = self.scm.expected_value_of_discrete_u(variable=self.reward_node, intervention_set=action)
             else:
                 raise NotImplementedError("Only binary and discrete expected value computations are implemented.")
 

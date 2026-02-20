@@ -31,7 +31,7 @@ class SlidingWindowUCBAgent(BaseBanditAlgorithm):
     def _update(self, arm: InterventionSet, observation: Observation) -> None:
         reward = observation[self.reward_node]
         self.t += 1
-        arm_index = self.arms.index(arm)
+        arm_index = self.arm_to_index[arm]
         buf = self.buffers[arm_index]
         buf.append(reward)
         self.estimates[arm_index] = sum(buf) / len(buf)

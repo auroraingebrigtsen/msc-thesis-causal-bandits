@@ -1,11 +1,10 @@
 from cmab.scm.domain.binary import BinaryDomain
 from cmab.scm.distribution.bernoulli import Bernoulli
-from cmab.scm.mechanism.linear import LinearMechanism
 from cmab.scm.mechanism.custom import CustomMechanism
 from cmab.scm.mechanism.xor import XORMechanism
 from cmab.scm.scm import SCM
-from cmab.environments import CausalBanditEnv, NSCausalBanditEnv
-from cmab.algorithms.ucb import UCBAgent, SlidingWindowUCBAgent
+from cmab.environments import CausalBanditEnv
+from cmab.algorithms.ucb import UCBAgent
 from cmab.algorithms.ucb.pomis_ucb import PomisUCBAgent
 from cmab.utils.plotting import  plot_regrets
 from cmab.metrics.cumulative_regret import CumulativeRegret
@@ -57,7 +56,7 @@ def main():
     reward_node = 'Y'
     env = CausalBanditEnv(scm=scm, reward_node=reward_node, seed=SEED)
     print(f"Number of actions: {len(env.action_space)}")
-    optimal_action, optimal_value = env.get_optimal(binary=True, discrete=True)  # Should be X_1=1, X_2=1
+    optimal_action, optimal_value = env.get_optimal(binary=True)  # Should be Z=0
     print(f"optimal action is {optimal_action} with value {optimal_value}")
 
     G = env.scm.get_causal_diagram()
@@ -68,7 +67,7 @@ def main():
     }
 
     T= 1000  # number of steps in each run
-    n = 1  # number of runs to average over
+    n = 100  # number of runs to average over
 
     regret = CumulativeRegret(optimal_expected_reward=optimal_value, T=T)
 

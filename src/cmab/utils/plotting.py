@@ -14,7 +14,7 @@ def plot_regrets(regrets, labels, title):
 
 
 
-def plot_regrets_and_change_points(regrets, labels, title, change_points: list, T:int):
+def plot_regrets_and_change_points(regrets, labels, title, change_points: list, T:int, save_path="regret_curve_with_cps.png"):
     """Plots the averaged cumulative regrets along with vertical lines indicating change points.
     Args:
         regrets (list of np.ndarray): List of averaged cumulative regret arrays for each agent.
@@ -32,7 +32,7 @@ def plot_regrets_and_change_points(regrets, labels, title, change_points: list, 
     plt.ylabel("Averaged Cumulative Regret")
     plt.title(title)
     plt.legend()
-    plt.savefig("regret_curve.png", dpi=300, bbox_inches="tight")
+    plt.savefig(save_path, dpi=300, bbox_inches="tight")
     plt.close()
 
 

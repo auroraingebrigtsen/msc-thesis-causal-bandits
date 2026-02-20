@@ -14,9 +14,4 @@ class PomisUCBAgent(UCBAgent):
     def _get_arms_from_pomis_sets(self, all_arms, reward_node) -> list[InterventionSet]:
         """Select arms that correspond to POMISs."""
         pomis_sets = set(POMISs(self.G, reward_node))
-
-        return [frozenset()] + [
-            arm
-            for arm in all_arms
-            if frozenset(var for var, _ in arm) in pomis_sets
-        ]
+        return [arm for arm in all_arms if frozenset(var for var, _ in arm) in pomis_sets]

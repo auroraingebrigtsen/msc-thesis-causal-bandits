@@ -15,6 +15,7 @@ class UCBAgent(BaseBanditAlgorithm):
         self.estimates = np.zeros(self.n_arms)
         self.arm_samples = np.zeros(self.n_arms, dtype=int)
         self.t = 0
+        self.arm_to_index = {arm: idx for idx, arm in enumerate(arms)}
 
     def select_arm(self) -> InterventionSet:
         self.t += 1
@@ -32,7 +33,7 @@ class UCBAgent(BaseBanditAlgorithm):
     
     def _update(self, arm: InterventionSet, observation: Observation) -> None:
         reward = observation[self.reward_node]
-        arm_index = self.arms.index(arm)
+        arm_index = self.arm_to_index[arm]
         self.arm_samples[arm_index] += 1
         num_samples = self.arm_samples[arm_index]
         prev_reward = self.estimates[arm_index]
@@ -41,4 +42,4 @@ class UCBAgent(BaseBanditAlgorithm):
     def reset(self):
         self.t = 0
         self.estimates = np.zeros(self.n_arms)
-        self.arm_samples = np.zeros(self.n_arms)
+        self.arm_samples = np.zeros(self.n_arms, dtype=int)
