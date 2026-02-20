@@ -10,7 +10,7 @@ from cmab.algorithms.ucb.pomis_ucb import PomisUCBAgent
 from cmab.algorithms.ucb.custom import MyFirstAtomicAgent
 from cmab.algorithms.ucb.ph_ucb import PageHinkleyUCBAgent
 from cmab.environments.ns.scheduling.controlled_schedule import ControlledSchedule
-from cmab.utils.plotting import  plot_regrets, plot_regrets_and_change_points, plot_detection_rate_heatmap
+from cmab.utils.plotting import  plot_regrets, plot_regrets_and_change_points, plot_reset_rate_heatmap
 from cmab.metrics.dynamic_regret import DynamicRegret
 import numpy as np
 
@@ -26,10 +26,9 @@ def main():
         'Y': BinaryDomain()
     }
 
-    # Initial exogenous parameters (Segment 1)
-    P_X = Bernoulli(p=0.9)   # p_X(0) = 0.9
-    P_Z = Bernoulli(p=0.9)   # p_Z(0) = 0.9
-    P_Y = Bernoulli(p=0.0)   # remove noise; keep clean XOR signal
+    P_X = Bernoulli(p=0.1)  
+    P_Z = Bernoulli(p=0.7)  
+    P_Y = Bernoulli(p=0.9)
 
     mechanism_X = CustomMechanism(
         v_parents=[],
@@ -44,7 +43,6 @@ def main():
     mechanism_Y = CustomMechanism(
         v_parents=['X', 'Z'],
         u_parents=['U_Y'],
-        # XOR. If you later want noise, set P_Y > 0.
         f=lambda v, u: int((v['X'] ^ v['Z']) ^ u['U_Y'])
     )
 
@@ -67,13 +65,9 @@ def main():
 
     reward_node = 'Y'
 
-    # Change-points:
-    # t=500:  U_X -> 0.1  (only Z-arms change; X-arms invariant)
-    # t=1000: U_Z -> 0.1  (only X-arms change; Z-arms invariant)
-    # t=1500: U_X -> 0.9  (only Z-arms change again)
     schedule = ControlledSchedule(
-        exogenous=['U_X', 'U_Z', 'U_X'],
-        new_params=[0.1, 0.1, 0.9],
+        exogenous=['U_X', 'U_X', 'U_X'],
+        new_params=[0.9, 0.1, 0.9],
         every=500
     )
 
@@ -103,7 +97,7 @@ def main():
     agents = {
         # Arm level CPD
         #'UCB': UCBAgent(reward_node=reward_node, arms=env.action_space, c=c),
-        'PH-UCB': PageHinkleyUCBAgent(reward_node=reward_node, arms=env.action_space, c=c, delta=delta, lambda_=lambda_, min_samples_for_detection=min_samples_for_detection, reset_all=True),
+        #'PH-UCB': PageHinkleyUCBAgent(reward_node=reward_node, arms=env.action_space, c=c, delta=delta, lambda_=lambda_, min_samples_for_detection=min_samples_for_detection, reset_all=True),
         'PH-UCB-arm': PageHinkleyUCBAgent(reward_node=reward_node, arms=env.action_space, c=c, delta=delta, lambda_=lambda_, min_samples_for_detection=min_samples_for_detection, reset_all=False),
         #'SW-UCB': SlidingWindowUCBAgent(reward_node=reward_node, arms=env.action_space, c=c, window_size=100),
         # Node level CPD
@@ -116,8 +110,8 @@ def main():
     regret = DynamicRegret(T=T)
 
     averaged_regrets = {name: np.zeros(T) for name in agents.keys()}
-    change_points = {
-        name: {node: np.zeros(T, dtype=int) for node in G.nodes}
+    resat_arms = {
+        name: {arm: np.zeros(T, dtype=int) for arm in env.action_space} 
         for name in agents.keys()
     }
     for name, agent in agents.items():
@@ -144,21 +138,22 @@ def main():
 
                 regret.update(expected_reward, opt_exp_reward)
             
-            if hasattr(agent, 'change_points'):
-                for node, cps in agent.change_points.items():
-                    # cps is a list of length of T with values 0/1
-                    change_points[name][node] += np.array(cps) 
-            
-            averaged_regrets[name] += regret.get_regrets() / n
+            if hasattr(agent, 'resat_arms'):
+                for arm, cps in agent.resat_arms.items():
+                    # cps is a list of time steps where this arm was reset. We want to convert this into a binary array of length T where 1 indicates a change point at that time step.
+                    for cp in cps:
+                        resat_arms[name][arm][cp-1] += 1  # cp-1 because time steps are 1-indexed in the agent but we want 0-indexed for the array
 
     #plot_regrets(regrets=averaged_regrets.values(), labels=averaged_regrets.keys(), title="Averaged Cumulative Regret")
     cps = schedule.get_change_points(T=T, rng=np.random.default_rng(SEED))
     plot_regrets_and_change_points(regrets=averaged_regrets.values(), labels=averaged_regrets.keys(), title="Averaged Cumulative Regret with Change Points", change_points=cps, T=T)
-    # plot_detection_rate_heatmap(
-    #     change_points=change_points,
-    #     true_change_points=[200, 400, 600, 800, 900],
-    #     title="Change detection rate by node",
-    # )
+    
+    for name, cps in resat_arms.items():
+        plot_reset_rate_heatmap(
+            reset_counts=cps,
+            title=f"Reset rate by arm for agent {name}",
+            save_path=f"reset_rate_{name}.png"
+        )
 
 if __name__ == "__main__":
     main()

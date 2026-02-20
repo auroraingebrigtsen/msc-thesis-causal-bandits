@@ -27,17 +27,9 @@ class PageHinkleyUCBAgent(UCBAgent):
         self.reset_all = reset_all
         self.steps_since_reset = 0
 
-        self.nodes = self._get_nodes_from_arms()
         self.cpds = [drift.PageHinkley(delta=self.delta, threshold=self.lambda_, min_instances=self.min_samples_for_detection) for _ in range(self.n_arms)]
-        self.change_points = {node: [] for node in self.nodes}  # Keep track of detected change points for analysis
-        self.test = ['X', 'Z', 'X']
-
-    def _get_nodes_from_arms(self):
-        nodes = set()
-        for arm in self.arms:
-            for var, val in arm:
-                nodes.add(var)
-        return nodes
+        self.resat_arms = {arm : [] for arm in self.arms}  # Keep track of detected change points for analysis
+        #self.test = ['X', 'X', 'X']
 
     @override
     def select_arm(self) -> InterventionSet:
@@ -68,27 +60,27 @@ class PageHinkleyUCBAgent(UCBAgent):
         self.cpds[arm_index].update(reward)
 
         drift_detected = self.cpds[arm_index].drift_detected
-        arm_nodes = [var for var, val in arm]
-        for node in self.nodes:
-            self.change_points[node].append(int(drift_detected and node in arm_nodes)) 
 
-        if self.t > 1 and self.t < 2000 and self.t % 500 == 0:
-        #if drift_detected:
+        #if self.t > 1 and self.t < 2000 and self.t % 500 == 0:
+        if drift_detected:
             print(f"Step {self.t}: Change point detected for arm {arm}!")
             if self.reset_all: # Reset all arms
                 self.estimates = np.zeros(self.n_arms)
                 self.arm_samples = np.zeros(self.n_arms, dtype=int)
                 self.steps_since_reset = 0
                 self.cpds = [drift.PageHinkley(delta=self.delta, threshold=self.lambda_, min_instances=self.min_samples_for_detection) for _ in range(self.n_arms)]
+                for a in self.arms:
+                    self.resat_arms[a].append(self.t)
             
             else: # Reset only the arm that triggered the alarm
                 self.estimates[arm_index] = 0.0
                 self.arm_samples[arm_index] = 0
                 self.cpds[arm_index] = drift.PageHinkley(delta=self.delta, threshold=self.lambda_, min_instances=self.min_samples_for_detection)
+                self.resat_arms[arm].append(self.t)
 
 
     def reset(self) -> None:
         super().reset()
         self.cpds = [drift.PageHinkley(delta=self.delta, threshold=self.lambda_, min_instances=self.min_samples_for_detection) for _ in range(self.n_arms)]
-        self.change_points = {node: [] for node in self.nodes}
+        self.resat_arms = {arm : [] for arm in self.arms}
         self.steps_since_reset = 0

@@ -79,18 +79,17 @@ def main():
     T= 1000  # number of steps in each run
     n = 1  # number of runs to average over
 
-
     regret = CumulativeRegret(optimal_expected_reward=optimal_value, T=T)
 
     averaged_regrets = {name: np.zeros(T) for name in agents.keys()}
     for name, agent in agents.items():
         print(f"Running agent: {name}")
-        for _ in range(n):
-            if _ % 100 == 0:
-                print(f"  Run {_}/{n}")
+        for i in range(n):
+            if i % 100 == 0:
+                print(f"  Run {i}/{n}")
             agent.reset()
             regret.reset()
-            env.reset(seed=SEED + _)  # Ensure different randomness across runs
+            env.reset(seed=SEED + i)  # Ensure different randomness across runs
             for _ in range(T):
                 action = agent.select_arm()
                 print(f"Selected action: {action}")

@@ -1,4 +1,6 @@
 import matplotlib.pyplot as plt
+from cmab.typing import InterventionSet
+import numpy as np
 
 def plot_regrets(regrets, labels, title):
     for regret, label in zip(regrets, labels):
@@ -34,39 +36,32 @@ def plot_regrets_and_change_points(regrets, labels, title, change_points: list, 
     plt.close()
 
 
-from typing import Dict, List, Sequence, Optional
-import numpy as np
 
-def plot_detection_rate_heatmap(
-    change_points: List[Dict[str, List[int]]],
-    true_change_points: Optional[Sequence[int]] = None,
-    title: str = "Detection-rate heatmap over time (by node)",
-) -> tuple[np.ndarray, list[str]]:
+def plot_reset_rate_heatmap(
+    reset_counts: dict[InterventionSet, np.ndarray],
+    title: str = "Reset-rate heatmap over time (by arm)",
+    save_path: str = "reset_rate_heatmap.png"
+):
 
-    n_runs = len(change_points)
+    arms = list(reset_counts.keys())
+    series = [np.asarray(reset_counts[a]).ravel() for a in arms]
 
-    # Collect node set
-    all_nodes = set()
-    for run_dict in change_points:
-        all_nodes.update(run_dict.keys())
+    data = np.vstack(series)  # (n_arms, T)
 
-    nodes = sorted(all_nodes)
+    fig, ax = plt.subplots(figsize=(12, 4 + 0.25 * len(arms)))
+    im = ax.imshow(data, aspect="auto", interpolation="nearest")
 
-    # Infer T (and validate)
-    # Find first available series to infer length
-    T = None
-    for run_dict in change_points:
-        for node in nodes:
-            if node in run_dict:
-                T = len(run_dict[node])
-                break
-        if T is not None:
-            break
+    ax.set_title(title)
+    ax.set_xlabel("Time step")
+    ax.set_ylabel("Arm")
 
-    # Validate and aggregate
-    counts = np.zeros((len(nodes), T), dtype=np.float64)
-    
+    # Label arms on y-axis (stringified)
+    ax.set_yticks(np.arange(len(arms)))
+    ax.set_yticklabels([str(a) for a in arms])
+
+    # Colorbar
+    cbar = fig.colorbar(im, ax=ax)
+    cbar.set_label("Reset count")
 
     plt.tight_layout()
-    plt.savefig("detection_rate_heatmap")
-    plt.close(fig)
+    plt.savefig(save_path, dpi=200)

@@ -77,7 +77,7 @@ def main():
     optimal_action, optimal_value = env.get_optimal(binary=True, discrete=True)  # Should be X_1=1, X_2=1
     print(f"optimal action is {optimal_action} with value {optimal_value}")
 
-    G = env.scm.get_augmented_causal_diagram()
+    G = env.scm.get_causal_diagram()
 
     agents = {
         "UCB": UCBAgent(reward_node=reward_node, arms=env.action_space, c=2),
@@ -87,18 +87,17 @@ def main():
     T= 1000  # number of steps in each run
     n = 100  # number of runs to average over
 
-
     regret = CumulativeRegret(optimal_expected_reward=optimal_value, T=T)
 
     averaged_regrets = {name: np.zeros(T) for name in agents.keys()}
     for name, agent in agents.items():
         print(f"Running agent: {name}")
-        for _ in range(n):
-            if _ % 100 == 0:
-                print(f"  Run {_}/{n}")
+        for i in range(n):
+            if i % 100 == 0:
+                print(f"  Run {i}/{n}")
             agent.reset()
             regret.reset()
-            env.reset()
+            env.reset(seed=SEED + i)  # Ensure different randomness across runs
             for _ in range(T):
                 action = agent.select_arm()
                 print(f"Selected action: {action}")
