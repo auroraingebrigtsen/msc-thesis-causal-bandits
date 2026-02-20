@@ -20,6 +20,8 @@ class MyFirstAtomicAgent(UCBAgent):
         self.min_samples_for_detection = min_samples_for_detection
 
         self.cpds = self._init_cpds()
+        self.change_points = {node: [] for node in self.nodes}  # Keep track of detected change points for analysis 
+        self.test = ['X', 'Z', 'X']
         
     def _init_cpds(self):
         cpds = defaultdict(dict)
@@ -34,25 +36,32 @@ class MyFirstAtomicAgent(UCBAgent):
     @override
     def _update(self, arm: InterventionSet, observation: Observation) -> None:
         super()._update(arm, observation)
-        print(f"\n\nStep {self.t}: Selected arm {arm}")
-        print(f"Observation: {observation}")
 
         detected = set()
-        for node in self.nodes:
-            if any(var == node for var, _ in arm): # Dont update cpd for intervened nodes
-                continue
+        if self.t > 1 and self.t < 2000 and self.t % 500 == 0:
+                print(f"\nStep {self.t}: Change point detected for nodes: {self.test[self.t//500 - 1]}!")
+                detected.add(self.test[self.t//500 - 1])
 
-            cfg = tuple(observation[parent] for parent in self.parents[node])
-            self.cpds[node][cfg].update(observation[node])
+        # for node in self.nodes:
+        #     if any(var == node for var, _ in arm): # Dont update cpd for intervened nodes
+        #         continue
+
+        #     cfg = tuple(observation[parent] for parent in self.parents[node])
+        #     self.cpds[node][cfg].update(observation[node])
             
-            if self.cpds[node][cfg].drift_detected:
-                print(f"Step {self.t}: Change point detected for node {node}!")
-                detected.add(node)
-                # Reset CPD state for this node
-                self.cpds[node][cfg] = drift.PageHinkley(delta=self.delta, threshold=self.lambda_, min_instances=self.min_samples_for_detection) 
-        
-        if detected:
+        #     if self.cpds[node][cfg].drift_detected:
+        #         print(f"\nStep {self.t}: Change point detected for node {node}!")
+        #         detected.add(node)
+        #         # Reset CPD state for this node
+        #         self.cpds[node][cfg] = drift.PageHinkley(delta=self.delta, threshold=self.lambda_, min_instances=self.min_samples_for_detection) 
+        #         # Consider adding some of the previous observations to the new CPD state to make it more robust, but for now we just reset it.
+
+        for node in self.nodes:
+            self.change_points[node].append(int(node in detected))
+
+        if len(detected) > 0:
             self._update_on_change_point(detected)
+
 
     def _update_on_change_point(self, detected: set[str]) -> None:
 
@@ -78,16 +87,18 @@ class MyFirstAtomicAgent(UCBAgent):
 
             if reset_arm:
                 print(f"Resetting arm {arm} (index {arm_index}) due to detected shift")
-                self.estimates[arm_index] = 0.0
+                self.estimates[arm_index] = 0.5
                 self.arm_samples[arm_index] = 0
-
-            
-            
-
+        
+        print(f"Actions: {self.arms}")
+        print(f"Updated estimates: {self.estimates}")
+        print(f"Updated arm samples: {self.arm_samples}")        
+        
     @override
     def reset(self):
         super().reset()
         self.cpds = self._init_cpds()
+        self.change_points = {node: [] for node in self.nodes}
 
 
 # class MyFirstAgent(PomisUCBAgent):

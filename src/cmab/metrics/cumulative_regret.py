@@ -19,6 +19,9 @@ class CumulativeRegret(BaseMetric):
     def get_regrets(self) -> np.ndarray:
         """Returns the array of cumulative regrets recorded at each step."""
         return self.cumulative_regrets
+    
+    def get_regret_at_step(self, step):
+        return self.cumulative_regrets[step]
 
     def reset(self) -> None:
         """Resets the cumulative regret metric."""

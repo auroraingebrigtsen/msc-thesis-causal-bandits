@@ -8,9 +8,9 @@ class DynamicRegret(BaseMetric):
         self.cumulative_regrets = np.zeros(T)
         self.step = 0
 
-    def update(self, reward: float, optimal_expected_reward: float) -> None:
+    def update(self, expected_reward: float, optimal_expected_reward: float) -> None:
         """Updates the cumulative regret with the received reward."""
-        instant_regret = optimal_expected_reward - reward
+        instant_regret = optimal_expected_reward - expected_reward
         self.cumulative_regret += instant_regret
         self.cumulative_regrets[self.step] = self.cumulative_regret
         self.step += 1

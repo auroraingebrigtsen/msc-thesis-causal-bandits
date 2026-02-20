@@ -17,7 +17,7 @@ class  CausalBanditEnv(BaseCausalBanditEnv):
         
         return self._get_obs(), values[self.reward_node], False, False, self._get_info()  # observation, reward, terminated, truncated, info
 
-    def reset(self):
+    def reset(self, seed: int = None):
         self._step = 0
         self.state = None
-        self.scm.reset()
+        self.scm.reset(seed=seed)

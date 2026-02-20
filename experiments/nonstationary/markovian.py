@@ -88,7 +88,7 @@ def main():
     for name, agent in agents.items():
         run_seed = SEED 
         print(f"Running agent: {name}")
-        for _ in range(n):
+        for i in range(n):
             if _ % 100 == 0:
                 print(f"  Run {_}/{n}")
             agent.reset()
@@ -96,7 +96,7 @@ def main():
             # If we want to fix change points accross different runs, 
             # Use scm.reset(seed=run_seed). Then the change point seeding will be the same accross runs.
             # If we want different change points accross runs, call env.reset(seed=run_seed) instead.
-            env.reset(seed=SEED)
+            env.reset(seed=SEED + i)
             scm.reset(seed=run_seed)
             for _ in range(T):
                 action = agent.select_arm()

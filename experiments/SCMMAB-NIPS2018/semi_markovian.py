@@ -85,7 +85,7 @@ def main():
     }
 
     T= 1000  # number of steps in each run
-    n = 1  # number of runs to average over
+    n = 100  # number of runs to average over
 
 
     regret = CumulativeRegret(optimal_expected_reward=optimal_value, T=T)

@@ -90,7 +90,7 @@ def main():
                 print(f"  Run {_}/{n}")
             agent.reset()
             regret.reset()
-            env.reset()
+            env.reset(seed=SEED + _)  # Ensure different randomness across runs
             for _ in range(T):
                 action = agent.select_arm()
                 print(f"Selected action: {action}")

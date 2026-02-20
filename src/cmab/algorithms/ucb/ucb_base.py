@@ -13,10 +13,12 @@ class UCBAgent(BaseBanditAlgorithm):
         self.n_arms = len(arms)
         self.c = c
         self.estimates = np.zeros(self.n_arms)
-        self.arm_samples = np.zeros(self.n_arms)
+        self.arm_samples = np.zeros(self.n_arms, dtype=int)
         self.t = 0
 
     def select_arm(self) -> InterventionSet:
+        self.t += 1
+
         for i in range(self.n_arms):   # ensure each arm is tried once
             if self.arm_samples[i] == 0:
                 return self.arms[i]
@@ -30,7 +32,6 @@ class UCBAgent(BaseBanditAlgorithm):
     
     def _update(self, arm: InterventionSet, observation: Observation) -> None:
         reward = observation[self.reward_node]
-        self.t += 1
         arm_index = self.arms.index(arm)
         self.arm_samples[arm_index] += 1
         num_samples = self.arm_samples[arm_index]

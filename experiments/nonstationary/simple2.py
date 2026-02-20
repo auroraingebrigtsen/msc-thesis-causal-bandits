@@ -26,13 +26,27 @@ def main():
         'Y': BinaryDomain()
     }
 
-    P_X = Bernoulli(p=0.9)
-    P_Z = Bernoulli(p=0.75)
-    P_Y = Bernoulli(p=0.2)
-    
-    mechanism_X = CustomMechanism(v_parents=[], u_parents=['U_X'], f=lambda _, u: u['U_X'])
-    mechanism_Z = CustomMechanism(v_parents=[], u_parents=['U_Z'], f=lambda _, u: u['U_Z'])
-    mechanism_Y = XORMechanism(v_parents=['X', 'Z'], u_parents=['U_Y'])
+    # Initial exogenous parameters (Segment 1)
+    P_X = Bernoulli(p=0.9)   # p_X(0) = 0.9
+    P_Z = Bernoulli(p=0.9)   # p_Z(0) = 0.9
+    P_Y = Bernoulli(p=0.0)   # remove noise; keep clean XOR signal
+
+    mechanism_X = CustomMechanism(
+        v_parents=[],
+        u_parents=['U_X'],
+        f=lambda _, u: int(u['U_X'])
+    )
+    mechanism_Z = CustomMechanism(
+        v_parents=[],
+        u_parents=['U_Z'],
+        f=lambda _, u: int(u['U_Z'])
+    )
+    mechanism_Y = CustomMechanism(
+        v_parents=['X', 'Z'],
+        u_parents=['U_Y'],
+        # XOR. If you later want noise, set P_Y > 0.
+        f=lambda v, u: int((v['X'] ^ v['Z']) ^ u['U_Y'])
+    )
 
     scm = SCM(
         U=U,
@@ -52,8 +66,26 @@ def main():
     )
 
     reward_node = 'Y'
-    schedule = ControlledSchedule(exogenous=['U_X', 'U_Z', 'U_Z', 'U_Y'], new_params=[0.6, 0.45, 0.8, 0.5], every=200)
-    env = NSCausalBanditEnv(scm=scm, reward_node=reward_node, seed=SEED, atomic=True, shift_schedule=schedule)
+
+    # Change-points:
+    # t=500:  U_X -> 0.1  (only Z-arms change; X-arms invariant)
+    # t=1000: U_Z -> 0.1  (only X-arms change; Z-arms invariant)
+    # t=1500: U_X -> 0.9  (only Z-arms change again)
+    schedule = ControlledSchedule(
+        exogenous=['U_X', 'U_Z', 'U_X'],
+        new_params=[0.1, 0.1, 0.9],
+        every=500
+    )
+
+    env = NSCausalBanditEnv(
+        scm=scm,
+        reward_node=reward_node,
+        seed=SEED,
+        atomic=True,
+        shift_schedule=schedule,
+        include_empty=False
+    )
+
     print(f"Number of actions: {len(env.action_space)}")
     print(f"Action space: {env.action_space}")
 
@@ -70,15 +102,15 @@ def main():
 
     agents = {
         # Arm level CPD
-        'UCB': UCBAgent(reward_node=reward_node, arms=env.action_space, c=c),
+        #'UCB': UCBAgent(reward_node=reward_node, arms=env.action_space, c=c),
         'PH-UCB': PageHinkleyUCBAgent(reward_node=reward_node, arms=env.action_space, c=c, delta=delta, lambda_=lambda_, min_samples_for_detection=min_samples_for_detection, reset_all=True),
-        #'PH-UCB-arm': PageHinkleyUCBAgent(reward_node=reward_node, arms=env.action_space, c=c, delta=delta, lambda_=lambda_, min_samples_for_detection=min_samples_for_detection, reset_all=False),
+        'PH-UCB-arm': PageHinkleyUCBAgent(reward_node=reward_node, arms=env.action_space, c=c, delta=delta, lambda_=lambda_, min_samples_for_detection=min_samples_for_detection, reset_all=False),
         #'SW-UCB': SlidingWindowUCBAgent(reward_node=reward_node, arms=env.action_space, c=c, window_size=100),
         # Node level CPD
-        #'Custom-UCB': MyFirstAtomicAgent(reward_node=reward_node, G=G, arms=env.action_space, c=c, delta=delta, lambda_=lambda_, min_samples_for_detection=min_samples_for_detection)
+        'Custom-UCB': MyFirstAtomicAgent(reward_node=reward_node, G=G, arms=env.action_space, c=c, delta=delta, lambda_=lambda_, min_samples_for_detection=min_samples_for_detection)
     }
 
-    T= 1000  # number of steps in each run
+    T= 2000  # number of steps in each run
     n = 100  # number of runs to average over
 
     regret = DynamicRegret(T=T)
@@ -102,11 +134,13 @@ def main():
 
             for _ in range(T):
                 optimal_arm, opt_exp_reward = env.get_optimal(binary=True, discrete=True)
+
                 action = agent.select_arm()
-                print(f"Selected action: {action}")
+                expected_reward = env.scm.expected_value_binary(variable=reward_node, intervention_set=action)
+
                 _, observation, _, _, _ = env.step(action)
                 agent._update(action, observation)
-                expected_reward = scm.expected_value_binary(variable=reward_node, intervention_set=action)
+                expected_reward = env.scm.expected_value_binary(variable=reward_node, intervention_set=action)
 
                 regret.update(expected_reward, opt_exp_reward)
             

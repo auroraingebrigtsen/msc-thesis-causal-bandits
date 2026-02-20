@@ -5,7 +5,7 @@ import itertools
 from abc import ABC, abstractmethod
 
 class BaseCausalBanditEnv(ABC):
-    def __init__(self, scm: SCM, reward_node: str, side_observations: bool, seed: int, atomic: bool, non_intervenable: list[str]):
+    def __init__(self, scm: SCM, reward_node: str, side_observations: bool, seed: int, atomic: bool, non_intervenable: list[str], include_empty: bool = True):
         self.scm = scm
         self.reward_node = reward_node
         self.side_observations = side_observations  
@@ -13,18 +13,18 @@ class BaseCausalBanditEnv(ABC):
         self.seed = seed
         self.rng = np.random.default_rng(seed=seed)
         self.state = None
-        self.action_space: list[InterventionSet] = self._init_action_space(atomic=atomic, non_intervenable=non_intervenable)
+        self.action_space: list[InterventionSet] = self._init_action_space(atomic=atomic, non_intervenable=non_intervenable, include_empty=include_empty)
 
     @staticmethod
     def _action_sort_key(action: InterventionSet):
         return (len(action), tuple(sorted(action)))
 
-    def _init_action_space(self, atomic: bool, non_intervenable: set[str]) -> list[InterventionSet]:
+    def _init_action_space(self, atomic: bool, non_intervenable: set[str], include_empty: bool) -> list[InterventionSet]:
         """Adds all combinations of possible interventions except for the reward node.
         If atomic is True, only single node interventions are added. 
         The list of non_intervenable nodes are excluded from the action space.
         """
-        action_space = {frozenset() }  # includes the empty intervention
+        action_space = {frozenset()} if include_empty else set()  # includes the empty intervention if include_empty is True
         intervenable_vars = [v for v in self.scm.V if v != self.reward_node and v not in non_intervenable]
 
         if atomic:  # add to the action set: {(var, val)} for each var and val
@@ -75,5 +75,5 @@ class BaseCausalBanditEnv(ABC):
         pass
 
     @abstractmethod
-    def reset(self):
+    def reset(self, seed: int = None):
         pass
