@@ -9,12 +9,12 @@ def plot_regrets(regrets, labels, title):
     plt.ylabel("Averaged Cumulative Regret")
     plt.title(title)
     plt.legend()
-    plt.savefig("regret_curve.png", dpi=300, bbox_inches="tight")
+    plt.savefig("plots/regret_curve.png", dpi=300, bbox_inches="tight")
     plt.close()
 
 
 
-def plot_regrets_and_change_points(regrets, labels, title, change_points: list, T:int, save_path="regret_curve_with_cps.png"):
+def plot_regrets_and_change_points(regrets, labels, title, change_points: list, T:int, save_path="plots/regret_curve_with_cps.png"):
     """Plots the averaged cumulative regrets along with vertical lines indicating change points.
     Args:
         regrets (list of np.ndarray): List of averaged cumulative regret arrays for each agent.
@@ -40,7 +40,7 @@ def plot_regrets_and_change_points(regrets, labels, title, change_points: list, 
 def plot_reset_rate_heatmap(
     reset_counts: dict[InterventionSet, np.ndarray],
     title: str = "Reset-rate heatmap over time (by arm)",
-    save_path: str = "reset_rate_heatmap.png"
+    save_path: str = "plots/reset_rate_heatmap.png"
 ):
 
     arms = list(reset_counts.keys())

@@ -83,14 +83,18 @@ def main():
         "POMIS-UCB": PomisUCBAgent(reward_node=reward_node, G=G, arms=env.action_space, c=2)
     }
 
-    print("UCB arms:", len(env.action_space), "unique:", len(set(env.action_space)))
-    pomis_arms = PomisUCBAgent(reward_node=reward_node, G=G, arms=env.action_space, c=2).arms
-    print("POMIS arms:", len(pomis_arms), "unique:", len(set(pomis_arms)))
-
-    T= 100  # number of steps in each run
-    n = 1  # number of runs to average over
+    T= 1  # number of steps in each run
+    n = 1 # number of runs to average over
 
     regret = CumulativeRegret(optimal_expected_reward=optimal_value, T=T)
+
+    for action in env.action_space:
+        expected_reward = scm.expected_value_binary(variable=reward_node, intervention_set=action)
+        print(f"Expected reward for action {action}: {expected_reward:.4f}")
+    
+    for action in agents["POMIS-UCB"].arms:
+        expected_reward = scm.expected_value_binary(variable=reward_node, intervention_set=action)
+        print(f"Expected reward for action {action}: {expected_reward:.4f}")
 
     averaged_regrets = {name: np.zeros(T) for name in agents.keys()}
     for name, agent in agents.items():

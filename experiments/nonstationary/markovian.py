@@ -128,7 +128,7 @@ def main():
             env.reset(scm_seed=SEED+i, ns_seed=SEED)
 
             for _ in range(T):
-                optimal_arm, opt_exp_reward = env.get_optimal(binary=True, discrete=True)
+                optimal_arm, opt_exp_reward = env.get_optimal(binary=True)
 
                 action = agent.select_arm()
                 expected_reward = env.scm.expected_value_binary(variable=reward_node, intervention_set=action)

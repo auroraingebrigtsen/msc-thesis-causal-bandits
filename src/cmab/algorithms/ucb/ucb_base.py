@@ -7,7 +7,7 @@ class UCBAgent(BaseBanditAlgorithm):
     Args:
     c: float, degree of exploration
     """
-    def __init__(self, reward_node:str, arms: list[InterventionSet], c:float=2):
+    def __init__(self, reward_node:str, arms: list[InterventionSet], c:float=np.sqrt(2)):
         super().__init__(reward_node)
         self.arms = arms
         self.n_arms = len(arms)
@@ -26,8 +26,9 @@ class UCBAgent(BaseBanditAlgorithm):
 
         ucb_values = []
         for arm in range(self.n_arms): 
-            n_i = self.arm_samples[arm]
-            bound = np.sqrt(np.log(self.t)/n_i)
+            n_arm = self.arm_samples[arm]
+            t = np.sum(self.arm_samples)  
+            bound = np.sqrt(np.log(t)/n_arm)
             ucb_values.append(self.estimates[arm] + self.c*bound)
         return self.arms[np.argmax(ucb_values)]
     

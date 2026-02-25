@@ -127,7 +127,7 @@ def main():
             env.reset(scm_seed=SEED+i, ns_seed=SEED)
 
             for _ in range(T):
-                optimal_arm, opt_exp_reward = env.get_optimal(binary=True, discrete=True)
+                optimal_arm, opt_exp_reward = env.get_optimal(binary=True)
 
                 action = agent.select_arm()
                 expected_reward = env.scm.expected_value_binary(variable=reward_node, intervention_set=action)
@@ -140,20 +140,17 @@ def main():
             
             if hasattr(agent, 'resat_arms'):
                 for arm, cps in agent.resat_arms.items():
-                    # cps is a list of time steps where this arm was reset. We want to convert this into a binary array of length T where 1 indicates a change point at that time step.
                     for cp in cps:
                         resat_arms[name][arm][cp-1] += 1  # cp-1 because time steps are 1-indexed in the agent but we want 0-indexed for the array
+
+            averaged_regrets[name] += regret.get_regrets() / n
 
     #plot_regrets(regrets=averaged_regrets.values(), labels=averaged_regrets.keys(), title="Averaged Cumulative Regret")
     cps = schedule.get_change_points(T=T, rng=np.random.default_rng(SEED))
     plot_regrets_and_change_points(regrets=averaged_regrets.values(), labels=averaged_regrets.keys(), title="Averaged Cumulative Regret with Change Points", change_points=cps, T=T)
     
     for name, cps in resat_arms.items():
-        plot_reset_rate_heatmap(
-            reset_counts=cps,
-            title=f"Reset rate by arm for agent {name}",
-            save_path=f"reset_rate_{name}.png"
-        )
+        plot_reset_rate_heatmap(reset_counts=cps,title=f"Reset rate by arm for agent {name}", save_path=f"plots/reset_rate_heatmap_{name}.png")
 
 if __name__ == "__main__":
     main()

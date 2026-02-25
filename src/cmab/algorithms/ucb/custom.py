@@ -21,7 +21,7 @@ class MyFirstAtomicAgent(UCBAgent):
 
         self.cpds = self._init_cpds()
         self.resat_arms = {arm: [] for arm in self.arms}  # Keep track of detected change points for analysis 
-        #self.test = ['X', 'X', 'X']
+        #self.test = ['X', 'Y', 'Z', 'Z']
         
     def _init_cpds(self):
         cpds = defaultdict(dict)
@@ -38,7 +38,7 @@ class MyFirstAtomicAgent(UCBAgent):
         super()._update(arm, observation)
 
         detected = set()
-        # if self.t > 1 and self.t < 2000 and self.t % 500 == 0:
+        # if self.t > 1 and self.t < 2500 and self.t % 500 == 0:
         #         print(f"\nStep {self.t}: Change point detected for nodes: {self.test[self.t//500 - 1]}!")
         #         detected.add(self.test[self.t//500 - 1])
 
@@ -53,8 +53,9 @@ class MyFirstAtomicAgent(UCBAgent):
                 print(f"\nStep {self.t}: Change point detected for node {node}!")
                 detected.add(node)
                 # Reset CPD state for this node
-                self.cpds[node][cfg] = drift.PageHinkley(delta=self.delta, threshold=self.lambda_, min_instances=self.min_samples_for_detection) 
-                # Consider adding some of the previous observations to the new CPD state to make it more robust, but for now we just reset it.
+                for cfg in self.cpds[node]: # reset all parent contexts for this node (if one changes, the other ones do to)
+                    self.cpds[node][cfg] = drift.PageHinkley(delta=self.delta, threshold=self.lambda_, min_instances=self.min_samples_for_detection) 
+                    # Consider adding some of the previous observations to the new CPD state to make it more robust, but for now we just reset it.
 
         if len(detected) > 0:
             self._update_on_change_point(detected)
@@ -64,7 +65,6 @@ class MyFirstAtomicAgent(UCBAgent):
 
         # We know which variable was alarmed, it must be the exogenous variabe of this one that shifted. 
         shifted = set()
-        print(f"Detected change points for nodes: {detected}" f" at step {self.t}")
         # Find exogenous variables of detected nodes
         for node in detected:
             exogenous = {u for (u, v) in self.G.noise_vars if v == node}
@@ -86,7 +86,7 @@ class MyFirstAtomicAgent(UCBAgent):
                 self.resat_arms[self.arms[arm_index]].append(self.t)
                 print(f"Resetting arm {arm} (index {arm_index}) due to detected shift")
                 self.estimates[arm_index] = 0.0
-                self.arm_samples[arm_index] = 0
+                self.arm_samples[arm_index] = 0.0#int(0.5 * self.arm_samples[arm_index]) # gamma * current estimate
         
     @override
     def reset(self):
