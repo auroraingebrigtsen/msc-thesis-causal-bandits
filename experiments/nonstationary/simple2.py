@@ -96,8 +96,8 @@ def main():
 
     agents = {
         # Arm level CPD
-        #'UCB': UCBAgent(reward_node=reward_node, arms=env.action_space, c=c),
-        #'PH-UCB': PageHinkleyUCBAgent(reward_node=reward_node, arms=env.action_space, c=c, delta=delta, lambda_=lambda_, min_samples_for_detection=min_samples_for_detection, reset_all=True),
+        'UCB': UCBAgent(reward_node=reward_node, arms=env.action_space, c=c),
+        'PH-UCB': PageHinkleyUCBAgent(reward_node=reward_node, arms=env.action_space, c=c, delta=delta, lambda_=lambda_, min_samples_for_detection=min_samples_for_detection, reset_all=True),
         'PH-UCB-arm': PageHinkleyUCBAgent(reward_node=reward_node, arms=env.action_space, c=c, delta=delta, lambda_=lambda_, min_samples_for_detection=min_samples_for_detection, reset_all=False),
         #'SW-UCB': SlidingWindowUCBAgent(reward_node=reward_node, arms=env.action_space, c=c, window_size=100),
         # Node level CPD
@@ -147,10 +147,10 @@ def main():
 
     #plot_regrets(regrets=averaged_regrets.values(), labels=averaged_regrets.keys(), title="Averaged Cumulative Regret")
     cps = schedule.get_change_points(T=T, rng=np.random.default_rng(SEED))
-    plot_regrets_and_change_points(regrets=averaged_regrets.values(), labels=averaged_regrets.keys(), title="Averaged Cumulative Regret with Change Points", change_points=cps, T=T)
-    
+    plot_regrets_and_change_points(regrets=averaged_regrets.values(), labels=averaged_regrets.keys(), title="Averaged Cumulative Regret with Change Points", 
+                                   change_points=cps, T=T, save_path="plots/simple2_regret_with_change_points.png")
     for name, cps in resat_arms.items():
-        plot_reset_rate_heatmap(reset_counts=cps,title=f"Reset rate by arm for agent {name}", save_path=f"plots/reset_rate_heatmap_{name}.png")
+        plot_reset_rate_heatmap(reset_counts=cps,title=f"Reset rate by arm for agent {name}", save_path=f"plots/simple2_reset_rate_heatmap_{name}.png")
 
 if __name__ == "__main__":
     main()

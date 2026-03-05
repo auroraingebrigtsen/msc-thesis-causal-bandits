@@ -7,10 +7,10 @@ from collections import defaultdict
 from river import drift
 from itertools import product
 
-class MyFirstAtomicAgent(UCBAgent):
+class MyFirstAtomicAgent(PomisUCBAgent):
     def __init__(self, reward_node:str, G: CausalDiagram, arms: list[InterventionSet], c:float=2, 
                  delta:float=0.5, lambda_:float=5.0, min_samples_for_detection:int=10):
-        super().__init__(reward_node, arms, c)
+        super().__init__(reward_node=reward_node, G=G, arms=arms, c=c)
         self.G = G
         self.nodes = list(G.nodes)
         self.parents = {node: list(G.Pa({node}, include_self=False)) for node in self.nodes}
@@ -21,7 +21,7 @@ class MyFirstAtomicAgent(UCBAgent):
 
         self.cpds = self._init_cpds()
         self.resat_arms = {arm: [] for arm in self.arms}  # Keep track of detected change points for analysis 
-        #self.test = ['X', 'Y', 'Z', 'Z']
+        self.test = ['X', 'Y', 'Z', 'Z']
         
     def _init_cpds(self):
         cpds = defaultdict(dict)
@@ -38,24 +38,24 @@ class MyFirstAtomicAgent(UCBAgent):
         super()._update(arm, observation)
 
         detected = set()
-        # if self.t > 1 and self.t < 2500 and self.t % 500 == 0:
-        #         print(f"\nStep {self.t}: Change point detected for nodes: {self.test[self.t//500 - 1]}!")
-        #         detected.add(self.test[self.t//500 - 1])
+        if self.t > 1 and self.t < 2500 and self.t % 500 == 0:
+                print(f"\nStep {self.t}: Change point detected for nodes: {self.test[self.t//500 - 1]}!")
+                detected.add(self.test[self.t//500 - 1])
 
-        for node in self.nodes:
-            if any(var == node for var, _ in arm): # Dont update cpd for intervened nodes
-                continue
+        # for node in self.nodes:
+        #     if any(var == node for var, _ in arm): # Dont update cpd for intervened nodes
+        #         continue
 
-            cfg = tuple(observation[parent] for parent in self.parents[node])
-            self.cpds[node][cfg].update(observation[node])
+        #     cfg = tuple(observation[parent] for parent in self.parents[node])
+        #     self.cpds[node][cfg].update(observation[node])
             
-            if self.cpds[node][cfg].drift_detected:
-                print(f"\nStep {self.t}: Change point detected for node {node}!")
-                detected.add(node)
-                # Reset CPD state for this node
-                for cfg in self.cpds[node]: # reset all parent contexts for this node (if one changes, the other ones do to)
-                    self.cpds[node][cfg] = drift.PageHinkley(delta=self.delta, threshold=self.lambda_, min_instances=self.min_samples_for_detection) 
-                    # Consider adding some of the previous observations to the new CPD state to make it more robust, but for now we just reset it.
+        #     if self.cpds[node][cfg].drift_detected:
+        #         print(f"\nStep {self.t}: Change point detected for node {node}!")
+        #         detected.add(node)
+        #         # Reset CPD state for this node
+        #         for cfg in self.cpds[node]: # reset all parent contexts for this node (if one changes, the other ones do to)
+        #             self.cpds[node][cfg] = drift.PageHinkley(delta=self.delta, threshold=self.lambda_, min_instances=self.min_samples_for_detection) 
+        #             # Consider adding some of the previous observations to the new CPD state to make it more robust, but for now we just reset it.
 
         if len(detected) > 0:
             self._update_on_change_point(detected)
