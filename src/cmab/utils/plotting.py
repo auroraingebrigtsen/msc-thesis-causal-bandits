@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from cmab.typing import InterventionSet
+from cmab.typing import Intervention
 import numpy as np
 
 def plot_regrets(regrets, labels, title):
@@ -38,7 +38,7 @@ def plot_regrets_and_change_points(regrets, labels, title, change_points: list, 
 
 
 def plot_reset_rate_heatmap(
-    reset_counts: dict[InterventionSet, np.ndarray],
+    reset_counts: dict[Intervention, np.ndarray],
     title: str = "Reset-rate heatmap over time (by arm)",
     save_path: str = "plots/reset_rate_heatmap.png"
 ):

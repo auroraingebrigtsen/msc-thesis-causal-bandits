@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from typing import Tuple, Dict, TypeAlias
 
-Intervention: TypeAlias = Tuple[str, float]
-InterventionSet: TypeAlias = frozenset[Intervention]
+Assignment: TypeAlias = Tuple[str, float]
+Intervention: TypeAlias = frozenset[Assignment]
 
 Observation: TypeAlias = Dict[str, float]
 

@@ -15,7 +15,6 @@ class CausalDiagram:
         self.nodes = nodes
         self.directed_edges = directed_edges
         self.bidirected_edges = bidirected_edges
-        self.noise_vars = noise_vars
         self.parents: dict[str, set[str]] = defaultdict(set)
         self.children: dict[str, set[str]] = defaultdict(set)
         for u, v in directed_edges:
@@ -147,15 +146,11 @@ class CausalDiagram:
 
     def d_separated(self, X: set[str], Y: set[str], Z: set[str]) -> bool:
         """Check if X and Y are d-separated given Z using networx. 
-        Uses the augmented graph with exogenous noise variables"""
+        Adds bidirected edges as latent confounders. Note that this is not the most efficient way to check d-separation, but it is correct and we can optimize later if needed.
+        """
         G = nx.DiGraph()
         G.add_nodes_from(self.nodes)
         G.add_edges_from(self.directed_edges)
-
-        for u, v in self.noise_vars:
-            G.add_node(u)
-            if v is not None:
-                 G.add_edge(u, v)
 
         for x, y, u in self.bidirected_edges: 
             G.add_node(u)
@@ -168,10 +163,8 @@ class CausalDiagram:
         """Subgraph induced by given nodes."""
         sub_directed_edges = [(u, v) for (u, v) in self.directed_edges if u in nodes and v in nodes]
         sub_bidirected_edges = [(x, y, u) for (x, y, u) in self.bidirected_edges if x in nodes and y in nodes]
-        sub_noise_vars = [(u, v) for (u, v) in self.noise_vars if u in nodes and (v in nodes or v is None)]
         return CausalDiagram(
             nodes=nodes,
             directed_edges=sub_directed_edges,
             bidirected_edges=sub_bidirected_edges,
-            noise_vars=sub_noise_vars
         )

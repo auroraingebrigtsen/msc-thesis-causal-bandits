@@ -5,7 +5,7 @@ from .distribution.base import BaseDistribution
 from .mechanism.base import BaseMechanism as Mechanism
 from .domain.base import FiniteDiscreteDomain
 from .causal_diagram import CausalDiagram
-from cmab.typing import  InterventionSet
+from cmab.typing import  Intervention
 import numpy as np
 from cmab.utils.graphs.topological_sort import topological_sort
 from itertools import product
@@ -28,7 +28,7 @@ class SCM:
         self.seed = seed
         self.rng = np.random.default_rng(seed=seed)
 
-    def sample(self, intervention_set: InterventionSet = set(), u_values: dict[str, float] = None) -> dict[str, float]:
+    def sample(self, intervention: Intervention = set(), u_values: dict[str, float] = None) -> dict[str, float]:
 
         # Sample exogenous variables
         if u_values is None:
@@ -37,8 +37,8 @@ class SCM:
         # Go over endogenous variables in topological order and compute their values
         values = {}
         for node in self.V_topological_order:  
-            if any(intervention[0] == node for intervention in intervention_set):
-                value = next(intervention[1] for intervention in intervention_set if intervention[0] == node)
+            if any(intervention[0] == node for intervention in intervention):
+                value = next(intervention[1] for intervention in intervention if intervention[0] == node)
             else:
                 v_parents = self.F[node].v_parents
                 u_parents = self.F[node].u_parents
@@ -53,7 +53,7 @@ class SCM:
 
         return values
     
-    def expected_value_binary(self, variable:str, intervention_set: InterventionSet = set()) -> float:
+    def expected_value_binary(self, variable:str, intervention: Intervention = set()) -> float:
         """Compute the expected values of a binary variable Y given an intervention set, that is, E[Y | do(X=x)], when all exogenous variables are binary."""
 
         def p_u(u_values: dict[str, float]) -> float:
@@ -74,7 +74,7 @@ class SCM:
             if prob == 0.0:
                 continue
 
-            v_values = self.sample(intervention_set=intervention_set, u_values=u_values)
+            v_values = self.sample(intervention=intervention, u_values=u_values)
             y = v_values[variable]
 
             expected += prob * float(y)

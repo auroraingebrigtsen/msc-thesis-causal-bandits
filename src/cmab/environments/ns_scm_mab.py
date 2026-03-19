@@ -1,6 +1,6 @@
 from cmab.scm.scm import SCM
 import numpy as np
-from cmab.typing import InterventionSet
+from cmab.typing import Intervention
 from .base import BaseCausalBanditEnv
 from .ns.scheduling.base import ShiftSchedule
     
@@ -12,10 +12,10 @@ class NSCausalBanditEnv(BaseCausalBanditEnv):
         self.state = None
         self.shift_schedule = shift_schedule
 
-    def step(self, action: InterventionSet):
+    def step(self, action: Intervention):
 
         self._step += 1
-        values = self.scm.sample(intervention_set=action)
+        values = self.scm.sample(intervention=action)
 
         if self.shift_schedule is not None:
             event = self.shift_schedule.next(t=self._step, scm=self.scm, rng=self.rng)

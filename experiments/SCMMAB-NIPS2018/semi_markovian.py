@@ -89,11 +89,11 @@ def main():
     regret = CumulativeRegret(optimal_expected_reward=optimal_value, T=T)
 
     for action in env.action_space:
-        expected_reward = scm.expected_value_binary(variable=reward_node, intervention_set=action)
+        expected_reward = scm.expected_value_binary(variable=reward_node, intervention=action)
         print(f"Expected reward for action {action}: {expected_reward:.4f}")
     
     for action in agents["POMIS-UCB"].arms:
-        expected_reward = scm.expected_value_binary(variable=reward_node, intervention_set=action)
+        expected_reward = scm.expected_value_binary(variable=reward_node, intervention=action)
         print(f"Expected reward for action {action}: {expected_reward:.4f}")
 
     averaged_regrets = {name: np.zeros(T) for name in agents.keys()}

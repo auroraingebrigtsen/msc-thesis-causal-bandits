@@ -2,14 +2,14 @@
 from typing import override
 from cmab.algorithms.ucb.ucb_base import UCBAgent
 import numpy as np
-from cmab.typing import InterventionSet, Observation
+from cmab.typing import Intervention, Observation
 from river import drift
 
 class PageHinkleyUCBAgent(UCBAgent):
     def __init__(
         self,
         reward_node: str,
-        arms: list[InterventionSet],
+        arms: list[Intervention],
         c: float,  # UCB exploration parameter
         delta: float,  # a small positive value (tolerance) to prevent overreacting to small fluctuations
         lambda_: float,  # the threshold for change detection
@@ -31,7 +31,7 @@ class PageHinkleyUCBAgent(UCBAgent):
         #self.test = ['X', 'X', 'X']
 
     @override
-    def _update(self, arm: InterventionSet, observation: Observation) -> None:
+    def _update(self, arm: Intervention, observation: Observation) -> None:
         super()._update(arm, observation)
 
         arm_index = self.arm_to_index[arm]

@@ -1,6 +1,6 @@
 from cmab.scm.scm import SCM
 import numpy as np
-from cmab.typing import InterventionSet
+from cmab.typing import Intervention
 import itertools
 from abc import ABC, abstractmethod
 
@@ -13,13 +13,13 @@ class BaseCausalBanditEnv(ABC):
         self.seed = seed
         self.rng = np.random.default_rng(seed=seed)
         self.state = None
-        self.action_space: list[InterventionSet] = self._init_action_space(atomic=atomic, non_intervenable=non_intervenable, include_empty=include_empty)
+        self.action_space: list[Intervention] = self._init_action_space(atomic=atomic, non_intervenable=non_intervenable, include_empty=include_empty)
 
     @staticmethod
-    def _action_sort_key(action: InterventionSet):
+    def _action_sort_key(action: Intervention):
         return (len(action), tuple(sorted(action)))
 
-    def _init_action_space(self, atomic: bool, non_intervenable: set[str], include_empty: bool) -> list[InterventionSet]:
+    def _init_action_space(self, atomic: bool, non_intervenable: set[str], include_empty: bool) -> list[Intervention]:
         """Adds all combinations of possible interventions except for the reward node.
         If atomic is True, only single node interventions are added. 
         The list of non_intervenable nodes are excluded from the action space.
@@ -61,7 +61,7 @@ class BaseCausalBanditEnv(ABC):
         expected_rewards = np.zeros(len(self.action_space))
         for idx, action in enumerate(self.action_space):
             if binary:
-                expected_rewards[idx] = self.scm.expected_value_binary(variable=self.reward_node, intervention_set=action)
+                expected_rewards[idx] = self.scm.expected_value_binary(variable=self.reward_node, intervention=action)
             else:
                 raise NotImplementedError("Only binary and discrete expected value computations are implemented.")
 
@@ -69,7 +69,7 @@ class BaseCausalBanditEnv(ABC):
         return self.action_space[best_arm_idx], expected_rewards[best_arm_idx]
 
     @abstractmethod
-    def step(self, action: InterventionSet):
+    def step(self, action: Intervention):
         pass
 
     @abstractmethod

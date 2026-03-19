@@ -61,7 +61,7 @@ def main():
     print(f"Action space: {env.action_space}")
 
     for action in env.action_space:
-        expected_reward = scm.expected_value_binary(variable=reward_node, intervention_set=action)
+        expected_reward = scm.expected_value_binary(variable=reward_node, intervention=action)
         print(f"Expected reward for action {action}: {expected_reward:.4f}")
 
     G = env.scm.get_causal_diagram()
@@ -110,17 +110,17 @@ def main():
 
                 if current_optimal_expected_reward is None or opt_exp_reward != current_optimal_expected_reward or optimal_arm != current_optimal_arm:
                     print(f"\nStep {_+1}: Optimal expected reward changed to {opt_exp_reward} with optimal arm {optimal_arm}")
-                    print(f"New expected rewards: {[f'{a}: {env.scm.expected_value_binary(variable=reward_node, intervention_set=a):.4f}' for a in env.action_space]}")
+                    print(f"New expected rewards: {[f'{a}: {env.scm.expected_value_binary(variable=reward_node, intervention=a):.4f}' for a in env.action_space]}")
                     current_optimal_expected_reward = opt_exp_reward
                     current_optimal_arm = optimal_arm
 
 
                 action = agent.select_arm()
-                expected_reward = env.scm.expected_value_binary(variable=reward_node, intervention_set=action)
+                expected_reward = env.scm.expected_value_binary(variable=reward_node, intervention=action)
 
                 _, observation, _, _, _ = env.step(action)
                 agent._update(action, observation)
-                expected_reward = env.scm.expected_value_binary(variable=reward_node, intervention_set=action)
+                expected_reward = env.scm.expected_value_binary(variable=reward_node, intervention=action)
 
                 regret.update(expected_reward, opt_exp_reward)
             
