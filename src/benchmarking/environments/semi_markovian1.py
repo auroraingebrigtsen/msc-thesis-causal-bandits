@@ -7,9 +7,9 @@ from cmab.scm.scm import SCM
 from cmab.environments import CausalBanditEnv, NSCausalBanditEnv
 from cmab.environments.ns.scheduling.controlled_schedule import ControlledSchedule
 
-def build_simple_markovian1(config):
+def build_semi_markovian1(config):
     V = ['X', 'Z', 'Y']
-    U = ['U_X', 'U_Z', 'U_Y']
+    U = ['U_X', 'U_Z', 'U_Y', 'U_XZ']
 
     domains = {
         'X': BinaryDomain(),
@@ -17,25 +17,16 @@ def build_simple_markovian1(config):
         'Y': BinaryDomain()
     }
 
-    P_X = Bernoulli(p=0.1)  
-    P_Z = Bernoulli(p=0.7)  
-    P_Y = Bernoulli(p=0.9)
-
-    mechanism_X = CustomMechanism(
-        v_parents=[],
-        u_parents=['U_X'],
-        f=lambda _, u: int(u['U_X'])
-    )
-    mechanism_Z = CustomMechanism(
-        v_parents=[],
-        u_parents=['U_Z'],
-        f=lambda _, u: int(u['U_Z'])
-    )
-    mechanism_Y = CustomMechanism(
-        v_parents=['X', 'Z'],
-        u_parents=['U_Y'],
-        f=lambda v, u: int((v['X'] ^ v['Z']) ^ u['U_Y'])
-    )
+    P_X = Bernoulli(p=0.9)
+    P_Z = Bernoulli(p=0.75)
+    P_Y = Bernoulli(p=0.2)
+    P_XZ = Bernoulli(p=0.9)
+    
+    mechanism_X = CustomMechanism(v_parents=[], u_parents=['U_X', 'U_XZ'], 
+                                  f=lambda _, u: u['U_X'] if u['U_XZ'] == 0 else 1 - u['U_X'])
+    mechanism_Z = CustomMechanism(v_parents=['X'], u_parents=['U_Z', 'U_XZ'], 
+                                  f=lambda v, u: (u['U_Z'] if u['U_XZ'] == 0 else 1 - u['U_Z'])  ^ v['X'])
+    mechanism_Y = XORMechanism(v_parents=['Z'], u_parents=['U_Y'])
 
     scm = SCM(
         U=U,
@@ -44,7 +35,8 @@ def build_simple_markovian1(config):
         P_u_marginals={
             'U_X': P_X,
             'U_Z': P_Z,
-            'U_Y': P_Y
+            'U_Y': P_Y,
+            'U_XZ': P_XZ
         },
         F={
             'X': mechanism_X,
@@ -54,13 +46,9 @@ def build_simple_markovian1(config):
         seed=config.seed
     )
 
+    # 500: X, 1000: Y, 1500: Z, 2000: Z 
     reward_node = 'Y'
-
-    schedule = ControlledSchedule(
-        exogenous=['U_X', 'U_X', 'U_X'],
-        new_params=[0.9, 0.1, 0.9],
-        every=500
-    )
+    schedule = ControlledSchedule(exogenous=['U_X', 'U_Y', 'U_X', 'U_Z'], new_params=[0.2, 0.9, 0.9, 0.1], every=500)
 
     return NSCausalBanditEnv(
         scm=scm,

@@ -45,14 +45,15 @@ def build_agent(name: str, params: dict, env):
             delta=params["delta"],
             lambda_=params["lambda"],
             min_samples_for_detection=params["min_samples_for_detection"],
+            atomic=params["atomic"],
         )
 
     else:
         raise ValueError(f"Unknown agent: {name}")
 
 
-def build_agents(cfg, env):
+def build_agents(agent_names: list[str], agent_params: dict, env):
     agents = {}
-    for name, params in cfg.agents.items():
-        agents[name] = build_agent(name, cfg.agent_params, env)
+    for name in agent_names:
+        agents[name] = build_agent(name, agent_params, env)
     return agents

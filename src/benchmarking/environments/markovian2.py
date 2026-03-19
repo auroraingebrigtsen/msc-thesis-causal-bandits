@@ -7,7 +7,7 @@ from cmab.scm.scm import SCM
 from cmab.environments import CausalBanditEnv, NSCausalBanditEnv
 from cmab.environments.ns.scheduling.controlled_schedule import ControlledSchedule
 
-def build_simple_markovian1(seed:int, params):
+def build_markovian2(config):
     V = ['X', 'Z', 'Y']
     U = ['U_X', 'U_Z', 'U_Y']
 
@@ -17,9 +17,9 @@ def build_simple_markovian1(seed:int, params):
         'Y': BinaryDomain()
     }
 
-    P_X = Bernoulli(p=params.p_x)  
-    P_Z = Bernoulli(p=params.p_z)  
-    P_Y = Bernoulli(p=params.p_y)
+    P_X = Bernoulli(p=0.1)  
+    P_Z = Bernoulli(p=0.7)  
+    P_Y = Bernoulli(p=0.9)
 
     mechanism_X = CustomMechanism(
         v_parents=[],
@@ -51,19 +51,21 @@ def build_simple_markovian1(seed:int, params):
             'Z': mechanism_Z,
             'Y': mechanism_Y
         },
-        seed=seed
+        seed=config.seed
     )
 
+    reward_node = 'Y'
+
     schedule = ControlledSchedule(
-        exogenous=params.schedule.exogenous,
-        new_params=params.schedule.new_params,
-        every=params.schedule.every
+        exogenous=['U_X', 'U_X', 'U_X'],
+        new_params=[0.9, 0.1, 0.9],
+        every=500
     )
 
     return NSCausalBanditEnv(
         scm=scm,
-        reward_node=params.reward_node,
-        seed=seed,
+        reward_node=reward_node,
+        seed=config.seed,
         atomic=True,
         shift_schedule=schedule,
         include_empty=False
