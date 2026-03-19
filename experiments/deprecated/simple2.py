@@ -7,7 +7,7 @@ from cmab.scm.scm import SCM
 from cmab.environments import CausalBanditEnv, NSCausalBanditEnv
 from cmab.algorithms.ucb import UCBAgent, SlidingWindowUCBAgent
 from cmab.algorithms.ucb.pomis_ucb import PomisUCBAgent
-from cmab.algorithms.ucb.custom import MyFirstAtomicAgent
+from cmab.algorithms.ucb.sr_ucb import SrUCBAgent
 from cmab.algorithms.ucb.ph_ucb import PageHinkleyUCBAgent
 from cmab.environments.ns.scheduling.controlled_schedule import ControlledSchedule
 from cmab.utils.plotting import  plot_regrets, plot_regrets_and_change_points, plot_reset_rate_heatmap
@@ -17,48 +17,47 @@ import numpy as np
 def main():
     SEED = 42
 
-    V = frozenset({'X_1', 'X_2', 'Z_1', 'Z_2', 'Y'})
-    U = frozenset({'U_X_1', 'U_X_2', 'U_Z_1', 'U_Z_2', 'U_Y'})
+    V = ['X', 'Z', 'Y']
+    U = ['U_X', 'U_Z', 'U_Y']
 
     domains = {
-        'X_1': BinaryDomain(),
-        'X_2': BinaryDomain(),
-        'Z_1': BinaryDomain(),
-        'Z_2': BinaryDomain(),
+        'X': BinaryDomain(),
+        'Z': BinaryDomain(),
         'Y': BinaryDomain()
     }
 
-    P_X_1 = Bernoulli(p=0.54)
-    P_X_2 = Bernoulli(p=0.67)
-    P_Z_1 = Bernoulli(p=0.54)
-    P_Z_2 = Bernoulli(p=0.44)
-    P_Y = Bernoulli(p=0.58)
-    
-    mechanism_X_1 = XORMechanism(v_parents=['Z_1', 'Z_2'], u_parents=['U_X_1'])
-    mechanism_X_2 = CustomMechanism(v_parents=['Z_1', 'Z_2'], u_parents=['U_X_2'], 
-                                    f=lambda v, u: 1 ^ v['Z_1'] ^ v['Z_2'] ^ u['U_X_2'])
-    mechanism_Z_1 = CustomMechanism(v_parents=[], u_parents=['U_Z_1'], f=lambda _, u: u['U_Z_1'])
-    mechanism_Z_2 = CustomMechanism(v_parents=[], u_parents=['U_Z_2'], f=lambda _, u: u['U_Z_2'])
-    mechanism_Y = CustomMechanism(v_parents=['X_1', 'X_2'], u_parents=['U_Y'],
-                                    f=lambda v, u: ((v["X_1"] and v["X_2"]) or u["U_Y"]))
-    
+    P_X = Bernoulli(p=0.1)  
+    P_Z = Bernoulli(p=0.7)  
+    P_Y = Bernoulli(p=0.9)
+
+    mechanism_X = CustomMechanism(
+        v_parents=[],
+        u_parents=['U_X'],
+        f=lambda _, u: int(u['U_X'])
+    )
+    mechanism_Z = CustomMechanism(
+        v_parents=[],
+        u_parents=['U_Z'],
+        f=lambda _, u: int(u['U_Z'])
+    )
+    mechanism_Y = CustomMechanism(
+        v_parents=['X', 'Z'],
+        u_parents=['U_Y'],
+        f=lambda v, u: int((v['X'] ^ v['Z']) ^ u['U_Y'])
+    )
 
     scm = SCM(
         U=U,
         V=V,
         domains=domains,
         P_u_marginals={
-            'U_X_1': P_X_1,
-            'U_X_2': P_X_2,
-            'U_Z_1': P_Z_1,
-            'U_Z_2': P_Z_2,
+            'U_X': P_X,
+            'U_Z': P_Z,
             'U_Y': P_Y
         },
         F={
-            'X_1': mechanism_X_1,
-            'X_2': mechanism_X_2,
-            'Z_1': mechanism_Z_1,
-            'Z_2': mechanism_Z_2,
+            'X': mechanism_X,
+            'Z': mechanism_Z,
             'Y': mechanism_Y
         },
         seed=SEED
@@ -67,8 +66,8 @@ def main():
     reward_node = 'Y'
 
     schedule = ControlledSchedule(
-        exogenous=['U_X_1', 'U_X_2', 'U_Z_1', 'U_Z_2'],
-        new_params=[0.6, 0.1, 0.9, 0.1],
+        exogenous=['U_X', 'U_X', 'U_X'],
+        new_params=[0.9, 0.1, 0.9],
         every=500
     )
 
@@ -99,10 +98,11 @@ def main():
         # Arm level CPD
         #'UCB': UCBAgent(reward_node=reward_node, arms=env.action_space, c=c),
         #'PH-UCB': PageHinkleyUCBAgent(reward_node=reward_node, arms=env.action_space, c=c, delta=delta, lambda_=lambda_, min_samples_for_detection=min_samples_for_detection, reset_all=True),
-        'PH-UCB-arm': PageHinkleyUCBAgent(reward_node=reward_node, arms=env.action_space, c=c, delta=delta, lambda_=lambda_, min_samples_for_detection=min_samples_for_detection, reset_all=False),
+        #'PH-UCB-arm': PageHinkleyUCBAgent(reward_node=reward_node, arms=env.action_space, c=c, delta=delta, lambda_=lambda_, min_samples_for_detection=min_samples_for_detection, reset_all=False),
         #'SW-UCB': SlidingWindowUCBAgent(reward_node=reward_node, arms=env.action_space, c=c, window_size=100),
         # Node level CPD
-        'Custom-UCB': MyFirstAtomicAgent(reward_node=reward_node, G=G, arms=env.action_space, c=c, delta=delta, lambda_=lambda_, min_samples_for_detection=min_samples_for_detection)
+        'SR-UCB': SrUCBAgent(reward_node=reward_node, G=G, arms=env.action_space, c=c, atomic=True,
+                             delta=delta, lambda_=lambda_, min_samples_for_detection=min_samples_for_detection)
     }
 
     T= 2000  # number of steps in each run
@@ -112,12 +112,13 @@ def main():
 
     averaged_regrets = {name: np.zeros(T) for name in agents.keys()}
     resat_arms = {
-        name: {arm: np.zeros(T, dtype=int) for arm in env.action_space} 
+        name: {arm: np.zeros(T, dtype=int) for arm in env.action_space}
         for name in agents.keys()
     }
     for name, agent in agents.items():
         print(f"Running agent: {name}")
         for i in range(n):
+            print(f"  Run {i+1}/{n}")
             if i % 100 == 0:
                 print(f"  Run {i}/{n}")
 
@@ -141,20 +142,17 @@ def main():
             
             if hasattr(agent, 'resat_arms'):
                 for arm, cps in agent.resat_arms.items():
-                    # cps is a list of time steps where this arm was reset. We want to convert this into a binary array of length T where 1 indicates a change point at that time step.
                     for cp in cps:
                         resat_arms[name][arm][cp-1] += 1  # cp-1 because time steps are 1-indexed in the agent but we want 0-indexed for the array
 
+            averaged_regrets[name] += regret.get_regrets() / n
+
     #plot_regrets(regrets=averaged_regrets.values(), labels=averaged_regrets.keys(), title="Averaged Cumulative Regret")
     cps = schedule.get_change_points(T=T, rng=np.random.default_rng(SEED))
-    plot_regrets_and_change_points(regrets=averaged_regrets.values(), labels=averaged_regrets.keys(), title="Averaged Cumulative Regret with Change Points", change_points=cps, T=T)
-    
+    plot_regrets_and_change_points(regrets=averaged_regrets.values(), labels=averaged_regrets.keys(), title="Averaged Cumulative Regret with Change Points", 
+                                   change_points=cps, T=T, save_path="plots/simple2_regret_with_change_points.png")
     for name, cps in resat_arms.items():
-        plot_reset_rate_heatmap(
-            reset_counts=cps,
-            title=f"Reset rate by arm for agent {name}",
-            save_path=f"reset_rate_{name}.png"
-        )
+        plot_reset_rate_heatmap(reset_counts=cps,title=f"Reset rate by arm for agent {name}", save_path=f"plots/simple2_reset_rate_heatmap_{name}.png")
 
 if __name__ == "__main__":
     main()

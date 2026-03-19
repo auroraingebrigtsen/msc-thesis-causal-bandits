@@ -27,7 +27,7 @@ def only(W: list[Any], Z: set[Any]) -> list[Any]:
 
 
 
-### Functions to compute different POMIS sets ###
+### Helpers for computing the POMIS ###
 
 def MISs(G: CausalDiagram, Y: str) -> FrozenSet[FrozenSet[str]]:
     """ All minimal intervention sets """

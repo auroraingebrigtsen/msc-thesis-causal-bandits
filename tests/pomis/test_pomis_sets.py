@@ -31,10 +31,18 @@ DIAGRAMS = [
         bidirected_edges=[],
         target="Y",
     ),
+    dict(
+        name="Diagram 3",
+        nodes=["X", "Z", "Y"],
+        directed_edges=[("X", "Y"), ("Z", "Y")],
+        bidirected_edges=[],
+        target="Y",
+    )
 ]
 
 @pytest.fixture(params=DIAGRAMS, ids=lambda s: s["name"])
 def diagrams(request):
+    """Create the NPSEM causal diagram, and a causal diagram with my code."""
     spec = request.param
 
     npsem_cd = NPSEM_CausalDiagram(
@@ -61,6 +69,7 @@ def diagrams(request):
     ],
 )
 def test_sets_match_npsem(diagrams, npsem_fn, my_fn):
+    """Test that the MUCT, IB, and POMISs match  between my implementation and NPSEM"""
     npsem_cd, my_cd, target = diagrams
     expected = npsem_fn(npsem_cd, target)
     actual = my_fn(my_cd, target)

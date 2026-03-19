@@ -1,7 +1,5 @@
 from cmab.scm.scm import SCM
-import numpy as np
 from cmab.typing import Intervention, Intervention
-import itertools
 from .base import BaseCausalBanditEnv
 
 class  CausalBanditEnv(BaseCausalBanditEnv):

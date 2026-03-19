@@ -6,11 +6,12 @@ from cmab.typing import Intervention, Observation
 from collections import defaultdict
 from river import drift
 from itertools import product
+import numpy as np
 
-class MyFirstAgent(PomisUCBAgent):
-    def __init__(self, reward_node:str, G: CausalDiagram, arms: list[Intervention], c:float=2, 
+class SrUCBAgent(PomisUCBAgent):
+    def __init__(self, reward_node:str, G: CausalDiagram, arms: list[Intervention], c:float=np.sqrt(2), atomic:bool=False, 
                  delta:float=0.5, lambda_:float=5.0, min_samples_for_detection:int=10):
-        super().__init__(reward_node=reward_node, G=G, arms=arms, c=c)
+        super().__init__(reward_node=reward_node, G=G, arms=arms, c=c, atomic=atomic)
         self.G = G
         self.nodes = list(G.nodes)
         self.parents = {node: list(G.Pa({node}, include_self=False)) for node in self.nodes}
@@ -57,13 +58,17 @@ class MyFirstAgent(PomisUCBAgent):
                     # Could consider adding some of the previous observations to the new CPD state to make it more robust, but for now we just reset it.
 
         if len(detected) > 0:
+            # Add variables sharing an UC with nodes in detected, to detected, as these cannot be guaranteed invariant
+            for v in list(detected):
+                detected.update(self.G.bidirected_neighbors[v])
             # Reset the arms that are not guaranteed to be invariant to this change
-            for a in self.arms - self._structural_resets(detected):
+            for a in set(self.arms) - set(self._structural_resets(detected)):
                 arm_index = self.arm_to_index[a]
                 self.reset_arm(arm_index)
 
 
     def _structural_resets(self, detected: set[str]) -> None:
+        print("Detected", detected)
         invariant_arms = []
         seen_intervention_sets = {}
         S =[f"S_{i}" for i in range(len(detected))]

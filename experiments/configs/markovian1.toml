@@ -1,0 +1,45 @@
+name = "markovian1"
+environment = "markovian1"
+
+[run]
+seed = 42
+T = 2000
+n_runs = 100
+
+[env_params]
+reward_node = "Y"
+atomic = true
+include_empty = false
+p_x = 0.1
+p_z = 0.7
+p_y = 0.9
+
+[env_params.schedule]
+type = "controlled"
+exogenous = ["U_X", "U_X", "U_X"]
+new_params = [0.9, 0.1, 0.9]
+every = 500
+
+[agents.sr_ucb]
+enabled = true
+c = 2.0
+delta = 0.005
+lambda = 20.0
+min_samples_for_detection = 30
+atomic = true
+
+[agents]
+agents = ["UCB", "PH-UCB", "PH-UCB-arm", "SR-UCB"]
+
+[agents_params]
+enabled = false
+c = 2.0
+delta = 0.005
+lambda = 20.0
+min_samples_for_detection = 30
+reset_all = true
+
+[output]
+plot_regret_path = "plots/markovian1_regret.png"
+plot_reset_heatmap_prefix = "plots/markovian1_reset_rate"
+save_results_dir = "results/markovian1"

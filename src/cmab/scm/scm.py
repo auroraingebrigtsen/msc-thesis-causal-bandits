@@ -89,25 +89,19 @@ class SCM:
     def get_causal_diagram(self) -> CausalDiagram:
         """Get the causal diagram (with bidirected edges for UCs) and no exogenous nodes."""
         directed_edges = []
-        noise_vars = []
         bidirected_edges = []
         for v in self.V:
             for parent in self.F[v].v_parents:
                 directed_edges.append((parent, v))
         for u in self.U:
             children = [v for v in self.V if u in self.F[v].u_parents]
-            if len(children) == 0:
-                continue
+            if len(children) > 1:
+                print("ADDING THE UNOBSERVED CONFOUNDER", u, "BETWEEN", children)
+                for i in range(len(children)):
+                    for j in range(i + 1, len(children)):
+                        bidirected_edges.append((children[i], children[j], u))
 
-            if len(children) == 1:
-                noise_vars.append((u, children[0]))
-                continue
-
-            for i in range(len(children)):
-                for j in range(i + 1, len(children)):
-                    bidirected_edges.append((children[i], children[j], u))
-
-        return CausalDiagram(nodes=set(self.V), directed_edges=directed_edges, bidirected_edges=bidirected_edges, noise_vars=noise_vars)
+        return CausalDiagram(nodes=set(self.V), directed_edges=directed_edges, bidirected_edges=bidirected_edges)
 
     def reset(self, seed:int) -> None:
         self.seed = seed

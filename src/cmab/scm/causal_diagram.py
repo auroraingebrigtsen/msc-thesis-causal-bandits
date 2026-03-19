@@ -10,7 +10,6 @@ class CausalDiagram:
         nodes: set[str],
         directed_edges: list[tuple[str, str]],
         bidirected_edges: list[tuple[str, str, str]] = [],
-        noise_vars: list[tuple[str, str]] = [],
     ):
         self.nodes = nodes
         self.directed_edges = directed_edges
@@ -122,18 +121,10 @@ class CausalDiagram:
             if x not in intervention_set and y not in intervention_set
         ]
 
-        new_noise_vars = []
-        for (u,v) in self.noise_vars:
-            if v in intervention_set:
-                new_noise_vars.append((u, None))
-            else:
-                new_noise_vars.append((u, v))
-
         return CausalDiagram(
             nodes=self.nodes,
             directed_edges=new_directed_edges,
             bidirected_edges=new_bidirected_edges,
-            noise_vars=new_noise_vars
         )
 
     def causal_order(self, backward=False) -> tuple:
@@ -145,9 +136,7 @@ class CausalDiagram:
         
 
     def d_separated(self, X: set[str], Y: set[str], Z: set[str]) -> bool:
-        """Check if X and Y are d-separated given Z using networx. 
-        Adds bidirected edges as latent confounders. Note that this is not the most efficient way to check d-separation, but it is correct and we can optimize later if needed.
-        """
+        """Check if X and Y are d-separated given Z using networx. """
         G = nx.DiGraph()
         G.add_nodes_from(self.nodes)
         G.add_edges_from(self.directed_edges)
