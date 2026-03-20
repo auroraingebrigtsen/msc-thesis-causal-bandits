@@ -58,7 +58,7 @@ def main():
     # 500: X, 1000: Y, 1500: Z, 2000: Z 
     reward_node = 'Y'
     schedule = ControlledSchedule(exogenous=['U_X', 'U_Y', 'U_X', 'U_Z'], new_params=[0.2, 0.9, 0.9, 0.1], every=500)
-    env = NSCausalBanditEnv(scm=scm, reward_node=reward_node, seed=SEED, atomic=True, shift_schedule=schedule, include_empty=False)
+    env = NSCausalBanditEnv(scm=scm, reward_node=reward_node, seed=SEED, atomic=True, schedule=schedule, include_empty=False)
     print(f"Number of actions: {len(env.action_space)}")
     print(f"Action space: {env.action_space}")
 

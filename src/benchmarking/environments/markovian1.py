@@ -63,6 +63,6 @@ def build_markovian1(params, seed):
         reward_node=params["reward_node"],
         seed=seed,
         atomic=True,
-        shift_schedule=schedule,
+        schedule=schedule,
         include_empty=False
     )

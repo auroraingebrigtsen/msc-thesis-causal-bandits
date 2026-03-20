@@ -7,18 +7,18 @@ from .ns.scheduling.base import ShiftSchedule
 
 class NSCausalBanditEnv(BaseCausalBanditEnv):
     def __init__(self, scm: SCM, reward_node: str, side_observations: bool = True, seed:int=42, atomic: bool = False,
-                  non_intervenable: list[str] = [], shift_schedule: ShiftSchedule = None, include_empty: bool = True):
+                  non_intervenable: list[str] = [], schedule: ShiftSchedule = None, include_empty: bool = True):
         super().__init__(scm, reward_node, side_observations, seed, atomic, non_intervenable, include_empty=include_empty)
         self.state = None
-        self.shift_schedule = shift_schedule
+        self.schedule = schedule
 
     def step(self, action: Intervention):
 
         self._step += 1
         values = self.scm.sample(intervention=action)
 
-        if self.shift_schedule is not None:
-            event = self.shift_schedule.next(t=self._step, scm=self.scm, rng=self.rng)
+        if self.schedule is not None:
+            event = self.schedule.next(t=self._step, scm=self.scm, rng=self.rng)
 
             if event is not None:
                 self.scm.apply_shift(event)
@@ -41,5 +41,5 @@ class NSCausalBanditEnv(BaseCausalBanditEnv):
             self.seed = ns_seed
             self.rng = np.random.default_rng(seed=ns_seed)
         
-        if self.shift_schedule is not None:
-            self.shift_schedule.reset()
+        if self.schedule is not None:
+            self.schedule.reset()

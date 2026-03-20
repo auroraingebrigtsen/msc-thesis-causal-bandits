@@ -67,6 +67,6 @@ def build_markovian2(config):
         reward_node=reward_node,
         seed=config.seed,
         atomic=True,
-        shift_schedule=schedule,
+        schedule=schedule,
         include_empty=False
     )

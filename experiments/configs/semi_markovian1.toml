@@ -1,5 +1,4 @@
 name = "semi_markovian1"
-environment = "semi_markovian1"
 
 [run]
 seed = 42
@@ -20,26 +19,18 @@ exogenous = ['U_X', 'U_Y', 'U_X', 'U_Z']
 new_params = [0.2, 0.9, 0.9, 0.1]
 every = 500
 
-[agents.sr_ucb]
-enabled = true
-c = 2.0
-delta = 0.005
-lambda = 20.0
-min_samples_for_detection = 30
-atomic = true
-
 [agents]
 agents = ["UCB", "PH-UCB", "PH-UCB-arm", "SR-UCB"]
 
 [agents_params]
 enabled = false
-c = 2.0
+c = 1.41421356237
 delta = 0.005
 lambda = 20.0
 min_samples_for_detection = 30
 reset_all = true
+atomic = true
 
 [output]
 plot_regret_path = "plots/semi_markovian1_regret.png"
 plot_reset_heatmap_prefix = "plots/semi_markovian1_reset_rate"
-save_results_dir = "results/semi_markovian1"

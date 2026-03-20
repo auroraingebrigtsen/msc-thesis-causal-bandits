@@ -1,6 +1,5 @@
 import tomllib
 from pathlib import Path
-from cmab.utils.plotting import plot_regrets
 from benchmarking.run import run
 
 def load_config(path: str):

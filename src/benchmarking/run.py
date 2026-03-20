@@ -65,4 +65,4 @@ def run(cfg):
                                    change_points=cps, T=T, save_path=cfg["output"]["plot_regret_path"])
     for name, cps in resat_arms.items():
         plot_reset_rate_heatmap(reset_counts=cps,title=f"Reset rate by arm for agent {name}", 
-                                save_path=f"plots/{cfg['output']['plot_reset_heatmap_prefix']}_{name}.png")
+                                save_path=f"{cfg['output']['plot_reset_heatmap_prefix']}_{name}.png")

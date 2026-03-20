@@ -76,7 +76,7 @@ def main():
         reward_node=reward_node,
         seed=SEED,
         atomic=True,
-        shift_schedule=schedule,
+        schedule=schedule,
         include_empty=False
     )
 
