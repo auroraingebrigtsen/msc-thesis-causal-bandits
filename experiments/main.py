@@ -8,7 +8,7 @@ def load_config(path: str):
 
 
 def main():
-    cfg_path = Path("configs/markovian1.toml")
+    cfg_path = Path("configs/markovian1/small_changes.toml")
     cfg = load_config(cfg_path)
     run(cfg)
 

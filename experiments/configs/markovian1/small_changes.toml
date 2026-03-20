@@ -1,0 +1,33 @@
+name = "markovian1_small_changes"
+
+[run]
+seed = 42
+T = 2000
+n = 100
+
+[env_params]
+environment = "markovian1"
+reward_node = "Y"
+atomic = true
+include_empty = false
+p_x = 0.1
+p_z = 0.7
+p_y = 0.9
+
+[env_params.schedule]
+type = "controlled"
+exogenous = ["U_Y", "U_X", "U_Z"]
+new_params = [0.65, 0.4, 0.9]
+every = 500
+
+[agents]
+names = ["UCB", "PH-UCB", "PH-UCB-arm", "SR-UCB"]
+
+[agents_params]
+c = 1.41421356237
+delta = 0.005
+lambda = 20.0
+min_samples_for_detection = 30
+atomic = true
+
+[output]

@@ -1,6 +1,9 @@
+from os import path
+
 from cmab.utils.plotting import  plot_regrets_and_change_points, plot_reset_rate_heatmap
 from cmab.metrics.dynamic_regret import DynamicRegret
 import numpy as np
+from pathlib import Path
 from .agent_factory import build_agents
 from .environments import build_environment
 
@@ -9,6 +12,8 @@ def run(cfg):
     env = build_environment(cfg["env_params"], seed)
     reward_node = env.reward_node
 
+    print(f"Running experiment: {cfg['name']}")
+    print(f"Environment: {cfg['env_params']['environment']}")
     print(f"Number of actions: {len(env.action_space)}")
     print(f"Action space: {env.action_space}")
 
@@ -59,10 +64,28 @@ def run(cfg):
 
             averaged_regrets[name] += regret.get_regrets() / n
 
-    #plot_regrets(regrets=averaged_regrets.values(), labels=averaged_regrets.keys(), title="Averaged Cumulative Regret")
+    output_path = cfg['output'].get(
+        'output_path',
+        f"plots/{cfg['env_params']['environment']}/{cfg['name']}/"
+    )
+
+    path = Path(output_path)
+    path.mkdir(parents=True, exist_ok=True)
+
     cps = env.schedule.get_change_points(T=T, rng=np.random.default_rng(seed))
-    plot_regrets_and_change_points(regrets=averaged_regrets.values(), labels=averaged_regrets.keys(), title="Averaged Cumulative Regret with Change Points", 
-                                   change_points=cps, T=T, save_path=cfg["output"]["plot_regret_path"])
+
+    plot_regrets_and_change_points(
+        regrets=averaged_regrets.values(),
+        labels=averaged_regrets.keys(),
+        title="Averaged Cumulative Regret with Change Points",
+        change_points=cps,
+        T=T,
+        save_path=path / "regret.png"
+    )
+
     for name, cps in resat_arms.items():
-        plot_reset_rate_heatmap(reset_counts=cps,title=f"Reset rate by arm for agent {name}", 
-                                save_path=f"{cfg['output']['plot_reset_heatmap_prefix']}_{name}.png")
+        plot_reset_rate_heatmap(
+            reset_counts=cps,
+            title=f"Reset rate by arm for agent {name}",
+            save_path=path / f"reset_rate_{name}.png"
+        )
