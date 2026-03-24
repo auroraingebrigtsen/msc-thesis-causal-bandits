@@ -1,17 +1,19 @@
-name = "semi_markovian1"
+name = "iv"
 
 [run]
 seed = 42
-T = 2000
-n_runs = 100
+T = 2
+n_runs = 1
 
 [env_params]
+environment = "iv"
 reward_node = "Y"
-atomic = true
+atomic = false
 include_empty = false
-p_x = 0.1
-p_z = 0.7
-p_y = 0.9
+p_x = 0.6
+p_z = 0.1
+p_y = 0.2
+p_zy = 0.5
 
 [env_params.schedule]
 type = "controlled"
@@ -29,8 +31,4 @@ delta = 0.005
 lambda = 20.0
 min_samples_for_detection = 30
 reset_all = true
-atomic = true
-
-[output]
-plot_regret_path = "plots/semi_markovian1_regret.png"
-plot_reset_heatmap_prefix = "plots/semi_markovian1_reset_rate"
+atomic = false

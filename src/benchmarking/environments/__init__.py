@@ -1,11 +1,9 @@
 from .markovian1 import build_markovian1
-from .markovian2 import build_markovian2
-from .semi_markovian1 import build_semi_markovian1
+from .iv import build_iv
 
 ENV_BUILDERS = {
     "markovian1": build_markovian1,
-    "markovian2": build_markovian2,
-    "semi_markovian1": build_semi_markovian1,
+    "iv": build_iv,
 }
 
 

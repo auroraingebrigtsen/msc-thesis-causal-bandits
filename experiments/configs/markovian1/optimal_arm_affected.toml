@@ -1,4 +1,4 @@
-name = "markovian1"
+name = "markovian1_optimal_arm_affected"
 
 [run]
 seed = 42
@@ -11,13 +11,13 @@ reward_node = "Y"
 atomic = true
 include_empty = false
 p_x = 0.1
-p_z = 0.7
+p_z = 0.9
 p_y = 0.9
 
 [env_params.schedule]
 type = "controlled"
-exogenous = ["U_X", "U_X", "U_X"]
-new_params = [0.9, 0.1, 0.9]
+exogenous = ["U_Z", "U_X", "U_Y"]
+new_params = [0.6, 0.9, 0.1]
 every = 500
 
 [agents]
@@ -31,5 +31,3 @@ min_samples_for_detection = 30
 atomic = true
 
 [output]
-plot_regret_path = "plots/markovian1_regret.png"
-plot_reset_heatmap_prefix = "plots/markovian1_reset_rate"
