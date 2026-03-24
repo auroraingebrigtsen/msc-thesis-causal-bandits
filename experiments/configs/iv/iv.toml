@@ -3,7 +3,7 @@ name = "iv"
 [run]
 seed = 42
 T = 2
-n_runs = 1
+n = 1
 
 [env_params]
 environment = "iv"
@@ -22,13 +22,13 @@ new_params = [0.2, 0.9, 0.9, 0.1]
 every = 500
 
 [agents]
-agents = ["UCB", "PH-UCB", "PH-UCB-arm", "SR-UCB"]
+names = ["UCB", "PH-UCB", "PH-UCB-arm", "SR-UCB"]
 
 [agents_params]
-enabled = false
 c = 1.41421356237
 delta = 0.005
 lambda = 20.0
 min_samples_for_detection = 30
-reset_all = true
 atomic = false
+
+[output]

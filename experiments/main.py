@@ -8,7 +8,7 @@ def load_config(path: str):
 
 
 def main():
-    cfg_path = Path("configs/markovian1/optimal_arm_affected.toml")
+    cfg_path = Path("configs/iv/iv.toml")
     cfg = load_config(cfg_path)
     run(cfg)
 
