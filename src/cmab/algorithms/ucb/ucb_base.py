@@ -19,7 +19,6 @@ class UCBAgent(BaseBanditAlgorithm):
 
     def select_arm(self) -> Intervention:
         self.t += 1
-
         for i in range(self.n_arms):   # ensure each arm is tried once
             if self.arm_samples[i] == 0:
                 return self.arms[i]

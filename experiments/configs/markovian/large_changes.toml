@@ -1,4 +1,4 @@
-name = "markovian1_large_changes"
+name = "markovian_large_changes"
 
 [run]
 seed = 42
@@ -6,11 +6,11 @@ T = 2000
 n = 100
 
 [env_params]
-environment = "markovian1"
+environment = "markovian"
 reward_node = "Y"
 atomic = true
 include_empty = false
-p_x = 0.1
+p_x = 0.6
 p_z = 0.7
 p_y = 0.9
 
@@ -21,7 +21,7 @@ new_params = [0.9, 0.1, 0.9]
 every = 500
 
 [agents]
-names = ["UCB", "PH-UCB", "PH-UCB-arm", "SR-UCB"]
+names = ["UCB", "PH-UCB-global", "PH-UCB-arm", "SR-UCB"]
 
 [agents_params]
 c = 1.41421356237

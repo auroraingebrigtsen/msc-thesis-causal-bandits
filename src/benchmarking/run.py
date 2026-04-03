@@ -1,5 +1,3 @@
-from os import path
-
 from cmab.utils.plotting import  plot_regrets_and_change_points, plot_reset_rate_heatmap
 from cmab.metrics.dynamic_regret import DynamicRegret
 import numpy as np
@@ -14,12 +12,7 @@ def run(cfg):
 
     print(f"Running experiment: {cfg['name']}")
     print(f"Environment: {cfg['env_params']['environment']}")
-    print(f"Number of actions: {len(env.action_space)}")
-    print(f"Action space: {env.action_space}")
-
-    for action in env.action_space:
-        expected_reward = env.scm.expected_value_binary(variable=reward_node, intervention=action)
-        print(f"Expected reward for action {action}: {expected_reward:.4f}")
+    print(f"Environment has {len(env.action_space)} actions")
 
     agents = build_agents(cfg["agents"]["names"],  cfg["agents_params"], env)
 
@@ -36,7 +29,7 @@ def run(cfg):
     for name, agent in agents.items():
         print(f"Running agent: {name}")
         for i in range(n):
-            if i % 100 == 0:
+            if i % 10 == 0:
                 print(f"  Run {i}/{n}")
 
             agent.reset()
@@ -44,6 +37,12 @@ def run(cfg):
             # Use a different seed for SCM for each run. Use same seed for NS to have same change points across agents
             # If you want different change points across runs, use SEED + i for ns_seed
             env.reset(scm_seed=seed+i, ns_seed=seed)
+
+            # print expected reward of all arms 
+            if i == 0:  # Only print for the first run, as it will be the same for all runs since we reset with the same seed
+                for arm in agent.arms:
+                    expected_reward = env.scm.expected_value_binary(variable=reward_node, intervention=arm)
+                    print(f"Expected reward for arm {arm}: {expected_reward}")
 
             for _ in range(T):
                 optimal_arm, opt_exp_reward = env.get_optimal(binary=True)

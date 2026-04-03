@@ -1,10 +1,10 @@
-from .base import ShiftSchedule
+from .base import BaseSchedule
 from cmab.typing import ShiftEvent
 from cmab.scm.scm import SCM
 import numpy as np
 from typing import Optional
 
-class RandomSchedule(ShiftSchedule):
+class RandomSchedule(BaseSchedule):
     def __init__(self, prob_shift: float, max_delta: float):
         self.prob_shift = prob_shift
         self.max_delta = max_delta

@@ -11,22 +11,23 @@ reward_node = "Y"
 atomic = false
 include_empty = false
 p_x = 0.6
-p_z =0.15
-p_y =  0.2
+p_z =0.7
+p_y =  0.9
 p_zy = 0.5
+mechanism = "and"
 
 [env_params.schedule]
 type = "controlled"
 # First change:  changes from optimal arm from do(X=1) to do(Z=1)
 # Second change: Does nothing - nothing is resat - nothing is affected
 # Third change: changes from optimal arm from do(Z=1) to do(X=1)
-# Fourth change: changes from optimal arm from do(X=1) to do(X=0)
-exogenous = ['U_ZY', 'U_X', 'U_Z', 'U_Y']
-new_params = [0.9, 0.9, 0.05, 0.6]
+# Fourth change: changes from optimal arm from do(X=1) to do(X=0) (it is no fourth change lol but it is Y 0.2 -> 0.6
+exogenous = ['U_ZY', 'U_X', 'U_Z']
+new_params = [0.9, 0.9, 0.3]
 every = 500
 
 [agents]
-names = ["UCB", "PH-UCB", "PH-UCB-arm", "SR-UCB"]
+names = [ "POMIS-UCB", "PH-UCB-global", "PH-UCB-arm", "SR-UCB"]
 
 [agents_params]
 c = 1.41421356237

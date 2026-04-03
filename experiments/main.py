@@ -8,9 +8,12 @@ def load_config(path: str):
 
 
 def main():
-    cfg_path = Path("configs/iv/iv.toml")
-    cfg = load_config(cfg_path)
-    run(cfg)
+    try:
+        cfg_path = Path("configs/markovian/small_changes.toml")
+        cfg = load_config(cfg_path)
+        run(cfg)
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 
 if __name__ == "__main__":

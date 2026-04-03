@@ -9,7 +9,7 @@ from cmab.algorithms.ucb import UCBAgent, SlidingWindowUCBAgent
 from cmab.algorithms.ucb.pomis_ucb import PomisUCBAgent
 from cmab.algorithms.ucb.sr_ucb import SrUCBAgent
 from cmab.algorithms.ucb.ph_ucb import PageHinkleyUCBAgent
-from cmab.environments.ns.scheduling.controlled_schedule import ControlledSchedule
+from cmab.environments.ns.scheduling.controlled_shift_schedule import ControlledShiftSchedule
 from cmab.utils.plotting import  plot_regrets, plot_regrets_and_change_points, plot_reset_rate_heatmap
 from cmab.metrics.dynamic_regret import DynamicRegret
 import numpy as np
@@ -65,7 +65,7 @@ def main():
 
     reward_node = 'Y'
 
-    schedule = ControlledSchedule(
+    schedule = ControlledShiftSchedule(
         exogenous=['U_X', 'U_X', 'U_X'],
         new_params=[0.9, 0.1, 0.9],
         every=500

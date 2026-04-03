@@ -1,10 +1,8 @@
-from .base import ShiftSchedule
+from .base import BaseSchedule
 from cmab.typing import ShiftEvent
-from cmab.scm.scm import SCM
-import numpy as np
 from typing import Optional
 
-class ControlledSchedule(ShiftSchedule):
+class ControlledShiftSchedule(BaseSchedule):
     def __init__(self, exogenous: list[str], new_params: list[float], every: int):
         assert len(exogenous) == len(new_params)
         self.exogenous = list(exogenous)
@@ -12,18 +10,18 @@ class ControlledSchedule(ShiftSchedule):
         self.every = every  # Apply a shift at every t steps
         self._idx = 0
        
-    def next(self, t: int, scm: SCM, rng: np.random.Generator) -> Optional[ShiftEvent]:
+    def next(self, t: int) -> Optional[ShiftEvent]:
         if t == 0 or (t % self.every != 0):
             return None
         
         if self._idx >= len(self.exogenous):
             return None
         
-        event = ShiftEvent(exogenous=self.exogenous[self._idx], param_updates={"p": self.new_params[self._idx]})
+        event = ShiftEvent(variable=self.exogenous[self._idx], param_updates={"p": self.new_params[self._idx]})
         self._idx += 1
         return event
     
-    def get_change_points(self, T:int, rng: np.random.Generator = None) -> list[int]:
+    def get_change_points(self, T:int) -> list[int]:
         return [t for t in range(1, T) if t % self.every == 0]
     
     def reset(self) -> None:

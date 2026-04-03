@@ -2,12 +2,12 @@ from cmab.scm.scm import SCM
 import numpy as np
 from cmab.typing import Intervention
 from .base import BaseCausalBanditEnv
-from .ns.scheduling.base import ShiftSchedule
+from .ns.scheduling.base import BaseSchedule
     
 
 class NSCausalBanditEnv(BaseCausalBanditEnv):
     def __init__(self, scm: SCM, reward_node: str, side_observations: bool = True, seed:int=42, atomic: bool = False,
-                  non_intervenable: list[str] = [], schedule: ShiftSchedule = None, include_empty: bool = True):
+                  non_intervenable: list[str] = [], schedule: BaseSchedule = None, include_empty: bool = True):
         super().__init__(scm, reward_node, side_observations, seed, atomic, non_intervenable, include_empty=include_empty)
         self.state = None
         self.schedule = schedule
@@ -18,7 +18,7 @@ class NSCausalBanditEnv(BaseCausalBanditEnv):
         values = self.scm.sample(intervention=action)
 
         if self.schedule is not None:
-            event = self.schedule.next(t=self._step, scm=self.scm, rng=self.rng)
+            event = self.schedule.next(t=self._step)
 
             if event is not None:
                 self.scm.apply_shift(event)

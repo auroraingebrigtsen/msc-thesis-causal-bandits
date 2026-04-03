@@ -4,12 +4,12 @@ from cmab.scm.scm import SCM
 from cmab.typing import ShiftEvent
 import numpy as np
 
-class ShiftSchedule(ABC):
+class BaseSchedule(ABC):
     def __init__(self):
         pass
 
     @abstractmethod
-    def next(self, t: int, scm: SCM, rng) -> Optional[ShiftEvent]:
+    def next(self, t: int) -> Optional[ShiftEvent]:
         pass
 
     @abstractmethod

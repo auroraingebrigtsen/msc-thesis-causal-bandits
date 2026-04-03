@@ -1,5 +1,4 @@
 from cmab.algorithms.ucb.pomis_ucb import PomisUCBAgent
-from cmab.algorithms.ucb.ucb_base import UCBAgent
 from typing import override
 from cmab.scm.causal_diagram import CausalDiagram
 from cmab.typing import Intervention, Observation
@@ -15,14 +14,14 @@ class SrUCBAgent(PomisUCBAgent):
         self.G = G
         self.nodes = list(G.nodes)
         self.parents = {node: list(G.Pa({node}, include_self=False)) for node in self.nodes}
-
+        
         self.delta = delta
         self.lambda_ = lambda_
         self.min_samples_for_detection = min_samples_for_detection
 
         self.cpds = self._init_cpds()
         self.resat_arms = {arm: [] for arm in self.arms}  # Keep track of detected change points for analysis 
-        #self.test = ['X', 'Y', 'Z', 'Z']
+        #self.test = ['Y', 'X', 'Z', 'Y'] 
         
     def _init_cpds(self):
         cpds = defaultdict(dict)
@@ -38,7 +37,7 @@ class SrUCBAgent(PomisUCBAgent):
         super()._update(arm, observation)
 
         detected = set()
-        # if self.t > 1 and self.t < 2500 and self.t % 500 == 0:
+        # if self.t > 1 and self.t < 2000 and self.t % 500 == 0:
         #         print(f"\nStep {self.t}: Change point detected for nodes: {self.test[self.t//500 - 1]}!")
         #         detected.add(self.test[self.t//500 - 1])
 

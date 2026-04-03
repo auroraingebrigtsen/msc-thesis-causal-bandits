@@ -1,5 +1,4 @@
 from .base import BaseMechanism
-from typing import Any
 
 class XORMechanism(BaseMechanism):
     def __init__(self, v_parents: list[str], u_parents: list[str]):

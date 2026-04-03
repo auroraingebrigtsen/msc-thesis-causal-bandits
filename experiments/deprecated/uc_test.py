@@ -9,7 +9,7 @@ from cmab.algorithms.ucb import UCBAgent, SlidingWindowUCBAgent
 from cmab.algorithms.ucb.pomis_ucb import PomisUCBAgent
 from cmab.algorithms.ucb.sr_ucb import SrUCBAgent
 from cmab.algorithms.ucb.ph_ucb import PageHinkleyUCBAgent
-from cmab.environments.ns.scheduling.controlled_schedule import ControlledSchedule
+from cmab.environments.ns.scheduling.controlled_shift_schedule import ControlledShiftSchedule
 from cmab.utils.plotting import  plot_regrets, plot_regrets_and_change_points, plot_reset_rate_heatmap
 from cmab.metrics.dynamic_regret import DynamicRegret
 import numpy as np
@@ -57,7 +57,7 @@ def main():
 
     # 500: X, 1000: Y, 1500: Z, 2000: Z 
     reward_node = 'Y'
-    schedule = ControlledSchedule(exogenous=['U_X', 'U_Y', 'U_X', 'U_Z'], new_params=[0.2, 0.9, 0.9, 0.1], every=500)
+    schedule = ControlledShiftSchedule(exogenous=['U_X', 'U_Y', 'U_X', 'U_Z'], new_params=[0.2, 0.9, 0.9, 0.1], every=500)
     env = NSCausalBanditEnv(scm=scm, reward_node=reward_node, seed=SEED, atomic=True, schedule=schedule, include_empty=False)
     print(f"Number of actions: {len(env.action_space)}")
     print(f"Action space: {env.action_space}")

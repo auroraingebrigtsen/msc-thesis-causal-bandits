@@ -83,7 +83,7 @@ class SCM:
 
     def apply_shift(self, event: ShiftEvent):
         """Apply a shift event to the SCM by updating the relevant exogenous distribution."""
-        dist = self.P_u_marginals[event.exogenous]
+        dist = self.P_u_marginals[event.variable]
         dist.update_parameters(event.param_updates)
         
     def get_causal_diagram(self) -> CausalDiagram:
@@ -96,7 +96,6 @@ class SCM:
         for u in self.U:
             children = [v for v in self.V if u in self.F[v].u_parents]
             if len(children) > 1:
-                print("ADDING THE UNOBSERVED CONFOUNDER", u, "BETWEEN", children)
                 for i in range(len(children)):
                     for j in range(i + 1, len(children)):
                         bidirected_edges.append((children[i], children[j], u))

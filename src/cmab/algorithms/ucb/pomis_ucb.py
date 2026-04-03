@@ -11,6 +11,7 @@ class PomisUCBAgent(UCBAgent):
         self.atomic = atomic
         super().__init__(reward_node, self.arms, c)
         print(f"Total: {len(self.arms)} arms selected from {len(arms)} total arms.")
+        print("Pomis arms:", self.arms)
 
     def _get_pomis_arms(self, all_arms: list[Intervention], reward_node: str, atomic: bool) -> list[Intervention]:
         """Select only arms that correspond to POMISs."""

@@ -1,11 +1,11 @@
 from cmab.scm.domain.binary import BinaryDomain
 from cmab.scm.distribution.bernoulli import Bernoulli
-from cmab.scm.mechanism.custom import CustomMechanism
+from cmab.scm.mechanism import CustomMechanism, XORMechanism
 from cmab.scm.scm import SCM
 from cmab.environments import NSCausalBanditEnv
-from cmab.environments.ns.scheduling.controlled_schedule import ControlledSchedule
+from cmab.environments.ns.scheduling.controlled_shift_schedule import ControlledShiftSchedule
 
-def build_markovian1(params, seed):
+def build_markovian(params, seed):
     V = ['X', 'Z', 'Y']
     U = ['U_X', 'U_Z', 'U_Y']
 
@@ -29,12 +29,11 @@ def build_markovian1(params, seed):
         u_parents=['U_Z'],
         f=lambda _, u: int(u['U_Z'])
     )
-    mechanism_Y = CustomMechanism(
+    mechanism_Y = XORMechanism(
         v_parents=['X', 'Z'],
-        u_parents=['U_Y'],
-        f=lambda v, u: int((v['X'] ^ v['Z']) ^ u['U_Y'])
+        u_parents=['U_Y']
     )
-
+        
     scm = SCM(
         U=U,
         V=V,
@@ -52,7 +51,7 @@ def build_markovian1(params, seed):
         seed=seed
     )
 
-    schedule = ControlledSchedule(
+    schedule = ControlledShiftSchedule(
         exogenous=params["schedule"]["exogenous"],
         new_params=params["schedule"]["new_params"],
         every=params["schedule"]["every"]
@@ -62,7 +61,7 @@ def build_markovian1(params, seed):
         scm=scm,
         reward_node=params["reward_node"],
         seed=seed,
-        atomic=True,
+        atomic=params["atomic"],
         schedule=schedule,
-        include_empty=False
+        include_empty=params["include_empty"]
     )
