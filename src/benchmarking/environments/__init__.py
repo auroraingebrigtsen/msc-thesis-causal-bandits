@@ -1,11 +1,13 @@
 from .markovian import build_markovian
 from .iv import build_iv
 from .semi_markovian import build_semi_markovian
+from .noncausal import build_noncausal
 
 ENV_BUILDERS = {
     "markovian": build_markovian,
     "iv": build_iv,
-    "semi_markovian": build_semi_markovian
+    "semi_markovian": build_semi_markovian,
+    "noncausal": build_noncausal
 }
 
 

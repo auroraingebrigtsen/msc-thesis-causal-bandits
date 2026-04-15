@@ -1,4 +1,5 @@
-from cmab.utils.plotting import  plot_regrets_and_change_points, plot_reset_rate_heatmap
+from cmab.utils.plotting import  plot_regrets_and_change_points, plot_reset_rate_heatmap, plot_historical_means
+from cmab.utils.utils import compute_means_history
 from cmab.metrics.dynamic_regret import DynamicRegret
 import numpy as np
 from pathlib import Path
@@ -18,6 +19,21 @@ def run(cfg):
 
     T= cfg["run"]["T"]  # number of steps in each run
     n = cfg["run"]["n"]  # number of runs to average over
+
+    output_path = cfg['output'].get(
+    'output_path',
+    f"plots/{cfg['env_params']['environment']}/{cfg['name']}/"
+)
+
+    path = Path(output_path)
+    path.mkdir(parents=True, exist_ok=True)
+
+    means_history = compute_means_history(env, T=T)
+    plot_historical_means(
+        means_history=means_history,
+        breakpoints=env.schedule.get_change_points(T=T),
+        save_path=path / "historical_means.png"
+    )
 
     regret = DynamicRegret(T=T)
 
@@ -63,20 +79,12 @@ def run(cfg):
 
             averaged_regrets[name] += regret.get_regrets() / n
 
-    output_path = cfg['output'].get(
-        'output_path',
-        f"plots/{cfg['env_params']['environment']}/{cfg['name']}/"
-    )
-
-    path = Path(output_path)
-    path.mkdir(parents=True, exist_ok=True)
-
-    cps = env.schedule.get_change_points(T=T, rng=np.random.default_rng(seed))
+    cps = env.schedule.get_change_points(T=T)
 
     plot_regrets_and_change_points(
         regrets=averaged_regrets.values(),
         labels=averaged_regrets.keys(),
-        title="Averaged Cumulative Regret with Change Points",
+        title="Averaged Cumulative Regret",
         change_points=cps,
         T=T,
         save_path=path / "regret.png"

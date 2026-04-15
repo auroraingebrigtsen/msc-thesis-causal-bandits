@@ -3,6 +3,7 @@ import numpy as np
 from cmab.typing import Intervention
 import itertools
 from abc import ABC, abstractmethod
+import copy
 
 class BaseCausalBanditEnv(ABC):
     def __init__(self, scm: SCM, reward_node: str, side_observations: bool, seed: int, atomic: bool, non_intervenable: list[str], include_empty: bool = True):
@@ -67,6 +68,14 @@ class BaseCausalBanditEnv(ABC):
 
         best_arm_idx = np.argmax(expected_rewards)
         return self.action_space[best_arm_idx], expected_rewards[best_arm_idx]
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        new_obj = cls.__new__(cls)
+        memo[id(self)] = new_obj
+        for k, v in self.__dict__.items():
+            setattr(new_obj, k, copy.deepcopy(v, memo))
+        return new_obj
 
     @abstractmethod
     def step(self, action: Intervention):

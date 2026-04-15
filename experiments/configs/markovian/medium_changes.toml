@@ -1,4 +1,4 @@
-name = "markovian_large_changes"
+name = "markovian_medium_changes"
 
 [run]
 seed = 42
@@ -10,14 +10,18 @@ environment = "markovian"
 reward_node = "Y"
 atomic = true
 include_empty = false
-p_x = 0.1#0.6
+p_x = 0.5
 p_z = 0.7
 p_y = 0.9
 
 [env_params.schedule]
 type = "controlled"
+# X=0 er alltid 0.34
+# X=1 er alltid 0.66
+# Z=0 starter 0.5-> t:500 0.25 t:1000 0.5
+# Z=1 starter 0.5 -> t:500 0.74 t:1000 0.5
 exogenous = ["U_X", "U_X", "U_X"]
-new_params = [0.9, 0.1, 0.9]
+new_params = [0.8, 0.5, 0.8]
 every = 500
 
 [agents]

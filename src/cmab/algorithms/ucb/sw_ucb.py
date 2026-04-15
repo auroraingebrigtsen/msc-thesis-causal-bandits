@@ -10,7 +10,7 @@ class SlidingWindowUCBAgent(BaseBanditAlgorithm):
         self.arms = arms
         self.n_arms = len(arms)
         self.c = c
-        self.estimates=np.zeros(self.n_arms)
+        self.means=np.zeros(self.n_arms)
         self.W=window_size
         self.t=0
         self.buffers=[deque(maxlen=self.W) for _ in range(self.n_arms)]
@@ -25,7 +25,7 @@ class SlidingWindowUCBAgent(BaseBanditAlgorithm):
         for i in range(self.n_arms):
             n_i = len(self.buffers[i])
             bound = self.c * np.sqrt(np.log(L) / n_i)
-            ucb_values.append(self.estimates[i] + bound)
+            ucb_values.append(self.means[i] + bound)
         return self.arms[np.argmax(ucb_values)]
 
     def _update(self, arm: Intervention, observation: Observation) -> None:
@@ -34,9 +34,9 @@ class SlidingWindowUCBAgent(BaseBanditAlgorithm):
         arm_index = self.arm_to_index[arm]
         buf = self.buffers[arm_index]
         buf.append(reward)
-        self.estimates[arm_index] = sum(buf) / len(buf)
+        self.means[arm_index] = sum(buf) / len(buf)
 
     def reset(self):
         self.t=0
         self.buffers=[deque(maxlen=self.W) for _ in range(self.n_arms)]
-        self.estimates = np.zeros(self.n_arms)
+        self.means = np.zeros(self.n_arms)

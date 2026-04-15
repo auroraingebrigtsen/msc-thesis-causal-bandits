@@ -27,7 +27,7 @@ new_params = [0.9, 0.9, 0.3]
 every = 500
 
 [agents]
-names = [ "POMIS-UCB", "PH-UCB-global", "PH-UCB-arm", "SR-UCB"]
+names = [ "POMIS-UCB", "PHT-UCB-global", "PHT-UCB-arm", "SR-UCB"]
 
 [agents_params]
 c = 1.41421356237

@@ -16,14 +16,17 @@ p_y = 0.9
 
 [env_params.schedule]
 type = "controlled"
-# First CP: UX becomes the optimal arm
-# Second CP: UY becomes the optimal arm
+# Initially E(Y|do(X=0)) = 34, E(Y|do(X=1)) = 0.66, E(Y|do(Z=0)) = 0.42, E(Y|do(Z=1)) = 0.58 (X1 > Z1 >Z0 > X0)
+# 500:  E(Y|do(X=0)) = 0.54, E(Y|do(X=1)) = 0.46, E(Y|do(Z=0)) = 0.52, E(Y|do(Z=1)) = 0.48 (X0 > Z0 > Z1 > X1)
+# 1000: E(Y|do(X=0)) = 0.4, E(Y|do(X=1)) = 0.6, E(Y|do(Z=0)) = 0.45, E(Y|do(Z=1)) = 0.55 (X1 > Z1 > Z0 > X0)
+# 1500: Back to inital
 exogenous = ["U_Y", "U_Y", "U_Y"]
 new_params = [0.4, 0.75, 0.9]
+#new_params = [0.1, 0.9, 0.1]
 every = 500
 
 [agents]
-names = ["UCB", "PH-UCB-global", "PH-UCB-arm", "SR-UCB"]
+names = ["UCB", "PHT-UCB-global", "PHT-UCB-arm", "SR-UCB"]
 
 [agents_params]
 c = 1.41421356237

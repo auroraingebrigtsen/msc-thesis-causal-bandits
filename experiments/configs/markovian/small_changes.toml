@@ -17,11 +17,17 @@ p_y = 0.9
 [env_params.schedule]
 type = "controlled"
 exogenous = ["U_X", "U_X", "U_X"]
+# Initially do(X=1) is optimal
+# Same at 500
+# 1000 do(Z=1) is slighyly better than do(X=1)
+# 1500 do(Z=1) is becomes a bit more better than do(X=1)
+
+
 new_params = [0.66, 0.72, 0.78]
 every = 500
 
 [agents]
-names = ["UCB", "PH-UCB-global", "PH-UCB-arm", "SR-UCB"]
+names = ["UCB", "PHT-UCB-global", "PHT-UCB-arm", "SR-UCB"]
 
 [agents_params]
 c = 1.41421356237

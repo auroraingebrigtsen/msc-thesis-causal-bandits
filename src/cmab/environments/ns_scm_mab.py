@@ -14,14 +14,14 @@ class NSCausalBanditEnv(BaseCausalBanditEnv):
 
     def step(self, action: Intervention):
 
-        self._step += 1
-        values = self.scm.sample(intervention=action)
-
         if self.schedule is not None:
             event = self.schedule.next(t=self._step)
 
             if event is not None:
                 self.scm.apply_shift(event)
+        
+        self._step += 1
+        values = self.scm.sample(intervention=action)
         
         if self.side_observations:
             return self._get_obs(), values, False, False, self._get_info()  # observation, reward, terminated, truncated, info

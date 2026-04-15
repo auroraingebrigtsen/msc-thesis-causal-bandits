@@ -1,8 +1,4 @@
-from cmab.algorithms.ucb import UCBAgent
-from cmab.algorithms.ucb.pomis_ucb import PomisUCBAgent
-from cmab.algorithms.ucb.sr_ucb import SrUCBAgent
-from cmab.algorithms.ucb.ph_ucb import PageHinkleyUCBAgent
-from cmab.algorithms.ucb.var_reset_ucb import VarResetUCBAgent
+from cmab.algorithms.ucb import UCBAgent, PomisUCBAgent, PageHinkleyUCBAgent, SrUCBAgent
 
 
 def build_agent(name: str, params: dict, env):
@@ -24,7 +20,7 @@ def build_agent(name: str, params: dict, env):
             c=params["c"],
         )
 
-    elif name == "PH-UCB-global":
+    elif name == "PHT-UCB-global":
         return PageHinkleyUCBAgent(
             reward_node=reward_node,
             G=G,
@@ -37,7 +33,7 @@ def build_agent(name: str, params: dict, env):
             reset_all=True,
         )
 
-    elif name == "PH-UCB-arm":
+    elif name == "PHT-UCB-arm":
         return PageHinkleyUCBAgent(
             reward_node=reward_node,
             G=G,
@@ -61,17 +57,6 @@ def build_agent(name: str, params: dict, env):
             min_samples_for_detection=params["min_samples_for_detection"],
             atomic=params["atomic"],
         )
-    
-    elif name == "VarReset-UCB":
-        return VarResetUCBAgent(
-            reward_node=reward_node,
-            arms=env.action_space,
-            c=params["c"],
-            delta=params["delta"],
-            lambda_=params["lambda"],
-            min_samples_for_detection=params["min_samples_for_detection"],
-        )
-
     else:
         raise ValueError(f"Unknown agent: {name}")
 
