@@ -1,17 +1,19 @@
 import copy
 from cmab.typing import ShiftEvent, MechanismChangeEvent
 
-def compute_means_history(environment, T):
+def compute_means_history(environment, T, effective_action_space=None):
     """
     Compute the means history for each arm, inserting NaN values at the specified breakpoints.
 
     Parameters:
     - environment: The environment object which contains the SCM and schedule.
     - T: Total number of time steps to compute the history for.
+    - effective_action_space: Optional set of arms to compute the means for. If None, computes for all arms in the environment's action space.
     Returns:
     - A  dictionary mapping each arm to a list of means over time
     """
     env = copy.deepcopy(environment)  # Create a copy of the environment to avoid modifying the original SCM during mean computation
+    env.action_space = effective_action_space if effective_action_space is not None else env.action_space
     means_history = dict((arm, []) for arm in env.action_space)
     change_points = env.schedule.get_change_points(T=T)
     for t in range(T):

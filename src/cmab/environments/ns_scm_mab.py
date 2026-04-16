@@ -22,7 +22,7 @@ class NSCausalBanditEnv(BaseCausalBanditEnv):
                 self.scm.apply_shift(event)
             elif isinstance(event, MechanismChangeEvent):
                 self.scm.apply_mechanism_change(event)
-        
+            
         self._step += 1
         values = self.scm.sample(intervention=action)
         

@@ -21,12 +21,12 @@ p_zy = 0.54
 
 [env_params.schedule]
 type = "controlled_shift_schedule"
-variables = ['U_S', 'U_T', 'U_WX']
+variables = ['U_WX', 'U_WX', 'U_WX']
 new_params = [0.65, 0.31, 0.9]
 every = 500
 
 [agents]
-names = ["POMIS-UCB", "PHT-UCB", "PHT-UCB-arm", "SR-UCB"]
+names = ["POMIS-UCB", "PHT-UCB-global", "PHT-UCB-arm", "SR-UCB"]
 
 [agents_params]
 c = 1.41421356237

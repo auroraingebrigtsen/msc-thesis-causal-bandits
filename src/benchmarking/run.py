@@ -1,11 +1,13 @@
 from cmab.utils.plotting import  plot_regrets_and_change_points, plot_reset_rate_heatmap, plot_historical_means
 from cmab.utils.utils import compute_means_history
 from cmab.metrics.dynamic_regret import DynamicRegret
+from cmab.typing import Intervention
 import numpy as np
 from pathlib import Path
 from .agent_factory import build_agents
 from .environments import build_environment
 from cmab.environments.ns.scheduling.controlled_schedule import ControlledShiftSchedule, ControlledMechanismChangeSchedule
+from cmab.environments.ns.scheduling.stationary_schedule import StationarySchedule
 
 def run(cfg):
     seed = cfg["run"]["seed"]
@@ -25,6 +27,8 @@ def run(cfg):
             new_params=env_params["schedule"]["new_params"],
             every=env_params["schedule"]["every"]
         )
+    else:
+        schedule = StationarySchedule()
     
     env = build_environment(cfg["env_params"], seed, schedule)
     reward_node = env.reward_node
@@ -34,6 +38,16 @@ def run(cfg):
     print(f"Environment has {len(env.action_space)} actions")
 
     agents = build_agents(cfg["agents"]["names"],  cfg["agents_params"], env)
+
+    action_space: set[Intervention] = set(env.action_space)
+    agent_action_space = {arm for agent in agents.values() for arm in agent.arms}
+    effective_action_space = action_space & agent_action_space
+
+    for action in effective_action_space:
+        print(
+            f"Arm: {action}, Expected reward: "
+            f"{env.scm.expected_value_binary(variable=reward_node, intervention=action)}"
+        )
 
     T= cfg["run"]["T"]  # number of steps in each run
     n = cfg["run"]["n"]  # number of runs to average over
@@ -45,7 +59,7 @@ def run(cfg):
 
     path = Path(output_path)
     path.mkdir(parents=True, exist_ok=True)
-    means_history = compute_means_history(env, T=T)
+    means_history = compute_means_history(env, T=T, effective_action_space=effective_action_space)
     plot_historical_means(
         means_history=means_history,
         breakpoints=env.schedule.get_change_points(T=T),
@@ -70,12 +84,6 @@ def run(cfg):
             # Use a different seed for SCM for each run. Use same seed for NS to have same change points across agents
             # If you want different change points across runs, use SEED + i for ns_seed
             env.reset(scm_seed=seed+i, ns_seed=seed)
-
-            # print expected reward of all arms 
-            if i == 0:  # Only print for the first run
-                for arm in agent.arms:
-                    expected_reward = env.scm.expected_value_binary(variable=reward_node, intervention=arm)
-                    print(f"Expected reward for arm {arm}: {expected_reward}")
 
             for _ in range(T):
                 optimal_arm, opt_exp_reward = env.get_optimal(binary=True)
