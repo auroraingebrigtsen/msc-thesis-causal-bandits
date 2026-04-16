@@ -11,10 +11,10 @@ ENV_BUILDERS = {
 }
 
 
-def build_environment(params, seed):
+def build_environment(params, seed, schedule=None):
     try:
         builder = ENV_BUILDERS[params["environment"]]
     except KeyError as e:
         raise ValueError(f"Unknown environment: {params['environment']}") from e
 
-    return builder(params, seed)
+    return builder(params, seed, schedule=schedule)

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 from cmab.scm.scm import SCM
-from cmab.typing import ShiftEvent
+from cmab.typing import BaseEvent
 import numpy as np
 
 class BaseSchedule(ABC):
@@ -9,7 +9,7 @@ class BaseSchedule(ABC):
         pass
 
     @abstractmethod
-    def next(self, t: int) -> Optional[ShiftEvent]:
+    def next(self, t: int) -> Optional[BaseEvent]:
         pass
 
     @abstractmethod

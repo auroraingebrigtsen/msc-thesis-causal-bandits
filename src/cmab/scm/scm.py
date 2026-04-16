@@ -1,6 +1,7 @@
 from typing import Mapping
 
-from cmab.typing import ShiftEvent
+from cmab.scm.mechanism.custom import CustomMechanism
+from cmab.typing import MechanismChangeEvent, ShiftEvent
 from .distribution.base import BaseDistribution
 from .mechanism.base import BaseMechanism as Mechanism
 from .domain.base import FiniteDiscreteDomain
@@ -84,8 +85,17 @@ class SCM:
     def apply_shift(self, event: ShiftEvent):
         """Apply a shift event to the SCM by updating the relevant exogenous distribution."""
         dist = self.P_u_marginals[event.variable]
-        dist.update_parameters(event.param_updates)
-        
+        dist.update_parameters(event.new_param)
+
+    def apply_mechanism_change(self, event: MechanismChangeEvent):
+        """Apply a mechanism change event to the SCM by updating the relevant mechanism."""
+        new_mechanism = CustomMechanism(
+            v_parents=self.F[event.variable].v_parents, 
+            u_parents=self.F[event.variable].u_parents,
+            f=lambda v, u: eval(event.new_mechanism)
+        )
+        self.F[event.variable] = new_mechanism
+
     def get_causal_diagram(self) -> CausalDiagram:
         """Get the causal diagram (with bidirected edges for UCs) and no exogenous nodes."""
         directed_edges = []

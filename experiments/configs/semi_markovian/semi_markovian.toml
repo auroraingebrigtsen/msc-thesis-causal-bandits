@@ -20,8 +20,8 @@ p_wx = 0.51
 p_zy = 0.54
 
 [env_params.schedule]
-type = "controlled"
-exogenous = ['U_S', 'U_T', 'U_WX']
+type = "controlled_shift_schedule"
+variables = ['U_S', 'U_T', 'U_WX']
 new_params = [0.65, 0.31, 0.9]
 every = 500
 

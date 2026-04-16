@@ -1,4 +1,5 @@
 import copy
+from cmab.typing import ShiftEvent, MechanismChangeEvent
 
 def compute_means_history(environment, T):
     """
@@ -14,8 +15,12 @@ def compute_means_history(environment, T):
     means_history = dict((arm, []) for arm in env.action_space)
     change_points = env.schedule.get_change_points(T=T)
     for t in range(T):
-        if t in change_points:
-            env.scm.apply_shift(env.schedule.next(t=t))
+        change_event = env.schedule.next(t=t)
+        if isinstance(change_event, ShiftEvent):
+            env.scm.apply_shift(change_event)
+        elif isinstance(change_event, MechanismChangeEvent):
+            env.scm.apply_mechanism_change(change_event)
+
         for arm in env.action_space:
             if t==0 or t in change_points:
                 means_history[arm].append(env.scm.expected_value_binary(variable=env.reward_node, intervention=arm))

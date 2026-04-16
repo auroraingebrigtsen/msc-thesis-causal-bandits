@@ -17,21 +17,3 @@ class XORMechanism(BaseMechanism):
         for u_parent in self.u_parents:
             result ^= u_vals[u_parent]
         return result
-    
-    def expected(self, v_vals_expected: dict[str, float], u_vals_expected: dict[str, float]) -> float:
-        """Compute the expected value of the XOR mechanism given expected values of parents. Values in {0,1}.
-        Args:
-            v_vals_expected (dict[str, float]): Expected values of parent variables
-            u_vals_expected (dict[str, float]): Expected values of exogenous parent variables
-        Returns:
-            float: Expected value of the XOR mechanism
-        """
-        
-        prob_one = 0.0
-        for parent in self.v_parents:
-            p = v_vals_expected[parent]
-            prob_one = prob_one * (1 - p) + (1 - prob_one) * p
-        for u_parent in self.u_parents:
-            p = u_vals_expected[u_parent]
-            prob_one = prob_one * (1 - p) + (1 - prob_one) * p
-        return prob_one

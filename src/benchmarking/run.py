@@ -5,10 +5,28 @@ import numpy as np
 from pathlib import Path
 from .agent_factory import build_agents
 from .environments import build_environment
+from cmab.environments.ns.scheduling.controlled_schedule import ControlledShiftSchedule, ControlledMechanismChangeSchedule
 
 def run(cfg):
     seed = cfg["run"]["seed"]
-    env = build_environment(cfg["env_params"], seed)
+    env_params = cfg["env_params"]
+
+    schedule = None
+    if env_params["schedule"]["type"] == "controlled_mechanism_schedule":
+        schedule = ControlledMechanismChangeSchedule(
+            variables=env_params["schedule"]["variables"],
+            new_mechanisms=env_params["schedule"]["new_mechanisms"],
+            every=env_params["schedule"]["every"]
+        )
+
+    elif env_params["schedule"]["type"] == "controlled_shift_schedule":
+        schedule = ControlledShiftSchedule(
+            variables=env_params["schedule"]["variables"],
+            new_params=env_params["schedule"]["new_params"],
+            every=env_params["schedule"]["every"]
+        )
+    
+    env = build_environment(cfg["env_params"], seed, schedule)
     reward_node = env.reward_node
 
     print(f"Running experiment: {cfg['name']}")
@@ -23,11 +41,10 @@ def run(cfg):
     output_path = cfg['output'].get(
     'output_path',
     f"plots/{cfg['env_params']['environment']}/{cfg['name']}/"
-)
+    )
 
     path = Path(output_path)
     path.mkdir(parents=True, exist_ok=True)
-
     means_history = compute_means_history(env, T=T)
     plot_historical_means(
         means_history=means_history,
@@ -55,7 +72,7 @@ def run(cfg):
             env.reset(scm_seed=seed+i, ns_seed=seed)
 
             # print expected reward of all arms 
-            if i == 0:  # Only print for the first run, as it will be the same for all runs since we reset with the same seed
+            if i == 0:  # Only print for the first run
                 for arm in agent.arms:
                     expected_reward = env.scm.expected_value_binary(variable=reward_node, intervention=arm)
                     print(f"Expected reward for arm {arm}: {expected_reward}")
@@ -64,7 +81,6 @@ def run(cfg):
                 optimal_arm, opt_exp_reward = env.get_optimal(binary=True)
 
                 action = agent.select_arm()
-                expected_reward = env.scm.expected_value_binary(variable=reward_node, intervention=action)
 
                 _, observation, _, _, _ = env.step(action)
                 agent._update(action, observation)

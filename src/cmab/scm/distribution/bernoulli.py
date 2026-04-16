@@ -20,10 +20,10 @@ class Bernoulli(BaseDistribution):
         else:
             return 0.0
         
-    def update_parameters(self, param_updates: dict[str, float]) -> None:
+    def update_parameters(self, new_params: dict[str, float]) -> None:
         """Update the parameters of the distribution based on the provided updates."""
-        if "p" in param_updates:
-            self.p = param_updates["p"]
+        if "p" in new_params:
+            self.p = new_params["p"]
 
     def reset(self) -> None:
         self.p = self.p0

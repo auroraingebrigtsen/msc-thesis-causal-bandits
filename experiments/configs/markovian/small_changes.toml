@@ -15,8 +15,8 @@ p_z = 0.7
 p_y = 0.9
 
 [env_params.schedule]
-type = "controlled"
-exogenous = ["U_X", "U_X", "U_X"]
+type = "controlled_shift_schedule"
+variables = ["U_X", "U_X", "U_X"]
 # Initially do(X=1) is optimal
 # Same at 500
 # 1000 do(Z=1) is slighyly better than do(X=1)

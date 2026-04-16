@@ -3,10 +3,8 @@ from cmab.scm.distribution.bernoulli import Bernoulli
 from cmab.scm.mechanism import CustomMechanism, XORMechanism
 from cmab.scm.scm import SCM
 from cmab.environments import NSCausalBanditEnv
-from cmab.environments.ns.scheduling.controlled_shift_schedule import ControlledShiftSchedule
-import numpy as np
 
-def build_noncausal(params, seed):
+def build_noncausal(params, seed, schedule=None):
     V = ['X', 'Y']
     U = ['U_0', 'U_1']
 
@@ -42,12 +40,6 @@ def build_noncausal(params, seed):
             'Y': mechanism_Y
         },
         seed=seed
-    )
-
-    schedule = ControlledShiftSchedule(
-        exogenous=params["schedule"]["exogenous"],
-        new_params=params["schedule"]["new_params"],
-        every=params["schedule"]["every"]
     )
 
     return NSCausalBanditEnv(

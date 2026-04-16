@@ -9,7 +9,7 @@ class BaseDistribution(ABC):
         pass
 
     @abstractmethod
-    def update_parameters(self, param_updates: dict[str, float]) -> None:
+    def update_parameters(self, new_params: dict[str, float]) -> None:
         pass
 
     @abstractmethod

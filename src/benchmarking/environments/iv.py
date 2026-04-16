@@ -4,9 +4,8 @@ from cmab.scm.mechanism.custom import CustomMechanism
 from cmab.scm.mechanism.xor import XORMechanism
 from cmab.scm.scm import SCM
 from cmab.environments import NSCausalBanditEnv
-from cmab.environments.ns.scheduling.controlled_shift_schedule import ControlledShiftSchedule
 
-def build_iv(params, seed):
+def build_iv(params, seed, schedule=None):
     V = ['X', 'Z', 'Y']
     U = ['U_X', 'U_Z', 'U_Y', 'U_ZY']
 
@@ -52,17 +51,9 @@ def build_iv(params, seed):
         seed=seed
     )
 
-    # 500: X, 1000: Y, 1500: Z, 2000: Z 
-    reward_node = 'Y'
-    schedule = ControlledShiftSchedule(
-        exogenous=params["schedule"]["exogenous"], 
-        new_params=params["schedule"]["new_params"], 
-        every=params["schedule"]["every"]
-        )
-
     return NSCausalBanditEnv(
         scm=scm,
-        reward_node=reward_node,
+        reward_node=params["reward_node"],
         seed=seed,
         atomic=params["atomic"],
         schedule=schedule,

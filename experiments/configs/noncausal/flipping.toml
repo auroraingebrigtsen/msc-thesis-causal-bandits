@@ -14,8 +14,8 @@ p_0 = 0.5 # Probability of Y=1 when X=0
 p_1 = 0.3  # Probability of Y=1 when X=1
 
 [env_params.schedule]
-type = "controlled"
-exogenous = ["U_1", "U_1"]
+type = "controlled_shift_schedule"
+variables = ["U_1", "U_1"]
 new_params = [0.8, 0.4]
 every = 2000
 
