@@ -2,6 +2,28 @@
 Code and experiments for my master thesis (INF399 @uib) on non-stationary causal bandits.
 
 
+## Modules
+
+The repository contains two modules under `src`.
+
+### Benchmarking Module
+Provides the infrastructure for running `.toml`-based experiments.  
+It includes:
+
+- reusable bandit environments
+- an agent factory for constructing algorithms
+- a `run` entry point for executing experiments
+
+The `run` function evaluates a set of bandit algorithms in a specified environment for **T** time steps and reports results averaged over **n** runs using the provided random seed.
+
+### CMAB Module
+Contains the causal bandit implementation.  
+This module includes:
+
+- a general causal bandit environment based on a structural causal model (SCM)
+- support for non-stationary schedules
+- implementations of different bandit algorithms
+
 ## Usage
 Make sure you have uv installed
 
@@ -24,7 +46,7 @@ uv sync
 - Create a ```.toml``` file in the ```experiments/configs``` folder
 - Use the ```experiments/configs/example_config.toml``` to specify the values of the agents and environment (including the SCM and the change schedule)
 - Point the entry point at your config file in  ```experiments/main.py```
-- Run the experiment 
+- Run the experiment by entering ```experiments``` and running the command:
  ```bash
 uv run main.py
 ```
