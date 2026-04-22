@@ -29,9 +29,8 @@ def build_iv(params, seed, schedule=None):
         mechanism_X = CustomMechanism(v_parents=[], u_parents=['U_X'], 
                                   f=lambda v, u: u['U_X'])
         mechanism_Z = CustomMechanism(v_parents=['X'], u_parents=['U_Z', 'U_ZY'], 
-                                      f=lambda v, u: v['X'] | u['U_Z'] | u['U_ZY'])
-        mechanism_Y = CustomMechanism(v_parents=['Z'], u_parents=['U_Y', 'U_ZY'], 
-                                      f=lambda v, u: v['Z'] & u['U_Y'] | u['U_ZY'])
+                                      f=lambda v, u: u['U_Z'] | (u['U_ZY'] & v['X']))
+        mechanism_Y = XORMechanism(v_parents=['Z'], u_parents=['U_Y', 'U_ZY'])
 
     scm = SCM(
         U=U,

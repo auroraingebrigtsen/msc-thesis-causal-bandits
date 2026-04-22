@@ -70,7 +70,7 @@ def run(cfg):
 
     averaged_regrets = {name: np.zeros(T) for name in agents.keys()}
     resat_arms = {
-        name: {arm: np.zeros(T, dtype=int) for arm in env.action_space} 
+        name: {arm: np.zeros(T, dtype=int) for arm in effective_action_space} 
         for name in agents.keys()
     }
     for name, agent in agents.items():
@@ -84,7 +84,6 @@ def run(cfg):
             # Use a different seed for SCM for each run. Use same seed for NS to have same change points across agents
             # If you want different change points across runs, use SEED + i for ns_seed
             env.reset(scm_seed=seed+i, ns_seed=seed)
-
             for _ in range(T):
                 optimal_arm, opt_exp_reward = env.get_optimal(binary=True)
 
@@ -93,7 +92,9 @@ def run(cfg):
                 _, observation, _, _, _ = env.step(action)
                 agent._update(action, observation)
                 expected_reward = env.scm.expected_value_binary(variable=reward_node, intervention=action)
-
+                print(f"Time step: {_}")
+                print(f"Current UCB parameters:\n means: {agent.means} \n counts: {agent.arm_samples}")
+                print(f"Computing regret between action {action} with expected reward {expected_reward} and optimal expected reward {opt_exp_reward} of optimal arm {optimal_arm}")
                 regret.update(expected_reward, opt_exp_reward)
             
             if hasattr(agent, 'resat_arms'):

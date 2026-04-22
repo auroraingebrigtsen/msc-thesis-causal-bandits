@@ -1,8 +1,8 @@
-name = "markovian_medium_changes"
+name = "markovian_test"
 
 [run]
 seed = 42
-T = 2000
+T = 10000
 n = 100
 
 [env_params]
@@ -10,15 +10,15 @@ environment = "markovian"
 reward_node = "Y"
 atomic = true
 include_empty = false
-p_x = 0.6
+p_x = 0.1#0.6
 p_z = 0.7
 p_y = 0.9
 
 [env_params.schedule]
 type = "controlled_shift_schedule"
 variables = ["U_X", "U_X", "U_X"]
-new_params = [0.8, 0.6, 0.8]
-every = 500
+new_params = [0.9, 0.1, 0.9]
+every = 2500
 
 [agents]
 names = ["UCB", "PHT-UCB-global", "PHT-UCB-arm", "SR-UCB"]
@@ -26,7 +26,7 @@ names = ["UCB", "PHT-UCB-global", "PHT-UCB-arm", "SR-UCB"]
 [agents_params]
 c = 1.41421356237
 delta = 0.005
-lambda = 20.0
+lambda = 25.0
 min_samples_for_detection = 30
 atomic = true
 

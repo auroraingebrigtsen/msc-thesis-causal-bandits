@@ -31,10 +31,11 @@ def build_semi_markovian(params, seed, schedule=None):
                                   f=lambda v, u: u['U_S'])
     mechanism_T = CustomMechanism(v_parents=[], u_parents=['U_T'], 
                                   f=lambda v, u: u['U_T'])
-    mechanism_W = XORMechanism(v_parents=['S'], u_parents=['U_W', 'U_WX'])
+    mechanism_W = CustomMechanism(v_parents=['S'], u_parents=['U_W', 'U_WX'],
+                                    f=lambda v, u: u['U_W'] | (u['U_WX'] & v['S']))
     mechanism_Z = XORMechanism(v_parents=[], u_parents=['U_Z', 'U_ZY'])
     mechanism_X = CustomMechanism(v_parents=['T', 'Z'], u_parents=['U_X', 'U_WX'],
-                                      f=lambda v, u: 1 ^ v['T'] ^ v['Z'] ^ u['U_X'] ^ u['U_WX'])
+                                      f=lambda v, u: 1 ^ u['U_X'] ^ (u['U_WX'] | (v['T'] & v['Z'])))
     mechanism_Y = XORMechanism(v_parents=['T','W', 'X'], u_parents=['U_Y', 'U_ZY'])
 
     scm = SCM(

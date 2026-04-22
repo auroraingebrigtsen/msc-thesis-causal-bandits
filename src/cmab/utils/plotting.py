@@ -69,20 +69,21 @@ def plot_reset_rate_heatmap(
 
 def plot_historical_means(
     means_history: dict,
-    title: str = "History of reward-means per arm",
+    title: str = "Reward-means per arm over horizon T=2000",
     save_path: str = "plots/historical_means.png",
     breakpoints: list[int] | None = None,
 ):
     fig, ax = plt.subplots(figsize=(12, 6))
 
     for arm, means in means_history.items():
-        ax.plot(means, label=str(arm), linewidth=2.5, marker="o", markevery=500, markersize=8)
+        intervention = f"do({', '.join(f'{var}={val}' for var, val in arm)})"
+        ax.plot(means, label=f"Arm: {intervention}", linewidth=2.5, marker="o", markevery=500, markersize=8)
 
     for bp in (breakpoints or []):
         ax.axvline(x=bp, color="black", linestyle="--", linewidth=1.5)
 
     ax.set_xlabel("Time steps")
-    ax.set_ylabel("Successive means of the arms")
+    ax.set_ylabel("Mean reward")
     ax.set_title(title)
     ax.legend()
     ax.grid(True)
