@@ -12,8 +12,8 @@ atomic = false
 include_empty = false
 p_x = 0.1
 p_z =0.7
-p_y =  0.9
-p_zy = 0.1
+p_y =  0.3
+p_zy = 0.7
 mechanism = "and"
 
 [env_params.schedule]
@@ -22,9 +22,9 @@ type = "controlled_shift_schedule"
 # Second change: Does nothing - nothing is resat - nothing is affected
 # Third change: changes from optimal arm from do(Z=1) to do(X=1)
 # Fourth change: changes from optimal arm from do(X=1) to do(X=0) (it is no fourth change lol but it is Y 0.2 -> 0.6
-variables = ['U_ZY', 'U_ZY', 'U_ZY', 'U_ZY', 'U_ZY', 'U_ZY', 'U_ZY', 'U_ZY', 'U_ZY', 'U_ZY'] 
-new_params = [0.9, 0.1, 0.9, 0.1, 0.9, 0.1, 0.1, 0.9, 0.1, 0.9]
-every = 200
+variables = ['U_ZY', 'U_ZY', 'U_ZY']
+new_params = [0.3, 0.7, 0.3]
+every = 500
 
 [agents]
 names = [ "POMIS-UCB", "PHT-UCB-global", "PHT-UCB-arm", "SR-UCB"]
