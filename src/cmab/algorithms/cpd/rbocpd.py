@@ -18,28 +18,13 @@ class RBOCPD(BaseCPD):
         self.pseudo_dist = np.array([1])
         self.like1 = 1
         self.drift_detected = False
-        self.restarted = False
 
     def update(self, reward: float) -> None:
-        if self.restarted:
-            self._update_forecaster_distribution_m(reward=reward)
-        else:
-            self._update_laplace_prediction(reward=reward)
+        self._update_forecaster_distribution_m(reward=reward)
+        self._update_laplace_prediction(reward=reward)
         estimated_best_expert = np.argmax(self.forecaster_distribution)
         self.drift_detected = not(estimated_best_expert == 0)
-
-
-    def _update_forecaster_distribution(self, reward):
-        """Updating the forecaster distribution using the message passing algorithm"""
-        if reward == 1:
-            likelihood = np.divide(self.alphas, self.alphas + self.betas)
-        else:
-            likelihood = np.divide(self.betas, self.alphas + self.betas)
-        forecaster_distribution0 = self.gamma*np.dot(likelihood, np.transpose(self.forecaster_distribution)) # Creating new Forecaster 
-        forecaster_distribution = (1-self.gamma)*likelihood*self.forecaster_distribution # update the previous forecasters 
-        forecaster_distribution = np.append(forecaster_distribution,forecaster_distribution0) # Including the new forecaseter into the previons ones
-        self.forecaster_distribution = forecaster_distribution/np.sum(forecaster_distribution) # Normalization for numerical purposes
-
+        
     def _update_forecaster_distribution_m(self, reward):
         """Updating the forecaster distribution using the message passing algorithm with a modified prior (q)"""
         if reward == 1:
