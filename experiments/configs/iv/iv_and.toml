@@ -12,7 +12,7 @@ atomic = false
 include_empty = false
 p_x = 0.1
 p_z =0.7
-p_y =  0.3
+p_y =  0.9
 p_zy = 0.7
 mechanism = "and"
 
@@ -27,13 +27,14 @@ new_params = [0.3, 0.7, 0.3]
 every = 500
 
 [agents]
-names = [ "POMIS-UCB", "PHT-UCB-global", "PHT-UCB-arm", "SR-UCB"]
+names = [ "POMIS-UCB", "PHT-UCB-global", "PHT-UCB-arm", "SR-UCB", "RBOCPD-UCB-global", "RBOCPD-UCB-arm", "RBOCPD-SR-UCB"]
 
 [agents_params]
 c = 1.41421356237
 delta = 0.005
-lambda = 8.0
+lambda = 20.0
 min_samples_for_detection = 30
 atomic = false
+gamma = 0.0005
 
 [output]

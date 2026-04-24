@@ -1,5 +1,4 @@
-from cmab.algorithms.ucb import UCBAgent, PomisUCBAgent, PageHinkleyUCBAgent, SrUCBAgent
-
+from cmab.algorithms.ucb import *
 
 def build_agent(name: str, params: dict, env):
     G = env.scm.get_causal_diagram()
@@ -56,6 +55,35 @@ def build_agent(name: str, params: dict, env):
             lambda_=params["lambda"],
             min_samples_for_detection=params["min_samples_for_detection"],
             atomic=params["atomic"],
+        )
+    elif name == "RBOCPD-UCB-global":
+        return RBOCPDUCBAgent(
+            reward_node=reward_node,
+            G=G,
+            arms=env.action_space,
+            c=params["c"],
+            atomic=params["atomic"],
+            gamma=params["gamma"],
+            reset_all=True
+        )
+    elif name == "RBOCPD-UCB-arm":
+        return RBOCPDUCBAgent(
+            reward_node=reward_node,
+            G=G,
+            arms=env.action_space,
+            c=params["c"],
+            atomic=params["atomic"],
+            gamma=params["gamma"],
+            reset_all=False
+        )
+    elif name == "RBOCPD-SR-UCB":
+        return RBOCPDSrUCBAgent(
+            reward_node=reward_node,
+            G=G,
+            arms=env.action_space,
+            c=params["c"],
+            atomic=params["atomic"],
+            gamma=params["gamma"],
         )
     else:
         raise ValueError(f"Unknown agent: {name}")
