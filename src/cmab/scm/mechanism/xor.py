@@ -17,3 +17,6 @@ class XORMechanism(BaseMechanism):
         for u_parent in self.u_parents:
             result ^= u_vals[u_parent]
         return result
+
+    def reset(self) -> None:
+        pass  # No parameters to reset in the XOR mechanism

@@ -13,7 +13,7 @@ class BaseEvent:
 
 @dataclass(frozen=True)
 class ShiftEvent(BaseEvent):
-    new_param: dict[str, float] # e.g. ["p" : 0.7] for a binary variable, or {"mean": 0.5, "std": 0.1} for a Gaussian variable
+    new_param: dict[str, float] # e.g. ["p" : 0.7] 
 
 @dataclass(frozen=True)
 class MechanismChangeEvent(BaseEvent):
@@ -21,3 +21,7 @@ class MechanismChangeEvent(BaseEvent):
 
     def as_callable(self) -> Callable:
         return eval(self.new_mechanism)
+    
+@dataclass(frozen=True)
+class LinearMechanismChangeEvent(BaseEvent):
+    new_weights: dict[str, float] 

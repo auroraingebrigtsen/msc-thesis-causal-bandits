@@ -6,7 +6,7 @@ import numpy as np
 from pathlib import Path
 from .agent_factory import build_agents
 from .environments import build_environment
-from cmab.environments.ns.scheduling.controlled_schedule import ControlledShiftSchedule, ControlledMechanismChangeSchedule
+from cmab.environments.ns.scheduling.controlled_schedule import ControlledShiftSchedule, ControlledMechanismChangeSchedule, ControlledLinearMechanismChangeSchedule
 from cmab.environments.ns.scheduling.stationary_schedule import StationarySchedule
 
 def run(cfg):
@@ -25,6 +25,12 @@ def run(cfg):
         schedule = ControlledShiftSchedule(
             variables=env_params["schedule"]["variables"],
             new_params=env_params["schedule"]["new_params"],
+            every=env_params["schedule"]["every"]
+        )
+    elif env_params["schedule"]["type"] == "controlled_linear_mechanism_change_schedule":
+        schedule = ControlledLinearMechanismChangeSchedule(
+            variables=env_params["schedule"]["variables"],
+            new_weights=env_params["schedule"]["new_weights"],
             every=env_params["schedule"]["every"]
         )
     else:
@@ -46,7 +52,7 @@ def run(cfg):
     for action in effective_action_space:
         print(
             f"Arm: {action}, Expected reward: "
-            f"{env.scm.expected_value_binary(variable=reward_node, intervention=action)}"
+            f"{env.scm.expected_value(variable=reward_node, intervention=action)}"
         )
 
     T= cfg["run"]["T"]  # number of steps in each run
@@ -91,7 +97,7 @@ def run(cfg):
 
                 _, observation, _, _, _ = env.step(action)
                 agent._update(action, observation)
-                expected_reward = env.scm.expected_value_binary(variable=reward_node, intervention=action)
+                expected_reward = env.scm.expected_value(variable=reward_node, intervention=action)
                 regret.update(expected_reward, opt_exp_reward)
             
             if hasattr(agent, 'resat_arms'):

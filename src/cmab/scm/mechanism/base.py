@@ -9,3 +9,7 @@ class BaseMechanism(ABC):
     @abstractmethod
     def __call__(self, v_vals: dict[str, Any], u_vals: dict[str, Any]) -> Any:
         pass
+
+    @abstractmethod
+    def reset(self) -> None:
+        pass

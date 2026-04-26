@@ -8,10 +8,10 @@ class Bernoulli(BaseDistribution):
 
     def sample(self, rng) -> int:
         return int(rng.binomial(1, self.p))
-
-    def expected(self):
-        return self.p
     
+    def expected_value(self) -> float:
+        return self.p
+
     def prob(self, x: int) -> float:
         if x == 1:
             return self.p
@@ -24,6 +24,9 @@ class Bernoulli(BaseDistribution):
         """Update the parameters of the distribution based on the provided updates."""
         if "p" in new_params:
             self.p = new_params["p"]
+
+    def support(self) -> list[int]:
+        return [0, 1]
 
     def reset(self) -> None:
         self.p = self.p0

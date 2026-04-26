@@ -62,7 +62,7 @@ class BaseCausalBanditEnv(ABC):
         expected_rewards = np.zeros(len(self.action_space))
         for idx, action in enumerate(self.action_space):
             if binary:
-                expected_rewards[idx] = self.scm.expected_value_binary(variable=self.reward_node, intervention=action)
+                expected_rewards[idx] = self.scm.expected_value(variable=self.reward_node, intervention=action)
             else:
                 raise NotImplementedError("Only binary and discrete expected value computations are implemented.")
 

@@ -3,7 +3,7 @@ import numpy as np
 from cmab.typing import Intervention
 from .base import BaseCausalBanditEnv
 from .ns.scheduling.base import BaseSchedule
-from cmab.typing import ShiftEvent, MechanismChangeEvent
+from cmab.typing import ShiftEvent, MechanismChangeEvent, LinearMechanismChangeEvent
     
 
 class NSCausalBanditEnv(BaseCausalBanditEnv):
@@ -17,11 +17,7 @@ class NSCausalBanditEnv(BaseCausalBanditEnv):
 
         if self.schedule is not None:
             event = self.schedule.next(t=self._step)
-
-            if isinstance(event, ShiftEvent):
-                self.scm.apply_shift(event)
-            elif isinstance(event, MechanismChangeEvent):
-                self.scm.apply_mechanism_change(event)
+            self.scm.apply_change_event(event)
             
         self._step += 1
         values = self.scm.sample(intervention=action)

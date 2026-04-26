@@ -16,6 +16,7 @@ class CausalDiagram:
         self.bidirected_edges = bidirected_edges
         self.parents: dict[str, set[str]] = defaultdict(set)
         self.children: dict[str, set[str]] = defaultdict(set)
+        print("Initializing CausalDiagram with nodes:", type(self.directed_edges))
         for u, v in directed_edges:
             self.parents[v].add(u)
             self.children[u].add(v)
