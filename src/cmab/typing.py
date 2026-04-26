@@ -22,6 +22,3 @@ class MechanismChangeEvent(BaseEvent):
     def as_callable(self) -> Callable:
         return eval(self.new_mechanism)
     
-@dataclass(frozen=True)
-class LinearMechanismChangeEvent(BaseEvent):
-    new_weights: dict[str, float] 

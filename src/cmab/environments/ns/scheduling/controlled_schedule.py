@@ -1,5 +1,5 @@
 from .base import BaseSchedule
-from cmab.typing import ShiftEvent, MechanismChangeEvent, LinearMechanismChangeEvent
+from cmab.typing import ShiftEvent, MechanismChangeEvent
 from typing import Optional
 
 class ControlledMechanismChangeSchedule(BaseSchedule):
@@ -26,34 +26,6 @@ class ControlledMechanismChangeSchedule(BaseSchedule):
     
     def reset(self) -> None:
         self._idx = 0
-
-class ControlledLinearMechanismChangeSchedule(BaseSchedule):
-    def __init__(self, variables: list[str], new_weights: list[dict[str, float]], every: int):
-        assert len(variables) == len(new_weights)
-        self.variables = variables
-        self.new_weights = new_weights
-        self.every = every  # Apply a shift at every t steps
-        self._idx = 0
-        print("Initialized ControlledLinearMechanismChangeSchedule with variables:", self.variables)
-        print(self.new_weights)
-       
-    def next(self, t: int) -> Optional[LinearMechanismChangeEvent]:
-        if t == 0 or (t % self.every != 0):
-            return None
-        
-        if self._idx >= len(self.variables):
-            return None
-        
-        event = LinearMechanismChangeEvent(variable=self.variables[self._idx], new_weights=self.new_weights[self._idx])
-        self._idx += 1
-        return event
-    
-    def get_change_points(self, T:int) -> list[int]:
-        return [t for t in range(1, T) if t % self.every == 0]
-    
-    def reset(self) -> None:
-        self._idx = 0
-
 
 class ControlledShiftSchedule(BaseSchedule):
     def __init__(self, variables: list[str], new_params: list[float], every: int):

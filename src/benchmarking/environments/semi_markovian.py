@@ -1,6 +1,5 @@
 from cmab.scm.distribution.bernoulli import Bernoulli
-from cmab.scm.mechanism.custom import CustomMechanism
-from cmab.scm.mechanism.xor import XORMechanism
+from cmab.scm.mechanism import Mechanism
 from cmab.scm.scm import SCM
 from cmab.environments import NSCausalBanditEnv
 
@@ -17,16 +16,18 @@ def build_semi_markovian(params, seed, schedule=None):
     P_WX = Bernoulli(p=params["p_wx"])
     P_ZY = Bernoulli(p=params["p_zy"])
     
-    mechanism_S = CustomMechanism(v_parents=[], u_parents=['U_S'], 
-                                  f=lambda v, u: u['U_S'])
-    mechanism_T = CustomMechanism(v_parents=[], u_parents=['U_T'], 
-                                  f=lambda v, u: u['U_T'])
-    mechanism_W = CustomMechanism(v_parents=['S'], u_parents=['U_W', 'U_WX'],
-                                    f=lambda v, u: u['U_W'] | (u['U_WX'] & v['S']))
-    mechanism_Z = XORMechanism(v_parents=[], u_parents=['U_Z', 'U_ZY'])
-    mechanism_X = CustomMechanism(v_parents=['T', 'Z'], u_parents=['U_X', 'U_WX'],
-                                      f=lambda v, u: 1 ^ u['U_X'] ^ (u['U_WX'] | (v['T'] & v['Z'])))
-    mechanism_Y = XORMechanism(v_parents=['T','W', 'X'], u_parents=['U_Y', 'U_ZY'])
+    mechanism_S = Mechanism(v_parents=[], u_parents=['U_S'], 
+                            f=lambda v, u: u['U_S'])
+    mechanism_T = Mechanism(v_parents=[], u_parents=['U_T'], 
+                            f=lambda v, u: u['U_T'])
+    mechanism_W = Mechanism(v_parents=['S'], u_parents=['U_W', 'U_WX'],
+                            f=lambda v, u: u['U_W'] | (u['U_WX'] & v['S']))
+    mechanism_Z = Mechanism(v_parents=[], u_parents=['U_Z', 'U_ZY'],
+                            f=lambda v, u: u['U_Z'] | (u['U_ZY'] & v['S']))
+    mechanism_X = Mechanism(v_parents=['T', 'Z'], u_parents=['U_X', 'U_WX'],
+                            f=lambda v, u: 1 ^ u['U_X'] ^ (u['U_WX'] | (v['T'] & v['Z'])))
+    mechanism_Y = Mechanism(v_parents=['T','W', 'X'], u_parents=['U_Y', 'U_ZY'],
+                            f=lambda v, u: 1 ^ u['U_Y'] ^ (u['U_ZY'] | (v['T'] & v['W'] & v['X'])))
 
     scm = SCM(
         U=U,

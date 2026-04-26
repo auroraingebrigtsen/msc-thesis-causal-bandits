@@ -1,7 +1,6 @@
-from .base import BaseMechanism
 from typing import Any, Callable
 
-class CustomMechanism(BaseMechanism):
+class Mechanism:
     """General mechanism defined by a function f, for more specific mechanisms where other generic implementations are not suitable. 
     Args:
         v_parents (list[str]): List of parent variable names
@@ -9,7 +8,8 @@ class CustomMechanism(BaseMechanism):
         f (Callable[[dict[str, Any], dict[str, Any]], Any]): Lambda function defining the mechanism
     """
     def __init__(self, v_parents: list[str], u_parents: list[str], f: Callable[[dict[str, Any], dict[str, Any]], Any]):
-        super().__init__(v_parents=v_parents, u_parents=u_parents)
+        self.v_parents = v_parents
+        self.u_parents = u_parents
         self.initial_f = f
         self.f = f
 

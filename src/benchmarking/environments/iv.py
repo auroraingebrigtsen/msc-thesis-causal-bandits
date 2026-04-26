@@ -1,6 +1,5 @@
 from cmab.scm.distribution.bernoulli import Bernoulli
-from cmab.scm.mechanism.custom import CustomMechanism
-from cmab.scm.mechanism.xor import XORMechanism
+from cmab.scm.mechanism import Mechanism
 from cmab.scm.scm import SCM
 from cmab.environments import NSCausalBanditEnv
 
@@ -13,17 +12,11 @@ def build_iv(params, seed, schedule=None):
     P_Y = Bernoulli(p=params["p_y"])
     P_ZY = Bernoulli(p=params["p_zy"])
 
-    if params["mechanism"] == "xor":
-        mechanism_X = CustomMechanism(v_parents=[], u_parents=['U_X'], 
-                                  f=lambda v, u: u['U_X'])
-        mechanism_Z = XORMechanism(v_parents=['X'], u_parents=['U_Z', 'U_ZY'])
-        mechanism_Y = XORMechanism(v_parents=['Z'], u_parents=['U_Y', 'U_ZY'])
-    else:
-        mechanism_X = CustomMechanism(v_parents=[], u_parents=['U_X'], 
-                                  f=lambda v, u: u['U_X'])
-        mechanism_Z = CustomMechanism(v_parents=['X'], u_parents=['U_Z', 'U_ZY'], 
-                                      f=lambda v, u: u['U_Z'] | (u['U_ZY'] & v['X']))
-        mechanism_Y = XORMechanism(v_parents=['Z'], u_parents=['U_Y', 'U_ZY'])
+    mechanism_X = Mechanism(v_parents=[], u_parents=['U_X'], 
+                                f=lambda v, u: u['U_X'])
+    mechanism_Z = Mechanism(v_parents=['X'], u_parents=['U_Z', 'U_ZY'], 
+                                    f=lambda v, u: u['U_Z'] | (u['U_ZY'] & v['X']))
+    mechanism_Y = Mechanism(v_parents=['Z'], u_parents=['U_Y', 'U_ZY'], f=lambda v, u: v['Z'] ^  u['U_Y'] ^ u['U_ZY'])
 
     scm = SCM(
         U=U,

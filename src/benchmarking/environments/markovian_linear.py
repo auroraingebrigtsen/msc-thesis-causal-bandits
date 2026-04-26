@@ -1,5 +1,5 @@
 from cmab.scm.distribution.uniform import Uniform
-from cmab.scm.mechanism import CustomMechanism, XORMechanism, LinearMechanism
+from cmab.scm.mechanism import Mechanism
 from cmab.scm.scm import SCM
 from cmab.environments import NSCausalBanditEnv
 
@@ -11,29 +11,31 @@ def build_markovian_linear(params, seed, schedule=None):
     P_Z = Uniform(lower=params['z_lower'], upper=params['z_upper'])
     P_Y = Uniform(lower=params['y_lower'], upper=params['y_upper'])
 
-    mechanism_X = LinearMechanism(
+    mechanism_X =  Mechanism(
         v_parents=[],
         u_parents=['U_X'],
-        weights={
-            'U_X': params['weights']['X']['U_X']
-        },
+        f=lambda _, u: u['U_X']
     )
 
-    mechanism_Z = LinearMechanism(
+    mechanism_Z = Mechanism(
         v_parents=[],
         u_parents=['U_Z'],
-        weights={
-            'U_Z': params['weights']['Z']['U_Z']
-        },
+        f=lambda _, u: u['U_Z']
     )
 
-    mechanism_Y = LinearMechanism(
+    mechanism_Y = Mechanism(
         v_parents=['X', 'Z'],
         u_parents=['U_Y'],
-        weights={
-            'X': params['weights']['Y']['X'],
-            'Z': params['weights']['Y']['Z'],
-            'U_Y': params['weights']['Y']['U_Y'],
+        f=lambda v, u: v['X'] * 2 + v['Z'] * 1 + u['U_Y']
+    )
+
+    scm = SCM(
+        U=U,
+        V=V,
+        P_u_marginals={
+            'U_X': P_X,
+            'U_Z': P_Z,
+            'U_Y': P_Y
         },
     )
             

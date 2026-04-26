@@ -1,11 +1,8 @@
 from typing import Mapping
 
-from cmab.scm.mechanism.custom import CustomMechanism
-from cmab.scm.mechanism.linear import LinearMechanism
-from cmab.typing import MechanismChangeEvent, ShiftEvent, LinearMechanismChangeEvent
-from cmab.scm.distribution.uniform import Uniform
+from cmab.scm.mechanism import Mechanism
+from cmab.typing import MechanismChangeEvent, ShiftEvent
 from .distribution.base import BaseDistribution
-from .mechanism.base import BaseMechanism as Mechanism
 from .causal_diagram import CausalDiagram
 from cmab.typing import  Intervention
 import numpy as np
@@ -93,14 +90,12 @@ class SCM:
             expected += prob * float(y)
         return float(expected)
 
-    def apply_change_event(self, event: ShiftEvent | MechanismChangeEvent | LinearMechanismChangeEvent):
+    def apply_change_event(self, event: ShiftEvent | MechanismChangeEvent):
         """Apply a change event to the SCM by updating the relevant distribution or mechanism."""
         if isinstance(event, ShiftEvent):
             self.apply_shift(event)
         elif isinstance(event, MechanismChangeEvent):
             self.apply_mechanism_change(event)
-        elif isinstance(event, LinearMechanismChangeEvent):
-            self.apply_linear_mechanism_change(event)
 
     def apply_shift(self, event: ShiftEvent):
         """Apply a shift event to the SCM by updating the relevant exogenous distribution."""
@@ -109,20 +104,10 @@ class SCM:
 
     def apply_mechanism_change(self, event: MechanismChangeEvent):
         """Apply a mechanism change event to the SCM by updating the relevant mechanism."""
-        new_mechanism = CustomMechanism(
+        new_mechanism = Mechanism(
             v_parents=self.F[event.variable].v_parents, 
             u_parents=self.F[event.variable].u_parents,
             f=lambda v, u: eval(event.new_mechanism)
-        )
-        self.F[event.variable] = new_mechanism
-
-    def apply_linear_mechanism_change(self, event: LinearMechanismChangeEvent):
-        """Apply a linear mechanism change event to the SCM by updating the relevant mechanism."""
-        old_mechanism = self.F[event.variable]
-        new_mechanism = LinearMechanism(
-            v_parents=old_mechanism.v_parents, 
-            u_parents=old_mechanism.u_parents,
-            weights=event.new_weights
         )
         self.F[event.variable] = new_mechanism
 

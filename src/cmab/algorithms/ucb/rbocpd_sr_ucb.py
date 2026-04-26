@@ -81,7 +81,7 @@ class RBOCPDSrUCBAgent(PomisUCBAgent):
                 
     def reset_arm(self, idx: int) -> None:
         self.resat_arms[self.arms[idx]].append(self.t)
-        print(f"Resetting arm {self.arms[idx]} (index {idx}) due to detected shift")
+        print(f"Resetting arm {self.arms[idx]} due to detected shift")
         self.means[idx] = 0.0
         self.arm_samples[idx] = 0
         

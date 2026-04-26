@@ -1,5 +1,5 @@
 from cmab.scm.distribution.bernoulli import Bernoulli
-from cmab.scm.mechanism import CustomMechanism, XORMechanism
+from cmab.scm.mechanism import Mechanism
 from cmab.scm.scm import SCM
 from cmab.environments import NSCausalBanditEnv
 
@@ -10,12 +10,12 @@ def build_noncausal(params, seed, schedule=None):
     P_0 = Bernoulli(p=params["p_0"])  
     P_1 = Bernoulli(p=params["p_1"])
 
-    mechanism_X = CustomMechanism(
+    mechanism_X = Mechanism(
         v_parents=[],
         u_parents=[],
         f=lambda _, u: 0
     )
-    mechanism_Y = CustomMechanism(
+    mechanism_Y = Mechanism(
         v_parents=['X'],
         u_parents=['U_0', 'U_1'],
         f=lambda v, u: int(u['U_0'])  if int(v['X']) == 0 else int(u['U_1'])
