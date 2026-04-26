@@ -2,13 +2,11 @@ from cmab.algorithms.ucb.pomis_ucb import PomisUCBAgent
 from typing import override
 from cmab.scm.causal_diagram import CausalDiagram
 from cmab.typing import Intervention, Observation
-from collections import defaultdict
 from river import drift
-from itertools import product
 import numpy as np
 
 class SrUCBAgent(PomisUCBAgent):
-    def __init__(self, reward_node:str, G: CausalDiagram, arms: list[Intervention], c:float=np.sqrt(2), atomic:bool=False, 
+    def __init__(self, reward_node:str, G: CausalDiagram, arms: list[Intervention], c:float=np.sqrt(2), atomic:bool=False,
                  delta:float=0.5, lambda_:float=5.0, min_samples_for_detection:int=10):
         super().__init__(reward_node=reward_node, G=G, arms=arms, c=c, atomic=atomic)
         self.G = G
@@ -19,18 +17,9 @@ class SrUCBAgent(PomisUCBAgent):
         self.lambda_ = lambda_
         self.min_samples_for_detection = min_samples_for_detection
 
-        self.cpds = self._init_cpds()
+        self.cpds = {node: {} for node in self.nodes} # cpds[node][parent_cfg] gives the drift detector for that node and parent configuration
         self.resat_arms = {arm: [] for arm in self.arms}  # Keep track of detected change points for analysis 
         #self.test = ['Y', 'X', 'Z', 'Y'] 
-        
-    def _init_cpds(self):
-        cpds = defaultdict(dict)
-        for node in self.nodes:
-            parents = self.parents[node]
-            parent_cfgs = list(product([0, 1], repeat=len(parents)))  # Currently only binary variables, TODO: extend to use domains 
-            for cfg in parent_cfgs:
-                cpds[node][cfg] = drift.PageHinkley(delta=self.delta, threshold=self.lambda_, min_instances=self.min_samples_for_detection)
-        return cpds
 
     @override
     def _update(self, arm: Intervention, observation: Observation) -> None:
@@ -46,6 +35,9 @@ class SrUCBAgent(PomisUCBAgent):
                 continue
 
             cfg = tuple(observation[parent] for parent in self.parents[node])
+            if cfg not in self.cpds[node]:
+                self.cpds[node][cfg] = drift.PageHinkley(delta=self.delta, threshold=self.lambda_, min_instances=self.min_samples_for_detection)
+
             self.cpds[node][cfg].update(observation[node])
             
             if self.cpds[node][cfg].drift_detected:
@@ -100,5 +92,5 @@ class SrUCBAgent(PomisUCBAgent):
     @override
     def reset(self):
         super().reset()
-        self.cpds = self._init_cpds()
+        self.cpds = {node: {} for node in self.nodes} 
         self.resat_arms = {arm: [] for arm in self.arms}

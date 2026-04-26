@@ -3,7 +3,6 @@ import numpy as np
 from cmab.typing import Intervention
 from .base import BaseCausalBanditEnv
 from .ns.scheduling.base import BaseSchedule
-from cmab.typing import ShiftEvent, MechanismChangeEvent, LinearMechanismChangeEvent
     
 
 class NSCausalBanditEnv(BaseCausalBanditEnv):

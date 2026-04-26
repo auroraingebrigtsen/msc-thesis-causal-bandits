@@ -1,4 +1,3 @@
-from cmab.scm.domain.binary import BinaryDomain
 from cmab.scm.distribution.bernoulli import Bernoulli
 from cmab.scm.mechanism.custom import CustomMechanism
 from cmab.scm.mechanism.xor import XORMechanism
@@ -8,15 +7,6 @@ from cmab.environments import NSCausalBanditEnv
 def build_semi_markovian(params, seed, schedule=None):
     V = ['S', 'T', 'W', 'X', 'Z', 'Y']
     U = ['U_S', 'U_T', 'U_W', 'U_X', 'U_Z', 'U_Y', 'U_WX' , 'U_ZY']
-
-    domains = {
-        'X': BinaryDomain(),
-        'Z': BinaryDomain(),
-        'Y': BinaryDomain(),
-        'W': BinaryDomain(),
-        'S': BinaryDomain(),
-        'T': BinaryDomain()
-    }
 
     P_X = Bernoulli(p=params["p_x"])
     P_Z = Bernoulli(p=params["p_z"])
@@ -41,7 +31,6 @@ def build_semi_markovian(params, seed, schedule=None):
     scm = SCM(
         U=U,
         V=V,
-        domains=domains,
         P_u_marginals={
             'U_S': P_S,
             'U_T': P_T,

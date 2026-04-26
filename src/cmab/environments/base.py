@@ -30,7 +30,7 @@ class BaseCausalBanditEnv(ABC):
 
         if atomic:  # add to the action set: {(var, val)} for each var and val
             for var in intervenable_vars:
-                for val in self.scm.domains[var].support():
+                for val in self.scm.support(var):
                     action_space.add(frozenset({(var, val)}))
 
         else:  # add to the action set: {(var,1 val1), (var1, val2), ... }
@@ -41,7 +41,7 @@ class BaseCausalBanditEnv(ABC):
                         new_assignments = []
 
                         for partial in assignments:
-                            for val in self.scm.domains[var].support():
+                            for val in self.scm.support(var):
                                 new_assignments.append(partial + ((var, val),))
 
                         assignments = new_assignments
@@ -57,14 +57,11 @@ class BaseCausalBanditEnv(ABC):
     def _get_info(self):
         return {"steps": self._step}
 
-    def get_optimal(self, binary: bool = True):
+    def get_optimal(self):
         """Returns the optimal arm, and the expected reward of that arm"""
         expected_rewards = np.zeros(len(self.action_space))
         for idx, action in enumerate(self.action_space):
-            if binary:
                 expected_rewards[idx] = self.scm.expected_value(variable=self.reward_node, intervention=action)
-            else:
-                raise NotImplementedError("Only binary and discrete expected value computations are implemented.")
 
         best_arm_idx = np.argmax(expected_rewards)
         return self.action_space[best_arm_idx], expected_rewards[best_arm_idx]

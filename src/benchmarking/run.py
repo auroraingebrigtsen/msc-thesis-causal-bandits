@@ -35,7 +35,7 @@ def run(cfg):
         )
     else:
         schedule = StationarySchedule()
-    
+
     env = build_environment(cfg["env_params"], seed, schedule)
     reward_node = env.reward_node
 
@@ -91,7 +91,7 @@ def run(cfg):
             # If you want different change points across runs, use SEED + i for ns_seed
             env.reset(scm_seed=seed+i, ns_seed=seed)
             for _ in range(T):
-                optimal_arm, opt_exp_reward = env.get_optimal(binary=True)
+                optimal_arm, opt_exp_reward = env.get_optimal()
 
                 action = agent.select_arm()
 

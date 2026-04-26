@@ -2,9 +2,7 @@ from cmab.algorithms.ucb.pomis_ucb import PomisUCBAgent
 from typing import override
 from cmab.scm.causal_diagram import CausalDiagram
 from cmab.typing import Intervention, Observation
-from collections import defaultdict
 from cmab.algorithms.cpd.rbocpd import RBOCPD
-from itertools import product
 import numpy as np
 
 class RBOCPDSrUCBAgent(PomisUCBAgent):
@@ -16,18 +14,9 @@ class RBOCPDSrUCBAgent(PomisUCBAgent):
         
         self.gamma = gamma
 
-        self.cpds = self._init_cpds()
+        self.cpds = {node: {} for node in self.nodes} # cpds[node][parent_cfg] gives the drift detector for that node and parent configuration
         self.resat_arms = {arm: [] for arm in self.arms}  # Keep track of detected change points for analysis 
         #self.test = ['Y', 'X', 'Z', 'Y'] 
-        
-    def _init_cpds(self):
-        cpds = defaultdict(dict)
-        for node in self.nodes:
-            parents = self.parents[node]
-            parent_cfgs = list(product([0, 1], repeat=len(parents)))  # Currently only binary variables, TODO: extend to use domains 
-            for cfg in parent_cfgs:
-                cpds[node][cfg] = RBOCPD(gamma=self.gamma)
-        return cpds
 
     @override
     def _update(self, arm: Intervention, observation: Observation) -> None:
@@ -43,6 +32,8 @@ class RBOCPDSrUCBAgent(PomisUCBAgent):
                 continue
 
             cfg = tuple(observation[parent] for parent in self.parents[node])
+            if cfg not in self.cpds[node]:
+                self.cpds[node][cfg] = RBOCPD(gamma=self.gamma)
             self.cpds[node][cfg].update(observation[node])
             
             if self.cpds[node][cfg].drift_detected:
@@ -97,5 +88,5 @@ class RBOCPDSrUCBAgent(PomisUCBAgent):
     @override
     def reset(self):
         super().reset()
-        self.cpds = self._init_cpds()
+        self.cpds = {node: {} for node in self.nodes}
         self.resat_arms = {arm: [] for arm in self.arms}

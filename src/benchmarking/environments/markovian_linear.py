@@ -1,4 +1,3 @@
-from cmab.scm.domain.interval import IntervalDomain
 from cmab.scm.distribution.uniform import Uniform
 from cmab.scm.mechanism import CustomMechanism, XORMechanism, LinearMechanism
 from cmab.scm.scm import SCM
@@ -8,15 +7,9 @@ def build_markovian_linear(params, seed, schedule=None):
     V = ['X', 'Z', 'Y']
     U = ['U_X', 'U_Z', 'U_Y']
 
-    domains = {
-        'X': IntervalDomain(params['x_lower'], params['x_upper']),
-        'Z': IntervalDomain(params['z_lower'], params['z_upper']),
-        'Y': IntervalDomain(params['y_lower'], params['y_upper'])
-    }
-
-    P_X = Uniform(domain=domains['X'])
-    P_Z = Uniform(domain=domains['Z'])
-    P_Y = Uniform(domain=domains['Y'])
+    P_X = Uniform(lower=params['x_lower'], upper=params['x_upper'])
+    P_Z = Uniform(lower=params['z_lower'], upper=params['z_upper'])
+    P_Y = Uniform(lower=params['y_lower'], upper=params['y_upper'])
 
     mechanism_X = LinearMechanism(
         v_parents=[],
@@ -47,7 +40,6 @@ def build_markovian_linear(params, seed, schedule=None):
     scm = SCM(
         U=U,
         V=V,
-        domains=domains,
         P_u_marginals={
             'U_X': P_X,
             'U_Z': P_Z,

@@ -1,4 +1,3 @@
-from cmab.scm.domain.binary import BinaryDomain
 from cmab.scm.distribution.bernoulli import Bernoulli
 from cmab.scm.mechanism.custom import CustomMechanism
 from cmab.scm.mechanism.xor import XORMechanism
@@ -8,12 +7,6 @@ from cmab.environments import NSCausalBanditEnv
 def build_iv(params, seed, schedule=None):
     V = ['X', 'Z', 'Y']
     U = ['U_X', 'U_Z', 'U_Y', 'U_ZY']
-
-    domains = {
-        'X': BinaryDomain(),
-        'Z': BinaryDomain(),
-        'Y': BinaryDomain()
-    }
 
     P_X = Bernoulli(p=params["p_x"])
     P_Z = Bernoulli(p=params["p_z"])
@@ -35,7 +28,6 @@ def build_iv(params, seed, schedule=None):
     scm = SCM(
         U=U,
         V=V,
-        domains=domains,
         P_u_marginals={
             'U_X': P_X,
             'U_Z': P_Z,

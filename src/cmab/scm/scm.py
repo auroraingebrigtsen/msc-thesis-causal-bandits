@@ -3,11 +3,9 @@ from typing import Mapping
 from cmab.scm.mechanism.custom import CustomMechanism
 from cmab.scm.mechanism.linear import LinearMechanism
 from cmab.typing import MechanismChangeEvent, ShiftEvent, LinearMechanismChangeEvent
-from cmab.scm.domain.interval import IntervalDomain
 from cmab.scm.distribution.uniform import Uniform
 from .distribution.base import BaseDistribution
 from .mechanism.base import BaseMechanism as Mechanism
-from .domain.base import FiniteDiscreteDomain
 from .causal_diagram import CausalDiagram
 from cmab.typing import  Intervention
 import numpy as np
@@ -18,14 +16,12 @@ class SCM:
     def __init__(self, 
                  U: list[str], 
                  V: list[str], 
-                 domains: Mapping[str, FiniteDiscreteDomain], 
                  P_u_marginals: Mapping[str, BaseDistribution], 
                  F: Mapping[str, Mechanism],
                 seed: int = 42,
                  ):
         self.U = U   # List of exogenous variables
         self.V = V  # List of endogenous variables
-        self.domains = domains  # Domain for each variable
         self.P_u_marginals = P_u_marginals  # Marginal distributions for exogenous variables
         self.F = F  # Mechanisms for each endogenous variable
         self.V_topological_order = topological_sort(V, [(parent, v) for v in V for parent in F[v].v_parents])  # Topological order of endogenous variables
@@ -57,37 +53,22 @@ class SCM:
 
         return values
     
-    def expected_value_binary(self, variable:str, intervention: Intervention = set()) -> float:
-        """Compute the expected values of a binary variable Y given an intervention set, that is, E[Y | do(X=x)], when all exogenous variables are binary."""
+    def support(self, variable:str) -> set[int]:
+        """TODO: only works for discrete variables now
+        Compute the support of a variable by enumerating all combinations of exogenous variables and applying the structural equations.
+        """
+        support = set()
 
-        def p_u(u_values: dict[str, float]) -> float:
-            """Compute the probability of a given assignment to the exogenous variables Ex: {'U_X_1': 0, 'U_X_2': 1, 'U_Z_1': 0, 'U_Z_2': 1, 'U_Y': 0}"""
-            p = 1.0
-            for u in self.U:
-                val = u_values[u]
-                p *= float(self.P_u_marginals[u].prob(val))
-            return p
+        u_values = {u: self.P_u_marginals[u].support() for u in self.U}
+        for u_combination in product(*u_values.values()):
+            u_assignment = dict(zip(self.U, u_combination))
+            v_values = self.sample(u_values=u_assignment)
+            support.add(v_values[variable])
 
-        expected = 0.0
-
-        # Iterate over all possible assignments to exogenous variables
-        for u_bits in product((0, 1), repeat=len(self.U)):
-            u_values = dict(zip(self.U, u_bits))
-            prob = p_u(u_values)
-
-            if prob == 0.0:
-                continue
-
-            v_values = self.sample(intervention=intervention, u_values=u_values)
-            y = v_values[variable]
-
-            expected += prob * float(y)
-
-        return float(expected)
+        return support
 
     def expected_value(self, variable:str, intervention: Intervention = set()) -> float:
         """Compute the expected values of a variable Y given an intervention set, that is, E[Y | do(X=x)], when all exogenous variables are in a given interval."""
-
         def p_u(u_values: dict[str, float]) -> float:
             """Compute the probability of a given assignment to the exogenous variables Ex: {'U_X_1': 0, 'U_X_2': 1, 'U_Z_1': 0, 'U_Z_2': 1, 'U_Y': 0}"""
             p = 1.0
@@ -98,7 +79,6 @@ class SCM:
         
         expected = 0.0
 
-        # All marginals in p_u_marginals have a .support() method that returns the set of values with non-zero probability, so we can iterate over the Cartesian product of these supports to get all possible combinations of exogenous variable values. This is more efficient than iterating over the entire interval if the distributions are sparse.
         u_values = {u: self.P_u_marginals[u].support() for u in self.U}
         for u_combination in product(*u_values.values()):
             u_assignment = dict(zip(self.U, u_combination))
@@ -112,32 +92,6 @@ class SCM:
 
             expected += prob * float(y)
         return float(expected)
-
-    def expected_value_linear(self, variable:str, intervention: Intervention = set()) -> float:
-        """Compute the expected values of a linear variable Y"""
-
-        # Store computed expectations
-        E = {}
-        for u in self.U:
-            E[u] = self.P_u_marginals[u].expected_value()
-
-        for v in self.V_topological_order:
-            if v in intervention: # If intervened: override structural equation
-                E[v] = intervention[v]
-                continue
-
-            mechanism = self.F[v]
-            val = 0.0
-
-            for p in mechanism.v_parents:
-                val += mechanism.weights[p] * E[p]
-
-            for u in mechanism.u_parents:
-                val += mechanism.weights[u] * E[u]
-
-            E[v] = val
-
-        return E[variable]
 
     def apply_change_event(self, event: ShiftEvent | MechanismChangeEvent | LinearMechanismChangeEvent):
         """Apply a change event to the SCM by updating the relevant distribution or mechanism."""

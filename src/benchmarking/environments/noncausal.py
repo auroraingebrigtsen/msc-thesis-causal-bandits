@@ -1,4 +1,3 @@
-from cmab.scm.domain.binary import BinaryDomain
 from cmab.scm.distribution.bernoulli import Bernoulli
 from cmab.scm.mechanism import CustomMechanism, XORMechanism
 from cmab.scm.scm import SCM
@@ -7,11 +6,6 @@ from cmab.environments import NSCausalBanditEnv
 def build_noncausal(params, seed, schedule=None):
     V = ['X', 'Y']
     U = ['U_0', 'U_1']
-
-    domains = {
-        'X': BinaryDomain(),
-        'Y': BinaryDomain()
-    }
 
     P_0 = Bernoulli(p=params["p_0"])  
     P_1 = Bernoulli(p=params["p_1"])
@@ -30,7 +24,6 @@ def build_noncausal(params, seed, schedule=None):
     scm = SCM(
         U=U,
         V=V,
-        domains=domains,
         P_u_marginals={
             'U_0': P_0,
             'U_1': P_1

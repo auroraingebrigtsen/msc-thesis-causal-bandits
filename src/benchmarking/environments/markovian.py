@@ -1,4 +1,3 @@
-from cmab.scm.domain.binary import BinaryDomain
 from cmab.scm.distribution.bernoulli import Bernoulli
 from cmab.scm.mechanism import CustomMechanism, XORMechanism
 from cmab.scm.scm import SCM
@@ -7,12 +6,6 @@ from cmab.environments import NSCausalBanditEnv
 def build_markovian(params, seed, schedule=None):
     V = ['X', 'Z', 'Y']
     U = ['U_X', 'U_Z', 'U_Y']
-
-    domains = {
-        'X': BinaryDomain(),
-        'Z': BinaryDomain(),
-        'Y': BinaryDomain()
-    }
 
     P_X = Bernoulli(p=params["p_x"])  
     P_Z = Bernoulli(p=params["p_z"])  
@@ -32,11 +25,9 @@ def build_markovian(params, seed, schedule=None):
         v_parents=['X', 'Z'],
         u_parents=['U_Y']
     )
-        
     scm = SCM(
         U=U,
         V=V,
-        domains=domains,
         P_u_marginals={
             'U_X': P_X,
             'U_Z': P_Z,
@@ -49,7 +40,6 @@ def build_markovian(params, seed, schedule=None):
         },
         seed=seed
     )
-
     return NSCausalBanditEnv(
         scm=scm,
         reward_node=params["reward_node"],
