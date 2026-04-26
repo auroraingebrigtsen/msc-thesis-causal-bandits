@@ -21,12 +21,12 @@ p_zy = 0.54
 
 [env_params.schedule]
 type = "controlled_shift_schedule"
-variables = ['U_WX', 'U_WX', 'U_WX']
-new_params = [0.65, 0.31, 0.9]
+variables = ['U_WX', 'U_W', 'U_X']
+new_params = [0.7, 0.31, 0.9]
 every = 500
 
 [agents]
-names = ["POMIS-UCB", "PHT-UCB-global", "PHT-UCB-arm", "SR-UCB"]
+names = [ "POMIS-UCB", "RBOCPD-UCB-global", "RBOCPD-UCB-arm", "RBOCPD-SR-UCB"]
 
 [agents_params]
 c = 1.41421356237
@@ -34,5 +34,6 @@ delta = 0.005
 lambda = 20.0
 min_samples_for_detection = 30
 atomic = false
+gamma = 0.0005
 
 [output]

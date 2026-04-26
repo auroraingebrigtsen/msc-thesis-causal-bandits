@@ -35,7 +35,7 @@ def plot_regrets_and_change_points(regrets, labels, title, change_points: list, 
     plt.savefig(save_path, dpi=300, bbox_inches="tight")
     plt.close()
 
-
+# Copilot task: Make the titles be arm: do(X=0), like i did in plot_historical_means
 
 def plot_reset_rate_heatmap(
     reset_counts: dict[Intervention, np.ndarray],
@@ -57,7 +57,7 @@ def plot_reset_rate_heatmap(
 
     # Label arms on y-axis (stringified)
     ax.set_yticks(np.arange(len(arms)))
-    ax.set_yticklabels([str(a) for a in arms])
+    ax.set_yticklabels([f"do({', '.join(f'{var}={val}' for var, val in a)})" for a in arms])
 
     # Colorbar
     cbar = fig.colorbar(im, ax=ax)

@@ -1,4 +1,4 @@
-from cmab.utils.plotting import  plot_regrets_and_change_points, plot_reset_rate_heatmap, plot_historical_means
+from benchmarking.plotting import  plot_regrets_and_change_points, plot_reset_rate_heatmap, plot_historical_means
 from cmab.utils.utils import compute_means_history
 from cmab.metrics.dynamic_regret import DynamicRegret
 from cmab.typing import Intervention
@@ -102,7 +102,7 @@ def run(cfg):
             averaged_regrets[name] += regret.get_regrets() / n
 
     cps = env.schedule.get_change_points(T=T)
-
+    
     plot_regrets_and_change_points(
         regrets=averaged_regrets.values(),
         labels=averaged_regrets.keys(),
