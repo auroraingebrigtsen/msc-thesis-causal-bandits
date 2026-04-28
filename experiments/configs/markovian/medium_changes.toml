@@ -1,4 +1,4 @@
-name = "markovian_medium_changes"
+name = "markovian_medium_changes_0005"
 
 [run]
 seed = 42
@@ -21,13 +21,10 @@ new_params = [0.9, 0.6, 0.9]
 every = 500
 
 [agents]
-names = [ "UCB", "PHT-UCB-global", "PHT-UCB-arm", "SR-UCB", "RBOCPD-UCB-global", "RBOCPD-UCB-arm", "RBOCPD-SR-UCB"]
+names = ["UCB", "RBOCPD-UCB-global", "RBOCPD-UCB-arm", "RBOCPD-SR-UCB"]
 
 [agents_params]
 c = 1.41421356237
-delta = 0.005
-lambda = 20.0
-min_samples_for_detection = 30
 atomic = true
 gamma = 0.0005
 

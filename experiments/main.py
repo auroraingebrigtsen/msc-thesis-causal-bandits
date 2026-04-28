@@ -9,7 +9,7 @@ def load_config(path: str):
 
 def main():
     try:
-        cfg_path = Path("configs/markovian/large_changes.toml")
+        cfg_path = Path("configs/markovian_2/markovian_2.toml")
         cfg = load_config(cfg_path)
         run(cfg)
     except Exception as e:

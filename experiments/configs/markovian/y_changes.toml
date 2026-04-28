@@ -3,7 +3,7 @@ name = "markovian_y_changes"
 [run]
 seed = 42
 T = 2000
-n = 5
+n = 100
 
 [env_params]
 environment = "markovian"
@@ -21,12 +21,12 @@ type = "controlled_shift_schedule"
 # 1000: E(Y|do(X=0)) = 0.4, E(Y|do(X=1)) = 0.6, E(Y|do(Z=0)) = 0.45, E(Y|do(Z=1)) = 0.55 (X1 > Z1 > Z0 > X0)
 # 1500: Back to inital
 variables = ["U_Y", "U_Y", "U_Y"]
-new_params = [0.9, 0.9, 0.9]
+new_params = [0.1, 0.9, 0.1]
 #new_params = [0.1, 0.9, 0.1]
 every = 500
 
 [agents]
-names = [ "UCB", "PHT-UCB-global", "PHT-UCB-arm", "SR-UCB", "RBOCPD-UCB-global", "RBOCPD-UCB-arm", "RBOCPD-SR-UCB"]
+names = [ "UCB", "RBOCPD-UCB-global", "RBOCPD-UCB-arm", "RBOCPD-SR-UCB"]
 
 [agents_params]
 c = 1.41421356237

@@ -25,13 +25,11 @@ new_mechanisms = [
 every = 500
 
 [agents]
-names = ["UCB", "PHT-UCB-global", "PHT-UCB-arm", "SR-UCB"]
+names = ["UCB", "RBOCPD-UCB-global", "RBOCPD-UCB-arm", "RBOCPD-SR-UCB"]
 
 [agents_params]
 c = 1.41421356237
-delta = 0.005
-lambda = 20.0
-min_samples_for_detection = 30
 atomic = true
+gamma = 0.0005
 
 [output]

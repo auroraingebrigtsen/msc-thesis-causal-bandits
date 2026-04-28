@@ -1,26 +1,28 @@
-name = "markovian_2_mechanism_changes"
+name = "markovian_2"
 
 [run]
 seed = 42
 T = 2000
-n = 100
+n = 10
 
 [env_params]
 environment = "markovian_2"
 reward_node = "Y"
 atomic = true
 include_empty = false
-p_x = 0.1#0.6
-p_z = 0.7
-p_y = 0.9
+
+[env_params.uniform]
+x_values =  [0.0, 0.5, 1.0]
+z_values =  [0.0, 0.5, 1.0]
+y_values =  [0.0, 0.5, 1.0]
 
 [env_params.schedule]
 type = "controlled_mechanism_schedule"
 variables = ["Y", "Y", "Y"]
 new_mechanisms = [
-    "1 ^ v['X'] ^ v['Z'] ^ u['U_Y']",
-    "v['X'] ^ v['Z'] ^ u['U_Y']",
-    "1 ^ v['X'] ^ v['Z'] ^ u['U_Y']",
+    "v['X'] + 3 * v['Z'] - u['U_Y']",
+    "3 * v['X'] + v['Z'] - u['U_Y']",
+    "v['X'] + 3 * v['Z'] - u['U_Y']",
 ]
 every = 500
 
@@ -33,5 +35,6 @@ delta = 0.005
 lambda = 20.0
 min_samples_for_detection = 30
 atomic = true
+gamma = 0.0005
 
 [output]

@@ -6,26 +6,18 @@ import numpy as np
 from pathlib import Path
 from .agent_factory import build_agents
 from .environments import build_environment
-from cmab.environments.ns.scheduling.controlled_schedule import ControlledShiftSchedule, ControlledMechanismChangeSchedule
+from cmab.environments.ns.scheduling.controlled_schedule import ControlledSchedule
 from cmab.environments.ns.scheduling.stationary_schedule import StationarySchedule
 
 def run(cfg):
     seed = cfg["run"]["seed"]
     env_params = cfg["env_params"]
 
-    schedule = None
-    if env_params["schedule"]["type"] == "controlled_mechanism_schedule":
-        schedule = ControlledMechanismChangeSchedule(
-            variables=env_params["schedule"]["variables"],
-            new_mechanisms=env_params["schedule"]["new_mechanisms"],
-            every=env_params["schedule"]["every"]
-        )
-
-    elif env_params["schedule"]["type"] == "controlled_shift_schedule":
-        schedule = ControlledShiftSchedule(
-            variables=env_params["schedule"]["variables"],
-            new_params=env_params["schedule"]["new_params"],
-            every=env_params["schedule"]["every"]
+    if env_params["schedule"]["type"] == "controlled_shift_schedule":
+        schedule = ControlledSchedule(
+            variables=env_params["schedule"].get("variables", []),
+            update=env_params["schedule"].get("update", []),
+            every=env_params["schedule"].get("every", 0)
         )
     else:
         schedule = StationarySchedule()

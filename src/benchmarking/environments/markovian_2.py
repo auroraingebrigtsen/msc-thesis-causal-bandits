@@ -3,13 +3,13 @@ from cmab.scm.mechanism import Mechanism
 from cmab.scm.scm import SCM
 from cmab.environments import NSCausalBanditEnv
 
-def build_markovian_linear(params, seed, schedule=None):
+def build_markovian_2(params, seed, schedule=None):
     V = ['X', 'Z', 'Y']
     U = ['U_X', 'U_Z', 'U_Y']
 
-    P_X = Uniform(lower=params['x_lower'], upper=params['x_upper'])
-    P_Z = Uniform(lower=params['z_lower'], upper=params['z_upper'])
-    P_Y = Uniform(lower=params['y_lower'], upper=params['y_upper'])
+    P_X = Uniform(values=params["uniform"]["x_values"])
+    P_Z = Uniform(values=params["uniform"]["z_values"])
+    P_Y = Uniform(values=params["uniform"]["y_values"])
 
     mechanism_X =  Mechanism(
         v_parents=[],
@@ -26,17 +26,7 @@ def build_markovian_linear(params, seed, schedule=None):
     mechanism_Y = Mechanism(
         v_parents=['X', 'Z'],
         u_parents=['U_Y'],
-        f=lambda v, u: v['X'] * 2 + v['Z'] * 1 + u['U_Y']
-    )
-
-    scm = SCM(
-        U=U,
-        V=V,
-        P_u_marginals={
-            'U_X': P_X,
-            'U_Z': P_Z,
-            'U_Y': P_Y
-        },
+        f=lambda v, u: 3 * v['X'] + v['Z']  - u['U_Y']
     )
             
     scm = SCM(

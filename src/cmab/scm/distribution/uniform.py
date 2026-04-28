@@ -1,20 +1,20 @@
 from .base import BaseDistribution
 
 class Uniform(BaseDistribution):
-    def __init__(self, lower: int, upper: int):
+    def __init__(self, values):
         super().__init__()
-        self.lower = lower
-        self.upper = upper
+        self.values = values
+        self.n = len(values)
 
-    def sample(self, rng) -> int:
-        return int(rng.uniform(self.lower, self.upper + 1))
+    def sample(self, rng):
+        return rng.choice(self.values)
     
     def expected_value(self) -> float:
-        return (self.lower + self.upper) / 2
+        return sum(self.values) / self.n
     
-    def prob(self, x: int) -> float:
-        if self.lower <= x <= self.upper:
-            return 1 / (self.upper - self.lower + 1) 
+    def prob(self, x: float) -> float:
+        if x in self.values:
+            return 1 / self.n
         else:
             return 0.0
         
@@ -22,7 +22,7 @@ class Uniform(BaseDistribution):
         pass
 
     def support(self) -> list[int]:
-        return list(range(self.lower, self.upper + 1))
+        return self.values
 
     def reset(self) -> None:
         pass
