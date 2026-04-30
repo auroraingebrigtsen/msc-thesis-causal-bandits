@@ -16,10 +16,10 @@ x_values =  [0, 1, 2]
 z_values =  [0, 1, 2]
 y_values =  [0, 1]
 
-[env_params.schedule]
-type = "controlled_schedule"
+[env_params.change_params]
+mode = "controlled"
 variables = ["Y", "Y", "Y"]
-update = [
+updates = [
     "2 * v['Z'] - v['X'] + u['U_Y'] >= 3",
     "2 * v['X'] - v['Z'] + u['U_Y'] >= 3",
     "2 * v['Z'] - v['X'] + u['U_Y'] >= 3",

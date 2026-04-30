@@ -15,10 +15,10 @@ p_b = 0.1
 p_g = 0.7
 p_y = 0.9
 
-[env_params.schedule]
-type = "controlled_schedule"
+[env_params.change_params]
+mode = "controlled"
 variables = ["U_B", "U_B", "U_B"]
-update = [0.9, 0.1, 0.9]
+updates = [0.9, 0.1, 0.9]
 every = 500
 
 [agents]

@@ -14,11 +14,10 @@ ENV_BUILDERS = {
     "markovian_3": build_markovian_3
 }
 
-
-def build_environment(params, seed, schedule=None):
+def build_environment(params, T, seed):
     try:
         builder = ENV_BUILDERS[params["environment"]]
     except KeyError as e:
         raise ValueError(f"Unknown environment: {params['environment']}") from e
 
-    return builder(params, seed, schedule=schedule)
+    return builder(params, T, seed)

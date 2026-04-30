@@ -6,23 +6,14 @@ import numpy as np
 from pathlib import Path
 from .agent_factory import build_agents
 from .environments import build_environment
-from cmab.environments.ns.scheduling.controlled_schedule import ControlledSchedule
-from cmab.environments.ns.scheduling.stationary_schedule import StationarySchedule
+
 
 def run(cfg):
     seed = cfg["run"]["seed"]
-    env_params = cfg["env_params"]
+    T= cfg["run"]["T"]  # number of steps in each run
+    n = cfg["run"]["n"]  # number of runs to average over
 
-    if env_params["schedule"]["type"] == "controlled_schedule":
-        schedule = ControlledSchedule(
-            variables=env_params["schedule"].get("variables", []),
-            update=env_params["schedule"].get("update", []),
-            every=env_params["schedule"].get("every", 0)
-        )
-    else:
-        schedule = StationarySchedule()
-
-    env = build_environment(cfg["env_params"], seed, schedule)
+    env = build_environment(cfg["env_params"], T,  seed)
     reward_node = env.reward_node
 
     print(f"Running experiment: {cfg['name']}")
@@ -41,9 +32,6 @@ def run(cfg):
             f"{env.scm.expected_value(variable=reward_node, intervention=action)}"
         )
 
-    T= cfg["run"]["T"]  # number of steps in each run
-    n = cfg["run"]["n"]  # number of runs to average over
-
     output_path = cfg['output'].get(
     'output_path',
     f"plots/{cfg['env_params']['environment']}/{cfg['name']}/"
@@ -51,7 +39,7 @@ def run(cfg):
 
     path = Path(output_path)
     path.mkdir(parents=True, exist_ok=True)
-    change_points = env.schedule.get_change_points(T=T)
+    change_points = env.get_change_points()
     means_history = compute_means_history(env, T=T, effective_action_space=effective_action_space)
     plot_historical_means(
         means_history=means_history,

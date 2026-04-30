@@ -2,8 +2,9 @@ from cmab.scm.distribution.bernoulli import Bernoulli
 from cmab.scm.mechanism import Mechanism
 from cmab.scm.scm import SCM
 from cmab.environments import NSCausalBanditEnv
+from benchmarking.utils import compute_change_points
 
-def build_semi_markovian(params, seed, schedule=None):
+def build_semi_markovian(params, T, seed):
     V = ['S', 'T', 'W', 'X', 'Z', 'Y']
     U = ['U_S', 'U_T', 'U_W', 'U_X', 'U_Z', 'U_Y' , 'U_ZY']
 
@@ -55,6 +56,8 @@ def build_semi_markovian(params, seed, schedule=None):
         reward_node=params["reward_node"],
         seed=seed,
         atomic=params["atomic"],
-        schedule=schedule,
-        include_empty=params["include_empty"]
+        include_empty=params["include_empty"],
+        change_variables=params["change_params"]["variables"],
+        updates=params["change_params"]["updates"],
+        change_points=compute_change_points(T, params["change_params"])
     )

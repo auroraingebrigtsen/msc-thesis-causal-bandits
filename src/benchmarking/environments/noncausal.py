@@ -2,8 +2,9 @@ from cmab.scm.distribution.bernoulli import Bernoulli
 from cmab.scm.mechanism import Mechanism
 from cmab.scm.scm import SCM
 from cmab.environments import NSCausalBanditEnv
+from benchmarking.utils import compute_change_points
 
-def build_noncausal(params, seed, schedule=None):
+def build_noncausal(params, T, seed):
     V = ['X', 'Y']
     U = ['U_0', 'U_1']
 
@@ -40,6 +41,8 @@ def build_noncausal(params, seed, schedule=None):
         reward_node=params["reward_node"],
         seed=seed,
         atomic=params["atomic"],
-        schedule=schedule,
-        include_empty=params["include_empty"]
+        include_empty=params["include_empty"],
+        change_variables=params["change_params"]["variables"],
+        updates=params["change_params"]["updates"],
+        change_points=compute_change_points(T, params["change_params"])
     )

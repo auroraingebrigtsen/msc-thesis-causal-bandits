@@ -14,10 +14,10 @@ p_x = 0.1#0.6
 p_z = 0.7
 p_y = 0.9
 
-[env_params.schedule]
-type = "controlled_schedule"
+[env_params.change_params]
+mode = "controlled"
 variables = ["Y", "Y", "Y"]
-update= [
+updates= [
     "1 ^ v['X'] ^ v['Z'] ^ u['U_Y']",
     "v['X'] ^ v['Z'] ^ u['U_Y']",
     "1 ^ v['X'] ^ v['Z'] ^ u['U_Y']",

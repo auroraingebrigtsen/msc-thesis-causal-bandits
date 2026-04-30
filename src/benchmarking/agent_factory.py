@@ -92,8 +92,8 @@ def build_agent(name: str, params: dict, env):
             arms=env.action_space,
             c=params["c"],
             atomic=params["atomic"],
-            changed_vars=env.schedule.variables,
-            every=env.schedule.every
+            changed_vars=env.change_variables,
+            change_points=env.change_points
         )
     elif name == "UCB-Oracle-arm":
         return OracleUCBAgent(
@@ -102,8 +102,9 @@ def build_agent(name: str, params: dict, env):
             arms=env.action_space,
             c=params["c"],
             atomic=params["atomic"],
-            changed_vars=env.schedule.variables,
-            every=env.schedule.every
+            changed_vars=env.change_variables,
+            change_points=env.change_points,
+            reset_all=False
         )
     elif name == "UCB-Oracle-global":
         return OracleUCBAgent(
@@ -112,8 +113,8 @@ def build_agent(name: str, params: dict, env):
             arms=env.action_space,
             c=params["c"],
             atomic=params["atomic"],
-            changed_vars=env.schedule.variables,
-            every=env.schedule.every,
+            changed_vars=env.change_variables,
+            change_points=env.change_points,
             reset_all=True
         )
     else:

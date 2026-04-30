@@ -13,10 +13,10 @@ include_empty = false
 p_0 = 0.5 # Probability of Y=1 when X=0
 p_1 = 0.3  # Probability of Y=1 when X=1
 
-[env_params.schedule]
-type = "controlled_schedule"
+[env_params.change_params]
+mode = "controlled"
 variables = ["U_1", "U_1"]
-update = [0.8, 0.4]
+updates = [0.8, 0.4]
 every = 2000
 
 [agents]
