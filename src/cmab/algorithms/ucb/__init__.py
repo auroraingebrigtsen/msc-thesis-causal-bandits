@@ -4,7 +4,9 @@ from .sw_ucb import SlidingWindowUCBAgent
 from .pht_ucb import PageHinkleyUCBAgent
 from .sr_ucb import SrUCBAgent
 from .rbocpd_ucb import RBOCPDUCBAgent
-from .rbocpd_sr_ucb import RBOCPDSrUCBAgent
+from .rbocpd_sr_ucb import  RBOCPDSrUCBAgent
+from .ucb_oracle import OracleUCBAgent
+from .sr_ucb_oracle import OracleSrUCBAgent
 
 __all__ = [
     "UCBAgent",
@@ -13,5 +15,7 @@ __all__ = [
     "PageHinkleyUCBAgent",
     "SrUCBAgent",
     "RBOCPDUCBAgent",
-    "RBOCPDSrUCBAgent"
+    "RBOCPDSrUCBAgent",
+    "OracleUCBAgent",
+    "OracleSrUCBAgent",
 ]

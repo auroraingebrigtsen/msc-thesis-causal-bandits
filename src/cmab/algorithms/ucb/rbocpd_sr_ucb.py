@@ -16,16 +16,12 @@ class RBOCPDSrUCBAgent(PomisUCBAgent):
 
         self.cpds = {node: {} for node in self.nodes} # cpds[node][parent_cfg] gives the drift detector for that node and parent configuration
         self.resat_arms = {arm: [] for arm in self.arms}  # Keep track of detected change points for analysis 
-        #self.test = ['Y', 'X', 'Z', 'Y'] 
-
+        
     @override
     def _update(self, arm: Intervention, observation: Observation) -> None:
         super()._update(arm, observation)
 
         detected = set()
-        # if self.t > 1 and self.t < 2000 and self.t % 500 == 0:
-        #         print(f"\nStep {self.t}: Change point detected for nodes: {self.test[self.t//500 - 1]}!")
-        #         detected.add(self.test[self.t//500 - 1])
 
         for node in self.nodes:
             if any(var == node for var, _ in arm): # Dont update cpd for intervened nodes

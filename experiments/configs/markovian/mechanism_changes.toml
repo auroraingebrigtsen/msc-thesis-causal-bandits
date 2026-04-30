@@ -15,9 +15,9 @@ p_z = 0.7
 p_y = 0.9
 
 [env_params.schedule]
-type = "controlled_mechanism_schedule"
+type = "controlled_schedule"
 variables = ["Y", "Y", "Y"]
-new_mechanisms = [
+update= [
     "1 ^ v['X'] ^ v['Z'] ^ u['U_Y']",
     "v['X'] ^ v['Z'] ^ u['U_Y']",
     "1 ^ v['X'] ^ v['Z'] ^ u['U_Y']",

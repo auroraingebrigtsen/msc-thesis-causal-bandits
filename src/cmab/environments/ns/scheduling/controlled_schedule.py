@@ -21,15 +21,18 @@ class ControlledSchedule(BaseSchedule):
         if t == 0 or (t % self.every != 0) or self._idx >= len(self.variables):
             return None
         
-        if isinstance(self.update[self._idx], str):
-            event = MechanismChangeEvent(variable=self.variables[self._idx], new_mechanism=self.update[self._idx])
+        variable= self.variables[self._idx]
+        update = self.update[self._idx]
+        if isinstance(update, str):
+            event = MechanismChangeEvent(variable=variable, new_mechanism=update)
         else:             
-            event = ShiftEvent(variable=self.variables[self._idx], new_param={"p": self.update[self._idx]})
+            event = ShiftEvent(variable=variable, new_param={"p": update})
         self._idx += 1
         return event
     
     def get_change_points(self, T:int) -> list[int]:
-        return [t for t in range(1, T) if t % self.every == 0]
+        """ Returns an array of T entries with 0 at time steps where no change occurs and 1 at time steps where a change occurs. """
+        return [t for t in range(1, T) if t % self.every == 0 and (t // self.every) <= len(self.variables)]
     
     def reset(self) -> None:
         self._idx = 0

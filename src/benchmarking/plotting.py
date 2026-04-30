@@ -2,6 +2,10 @@ import matplotlib.pyplot as plt
 from cmab.typing import Intervention
 import numpy as np
 
+
+def _format_arm(arm: Intervention) -> str:
+    return "do(" + ", ".join(f"{var}={val}" for var, val in arm) + ")"
+
 def plot_regrets(regrets, labels, title):
     for regret, label in zip(regrets, labels):
         plt.plot(regret, label=label)
@@ -35,8 +39,6 @@ def plot_regrets_and_change_points(regrets, labels, title, change_points: list, 
     plt.savefig(save_path, dpi=300, bbox_inches="tight")
     plt.close()
 
-# Copilot task: Make the titles be arm: do(X=0), like i did in plot_historical_means
-
 def plot_reset_rate_heatmap(
     reset_counts: dict[Intervention, np.ndarray],
     title: str = "Reset-rate heatmap over time (by arm)",
@@ -57,7 +59,7 @@ def plot_reset_rate_heatmap(
 
     # Label arms on y-axis (stringified)
     ax.set_yticks(np.arange(len(arms)))
-    ax.set_yticklabels([f"do({', '.join(f'{var}={val}' for var, val in a)})" for a in arms])
+    ax.set_yticklabels([_format_arm(a) for a in arms])
 
     # Colorbar
     cbar = fig.colorbar(im, ax=ax)
@@ -71,16 +73,16 @@ def plot_historical_means(
     means_history: dict,
     title: str = "Reward-means per arm over horizon T=2000",
     save_path: str = "plots/historical_means.png",
-    breakpoints: list[int] | None = None,
+    change_points: list[int] | None = None,
 ):
     fig, ax = plt.subplots(figsize=(12, 6))
 
     for arm, means in means_history.items():
-        intervention = f"do({', '.join(f'{var}={val}' for var, val in arm)})"
+        intervention = _format_arm(arm)
         ax.plot(means, label=f"Arm: {intervention}", linewidth=2.5, marker="o", markevery=500, markersize=8)
 
-    for bp in (breakpoints or []):
-        ax.axvline(x=bp, color="black", linestyle="--", linewidth=1.5)
+    for cp in (change_points or []):
+        ax.axvline(x=cp, color="black", linestyle="--", linewidth=1.5)
 
     ax.set_xlabel("Time steps")
     ax.set_ylabel("Mean reward")

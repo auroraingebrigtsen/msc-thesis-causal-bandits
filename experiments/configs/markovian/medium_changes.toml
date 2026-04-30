@@ -15,9 +15,9 @@ p_z = 0.7
 p_y = 0.9
 
 [env_params.schedule]
-type = "controlled_shift_schedule"
+type = "controlled_schedule"
 variables = ["U_X", "U_X", "U_X"]
-new_params = [0.9, 0.6, 0.9]
+update = [0.9, 0.6, 0.9]
 every = 500
 
 [agents]

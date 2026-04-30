@@ -2,7 +2,7 @@ import copy
 
 def compute_means_history(environment, T, effective_action_space=None):
     """
-    Compute the means history for each arm, inserting NaN values at the specified breakpoints.
+    Compute the means history for each arm in the environment over T time steps, taking into account the schedule's change events.
 
     Parameters:
     - environment: The environment object which contains the SCM and schedule.

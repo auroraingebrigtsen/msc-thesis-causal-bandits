@@ -16,13 +16,13 @@ p_y =  0.9
 p_zy = 0.7
 
 [env_params.schedule]
-type = "controlled_shift_schedule"
+type = "controlled_schedule"
 # First change:  changes from optimal arm from do(X=1) to do(Z=1)
 # Second change: Does nothing - nothing is resat - nothing is affected
 # Third change: changes from optimal arm from do(Z=1) to do(X=1)
 # Fourth change: changes from optimal arm from do(X=1) to do(X=0) (it is no fourth change lol but it is Y 0.2 -> 0.6
 variables = ['U_ZY', 'U_ZY', 'U_ZY']
-new_params = [0.3, 0.7, 0.3]
+update = [0.3, 0.7, 0.3]
 every = 500
 
 [agents]

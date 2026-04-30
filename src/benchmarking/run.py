@@ -13,7 +13,7 @@ def run(cfg):
     seed = cfg["run"]["seed"]
     env_params = cfg["env_params"]
 
-    if env_params["schedule"]["type"] == "controlled_shift_schedule":
+    if env_params["schedule"]["type"] == "controlled_schedule":
         schedule = ControlledSchedule(
             variables=env_params["schedule"].get("variables", []),
             update=env_params["schedule"].get("update", []),
@@ -51,10 +51,11 @@ def run(cfg):
 
     path = Path(output_path)
     path.mkdir(parents=True, exist_ok=True)
+    change_points = env.schedule.get_change_points(T=T)
     means_history = compute_means_history(env, T=T, effective_action_space=effective_action_space)
     plot_historical_means(
         means_history=means_history,
-        breakpoints=env.schedule.get_change_points(T=T),
+        change_points=change_points,
         save_path=path / "historical_means.png"
     )
 
@@ -65,8 +66,10 @@ def run(cfg):
         name: {arm: np.zeros(T, dtype=int) for arm in effective_action_space} 
         for name in agents.keys()
     }
+
     for name, agent in agents.items():
         print(f"Running agent: {name}")
+        optimal_arm, opt_exp_reward = env.get_optimal()
         for i in range(n):
             if i % 10 == 0:
                 print(f"  Run {i}/{n}")
@@ -76,9 +79,10 @@ def run(cfg):
             # Use a different seed for SCM for each run. Use same seed for NS to have same change points across agents
             # If you want different change points across runs, use SEED + i for ns_seed
             env.reset(scm_seed=seed+i, ns_seed=seed)
-            for _ in range(T):
-                optimal_arm, opt_exp_reward = env.get_optimal()
-
+            for t in range(T):
+                if t in change_points:
+                    optimal_arm, opt_exp_reward = env.get_optimal()
+                    
                 action = agent.select_arm()
 
                 _, observation, _, _, _ = env.step(action)
@@ -93,13 +97,11 @@ def run(cfg):
 
             averaged_regrets[name] += regret.get_regrets() / n
 
-    cps = env.schedule.get_change_points(T=T)
-    
     plot_regrets_and_change_points(
         regrets=averaged_regrets.values(),
         labels=averaged_regrets.keys(),
         title="Averaged Cumulative Regret",
-        change_points=cps,
+        change_points=change_points,
         T=T,
         save_path=path / "regret.png"
     )

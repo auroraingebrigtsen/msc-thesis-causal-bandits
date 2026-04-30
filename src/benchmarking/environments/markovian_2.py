@@ -1,4 +1,5 @@
 from cmab.scm.distribution.uniform import Uniform
+from cmab.scm.distribution.bernoulli import Bernoulli
 from cmab.scm.mechanism import Mechanism
 from cmab.scm.scm import SCM
 from cmab.environments import NSCausalBanditEnv
@@ -26,7 +27,7 @@ def build_markovian_2(params, seed, schedule=None):
     mechanism_Y = Mechanism(
         v_parents=['X', 'Z'],
         u_parents=['U_Y'],
-        f=lambda v, u: 3 * v['X'] + v['Z']  - u['U_Y']
+        f=lambda v, u: 2 * v['X'] - v['Z'] + u['U_Y'] >= 3
     )
             
     scm = SCM(

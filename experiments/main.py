@@ -9,8 +9,8 @@ def load_config(path: str):
 
 def main():
     try:
-        cfg_path = Path("configs/markovian_2/markovian_2.toml")
-        cfg = load_config(cfg_path)
+        cfg_path = Path("configs/semi_markovian/semi_markovian.toml")
+        cfg = load_config(cfg_path) 
         run(cfg)
     except Exception as e:
         print(f"An error occurred: {e}")

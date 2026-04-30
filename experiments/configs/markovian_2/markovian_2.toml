@@ -12,27 +12,27 @@ atomic = true
 include_empty = false
 
 [env_params.uniform]
-x_values =  [0.0, 0.5, 1.0]
-z_values =  [0.0, 0.5, 1.0]
-y_values =  [0.0, 0.5, 1.0]
+x_values =  [0, 1, 2]
+z_values =  [0, 1, 2]
+y_values =  [0, 1]
 
 [env_params.schedule]
-type = "controlled_mechanism_schedule"
+type = "controlled_schedule"
 variables = ["Y", "Y", "Y"]
-new_mechanisms = [
-    "v['X'] + 3 * v['Z'] - u['U_Y']",
-    "3 * v['X'] + v['Z'] - u['U_Y']",
-    "v['X'] + 3 * v['Z'] - u['U_Y']",
+update = [
+    "2 * v['Z'] - v['X'] + u['U_Y'] >= 3",
+    "2 * v['X'] - v['Z'] + u['U_Y'] >= 3",
+    "2 * v['Z'] - v['X'] + u['U_Y'] >= 3",
 ]
 every = 500
 
 [agents]
-names = ["UCB", "PHT-UCB-global", "PHT-UCB-arm", "SR-UCB"]
+names = ["SR-UCB"]
 
 [agents_params]
 c = 1.41421356237
-delta = 0.005
-lambda = 20.0
+delta = 0.001
+lambda = 30.0
 min_samples_for_detection = 30
 atomic = true
 gamma = 0.0005

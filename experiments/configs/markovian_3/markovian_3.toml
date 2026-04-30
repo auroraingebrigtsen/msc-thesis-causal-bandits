@@ -1,33 +1,35 @@
-name = "test_experiment"
+name = "markovian_3"
 
 [run]
 seed = 42
 T = 2000
-n = 100
+n = 10
 
 [env_params]
-environment = "markovian"
+environment = "markovian_3"
 reward_node = "Y"
 atomic = true
 include_empty = false
-p_x = 0.1
-p_z = 0.7
+p_t = 0.6#0.6
+p_b = 0.1
+p_g = 0.7
 p_y = 0.9
 
 [env_params.schedule]
 type = "controlled_schedule"
-variables = ["U_X", "U_X", "U_X"]
+variables = ["U_B", "U_B", "U_B"]
 update = [0.9, 0.1, 0.9]
 every = 500
 
 [agents]
-names = ["UCB", "PHT-UCB-global", "PHT-UCB-arm", "SR-UCB"]
+names = ["UCB", "RBOCPD-UCB-global", "RBOCPD-UCB-arm", "RBOCPD-SR-UCB", "SR-UCB", "PHT-UCB-global", "PHT-UCB-arm"]
 
 [agents_params]
 c = 1.41421356237
-delta = 0.005
+atomic = true
+delta = 0.001
 lambda = 20.0
 min_samples_for_detection = 30
-atomic = true
+gamma = 0.0005
 
 [output]

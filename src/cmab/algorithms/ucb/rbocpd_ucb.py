@@ -14,7 +14,7 @@ class RBOCPDUCBAgent(PomisUCBAgent):
         c: float,  # UCB exploration parameter
         atomic: bool,
         gamma: float,  # RBOCPD switching rate (optional, default is 1/horizon)
-        reset_all: bool = True  # whether to reset all arms or just the one that triggered the change point
+        reset_all: bool = True,  # whether to reset all arms or just the one that triggered the change point
     ):
         super().__init__(reward_node=reward_node, G=G, arms=arms, c=c, atomic=atomic)
         self.means = np.zeros(self.n_arms, dtype=float)
@@ -34,7 +34,6 @@ class RBOCPDUCBAgent(PomisUCBAgent):
         reward = observation[self.reward_node]
 
         self.cpds[arm_index].update(reward)
-
         drift_detected = self.cpds[arm_index].drift_detected
 
         if drift_detected:

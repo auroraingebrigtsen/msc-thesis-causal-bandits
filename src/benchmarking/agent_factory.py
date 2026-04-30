@@ -85,6 +85,37 @@ def build_agent(name: str, params: dict, env):
             atomic=params["atomic"],
             gamma=params["gamma"],
         )
+    elif name == "SR-UCB-Oracle":
+        return OracleSrUCBAgent(
+            reward_node=reward_node,
+            G=G,
+            arms=env.action_space,
+            c=params["c"],
+            atomic=params["atomic"],
+            changed_vars=env.schedule.variables,
+            every=env.schedule.every
+        )
+    elif name == "UCB-Oracle-arm":
+        return OracleUCBAgent(
+            reward_node=reward_node,
+            G=G,
+            arms=env.action_space,
+            c=params["c"],
+            atomic=params["atomic"],
+            changed_vars=env.schedule.variables,
+            every=env.schedule.every
+        )
+    elif name == "UCB-Oracle-global":
+        return OracleUCBAgent(
+            reward_node=reward_node,
+            G=G,
+            arms=env.action_space,
+            c=params["c"],
+            atomic=params["atomic"],
+            changed_vars=env.schedule.variables,
+            every=env.schedule.every,
+            reset_all=True
+        )
     else:
         raise ValueError(f"Unknown agent: {name}")
 
