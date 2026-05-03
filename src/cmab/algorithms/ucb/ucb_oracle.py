@@ -14,7 +14,7 @@ class OracleUCBAgent(PomisUCBAgent):
         atomic: bool,
         reset_all: bool = True,  # whether to reset all arms or just the one that triggered the change point
         changed_vars: list = [],
-        every: int = 500
+        change_points = [],
     ):
         super().__init__(reward_node=reward_node, G=G, arms=arms, c=c, atomic=atomic)
         self.means = np.zeros(self.n_arms, dtype=float)
@@ -22,8 +22,7 @@ class OracleUCBAgent(PomisUCBAgent):
         self.reset_all = reset_all
 
         self.changed_vars = changed_vars
-        self.every = every
-
+        self.change_points = change_points
         self.resat_arms = {arm : [] for arm in self.arms}  # Keep track of detected change points for analysis
 
     @override
@@ -32,7 +31,7 @@ class OracleUCBAgent(PomisUCBAgent):
 
         arm_index = self.arm_to_index[arm]
 
-        if self.t > 1 and self.t % self.every == 0:
+        if self.t in self.change_points:
             arm_index = self.means.argmax() # In oracle mode, we assume we know which arm changed, so we reset the one with highest mean, as this is the one most likely to have changed (as it was the best performing one)
             print(f"Step {self.t}: Change point detected for arm {arm}!")
 
@@ -46,6 +45,9 @@ class OracleUCBAgent(PomisUCBAgent):
                 self.means[arm_index] = 0.0
                 self.arm_samples[arm_index] =0
                 self.resat_arms[arm].append(self.t)
+            
+        self.t += 1
+
 
 
     def reset(self) -> None:

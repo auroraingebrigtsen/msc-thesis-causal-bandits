@@ -30,6 +30,21 @@ class PageHinkleyUCBAgent(PomisUCBAgent):
         self.cpds = [drift.PageHinkley(delta=self.delta, threshold=self.lambda_, min_instances=self.min_samples_for_detection) for _ in range(self.n_arms)]
         self.resat_arms = {arm : [] for arm in self.arms}  # Keep track of detected change points for analysis
 
+    
+    @override
+    def _select_arm(self) -> int:
+        for i in range(self.n_arms):   # ensure each arm is tried once
+            if self.arm_samples[i] == 0:
+                return self.arms[i]
+
+        ucb_values = []
+        for arm in range(self.n_arms): 
+            n_arm = self.arm_samples[arm]
+            t = np.sum(self.arm_samples)  
+            bound = np.sqrt(np.log(t)/n_arm)
+            ucb_values.append(self.means[arm] + self.c*bound)
+        return self.arms[np.argmax(ucb_values)]
+
     @override
     def _update(self, arm: Intervention, observation: Observation) -> None:
         super()._update(arm, observation)
@@ -56,6 +71,7 @@ class PageHinkleyUCBAgent(PomisUCBAgent):
                 self.cpds[arm_index] = drift.PageHinkley(delta=self.delta, threshold=self.lambda_, min_instances=self.min_samples_for_detection)
                 self.resat_arms[arm].append(self.t)
 
+        self.t += 1
 
     def reset(self) -> None:
         super().reset()

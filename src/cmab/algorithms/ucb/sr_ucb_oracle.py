@@ -5,7 +5,7 @@ from cmab.typing import Intervention, Observation
 import numpy as np
 
 class OracleSrUCBAgent(PomisUCBAgent):
-    def __init__(self, reward_node:str, G: CausalDiagram, arms: list[Intervention],c:float=np.sqrt(2), atomic:bool=False,  changed_vars:list=[], every:int=500):
+    def __init__(self, reward_node:str, G: CausalDiagram, arms: list[Intervention],c:float=np.sqrt(2), atomic:bool=False,  changed_vars:list=[], change_points:list=[]):
         super().__init__(reward_node=reward_node, G=G, arms=arms, c=c, atomic=atomic)
         self.G = G
         self.nodes = list(G.nodes)
@@ -14,16 +14,30 @@ class OracleSrUCBAgent(PomisUCBAgent):
         self.resat_arms = {arm: [] for arm in self.arms}  # Keep track of detected change points for analysis 
         
         self.changed_vars = changed_vars
-        self.every = every
+        self.change_points = change_points
+        self._idx = 0
+
+        self.changed_vars = self._get_changed_vars(changed_vars)
+    
+    def _get_changed_vars(self, changed_vars):
+        """If it is a exogenous var that changed, infer the children of it
+        TODO: Find a better way to do this as this assumes the specific naming convention for exogenous variables"""
+        changed_vars = changed_vars.copy()
+        for idx, var in enumerate(changed_vars):
+            if var.startswith("U_"):
+                var = var[2:3]
+                changed_vars[idx] = var
+        return changed_vars
 
     @override
     def _update(self, arm: Intervention, observation: Observation) -> None:
         super()._update(arm, observation)
 
         detected = set()
-        if self.t > 1 and self.t % self.every == 0 and (self.t//self.every)-1 < len(self.changed_vars):
-                print(f"\nStep {self.t}: Change point detected for nodes: {self.changed_vars[(self.t//self.every)-1]}!")
-                detected.add(self.changed_vars[(self.t//self.every)-1])
+        if self.t in self.change_points:
+                print(f"\nStep {self.t}: Change point detected for nodes: {self.changed_vars[self._idx]}!")
+                detected.add(self.changed_vars[self._idx])
+                self._idx += 1
 
         if len(detected) > 0:
             # Add variables sharing an UC with nodes in detected, to detected, as these cannot be guaranteed invariant
@@ -33,6 +47,8 @@ class OracleSrUCBAgent(PomisUCBAgent):
             for a in set(self.arms) - set(self._structural_resets(detected)):
                 arm_index = self.arm_to_index[a]
                 self.reset_arm(arm_index)
+
+        self.t += 1
 
 
     def _structural_resets(self, detected: set[str]) -> None:
@@ -70,3 +86,4 @@ class OracleSrUCBAgent(PomisUCBAgent):
     def reset(self):
         super().reset()
         self.resat_arms = {arm: [] for arm in self.arms}
+        self._idx = 0

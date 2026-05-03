@@ -36,7 +36,6 @@ def run(cfg):
     'output_path',
     f"plots/{cfg['env_params']['environment']}/{cfg['name']}/"
     )
-
     path = Path(output_path)
     path.mkdir(parents=True, exist_ok=True)
     change_points = env.get_change_points()
@@ -46,7 +45,6 @@ def run(cfg):
         change_points=change_points,
         save_path=path / "historical_means.png"
     )
-
     regret = DynamicRegret(T=T)
 
     averaged_regrets = {name: np.zeros(T) for name in agents.keys()}
@@ -57,7 +55,6 @@ def run(cfg):
 
     for name, agent in agents.items():
         print(f"Running agent: {name}")
-        optimal_arm, opt_exp_reward = env.get_optimal()
         for i in range(n):
             if i % 10 == 0:
                 print(f"  Run {i}/{n}")
@@ -67,15 +64,16 @@ def run(cfg):
             # Use a different seed for SCM for each run. Use same seed for NS to have same change points across agents
             # If you want different change points across runs, use SEED + i for ns_seed
             env.reset(scm_seed=seed+i, ns_seed=seed)
+            
+            optimal_arm, opt_exp_reward = env.get_optimal()
             for t in range(T):
-                if t in change_points:
-                    optimal_arm, opt_exp_reward = env.get_optimal()
-                    
                 action = agent.select_arm()
 
                 _, observation, _, _, _ = env.step(action)
                 agent._update(action, observation)
                 expected_reward = env.scm.expected_value(variable=reward_node, intervention=action)
+                if t in change_points:
+                    optimal_arm, opt_exp_reward = env.get_optimal()
                 regret.update(expected_reward, opt_exp_reward)
             
             if hasattr(agent, 'resat_arms'):

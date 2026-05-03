@@ -18,7 +18,6 @@ class UCBAgent(BaseBanditAlgorithm):
         self.arm_to_index = {arm: idx for idx, arm in enumerate(arms)}
 
     def select_arm(self) -> Intervention:
-        self.t += 1
         for i in range(self.n_arms):   # ensure each arm is tried once
             if self.arm_samples[i] == 0:
                 return self.arms[i]
@@ -38,6 +37,7 @@ class UCBAgent(BaseBanditAlgorithm):
         num_samples = self.arm_samples[arm_index]
         prev_mean = self.means[arm_index]
         self.means[arm_index] = prev_mean + 1/(num_samples)*(reward - prev_mean)
+        self.t += 1
     
     def reset(self):
         self.t = 0

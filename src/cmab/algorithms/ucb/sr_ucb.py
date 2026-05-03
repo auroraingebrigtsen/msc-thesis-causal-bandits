@@ -51,6 +51,9 @@ class SrUCBAgent(PomisUCBAgent):
             for a in set(self.arms) - set(self._structural_resets(detected)):
                 arm_index = self.arm_to_index[a]
                 self.reset_arm(arm_index)
+            
+        self.t += 1
+
 
 
     def _structural_resets(self, detected: set[str]) -> None:

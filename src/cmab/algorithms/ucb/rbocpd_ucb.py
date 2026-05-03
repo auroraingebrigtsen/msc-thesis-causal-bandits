@@ -52,6 +52,7 @@ class RBOCPDUCBAgent(PomisUCBAgent):
                 self.cpds[arm_index].reset()
                 self.resat_arms[arm].append(self.t)
 
+        self.t += 1
 
     def reset(self) -> None:
         super().reset()
