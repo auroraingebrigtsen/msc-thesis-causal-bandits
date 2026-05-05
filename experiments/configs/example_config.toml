@@ -21,13 +21,17 @@ updates = [0.9, 0.1, 0.9]
 every = 500
 
 [agents]
-names = ["UCB", "PHT-UCB-global", "PHT-UCB-arm", "SR-UCB"]
+names = ["UCB", "PHT-UCB-global", "PHT-UCB-local", "SR-UCB"]
 
 [agents_params]
 c = 1.41421356237
+atomic = true
 delta = 0.005
 lambda = 20.0
 min_samples_for_detection = 30
-atomic = true
+alpha = 0.099
+gamma = 0.0001
+seed = 42
+
 
 [output]

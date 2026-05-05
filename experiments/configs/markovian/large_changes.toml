@@ -2,7 +2,7 @@ name = "markovian_large_changes"
 
 [run]
 seed = 42
-T = 2000
+T = 2500
 n = 100
 
 [env_params]
@@ -16,16 +16,28 @@ p_y = 0.9
 
 [env_params.change_params]
 mode = "controlled"
-variables = ["U_X", "U_X", "U_X"]
-updates = [0.9, 0.1, 0.9]
+variables = ["U_X", "U_X", "U_X", "U_X"]
+updates = [0.9, 0.1, 0.9, 0.1]
 every = 500
 
 [agents]
-names = ["UCB", "RBOCPD-UCB-global", "RBOCPD-UCB-arm", "RBOCPD-SR-UCB"]
+names = [ "PHT-UCB-local", "PHT-UCB-global"]
 
 [agents_params]
 c = 1.41421356237
 atomic = true
-gamma = 0.0005
+seed = 42
+
+[agents_params.variable_monitoring]
+delta = 0.005
+lambda = 20.0
+min_samples_for_detection = 30
+
+[agents_params.arm_monitoring]
+delta = 0.005
+lambda = 20.0
+min_samples_for_detection = 30
+alpha = 0.099
+seed = 42
 
 [output]

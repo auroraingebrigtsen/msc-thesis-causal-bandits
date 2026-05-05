@@ -1,41 +1,53 @@
 import matplotlib.pyplot as plt
 from cmab.typing import Intervention
 import numpy as np
-
+import seaborn as sns
 
 def _format_arm(arm: Intervention) -> str:
     return "do(" + ", ".join(f"{var}={val}" for var, val in arm) + ")"
 
-def plot_regrets(regrets, labels, title):
-    for regret, label in zip(regrets, labels):
-        plt.plot(regret, label=label)
-    plt.xlabel("Time Steps")
-    plt.ylabel("Averaged Cumulative Regret")
-    plt.title(title)
-    plt.legend()
-    plt.savefig("plots/regret_curve.png", dpi=300, bbox_inches="tight")
-    plt.close()
-
-
-
-def plot_regrets_and_change_points(regrets, labels, title, change_points: list, T:int, save_path="plots/regret_curve_with_cps.png"):
-    """Plots the averaged cumulative regrets along with vertical lines indicating change points.
-    Args:
-        regrets (list of np.ndarray): List of averaged cumulative regret arrays for each agent.
-        labels (list of str): List of labels corresponding to each regret array.
-        title (str): Title of the plot.
-        change_points (list of int): List of time steps where change points occur.
+def plot_regrets_and_change_points(regrets, labels, change_points: list, T: int,
+                                   std_devs=None,
+                                   save_path="plots/regret_curve_with_cps.png"):
     """
-    for regret, label in zip(regrets, labels):
-        plt.plot(regret, label=label)
-    for t in range(1, T):
-        if t in change_points:
-            plt.axvline(x=t, color='red', linestyle='--', alpha=0.5)
+    Plots averaged cumulative regrets with optional confidence bands and change point markers.
 
-    plt.xlabel("Time Steps")
-    plt.ylabel("Averaged Cumulative Regret")
-    plt.title(title)
-    plt.legend()
+    Args:
+        regrets (list of np.ndarray): Averaged cumulative regret arrays (shape: [T] each).
+        labels (list of str): Labels for each regret array.
+        title (str): Plot title.
+        change_points (list of int): Time steps where change points occur.
+        T (int): Total number of time steps.
+        std_devs (list of np.ndarray, optional): Std dev arrays for each agent, for shaded bands.
+        save_path (str): Output path for the saved figure.
+    """
+    sns.set_theme(style="whitegrid", context="paper", font_scale=1.3)
+
+    palette = sns.color_palette("deep", n_colors=len(labels))
+    colors = [palette[i] for i in range(len(labels))]
+
+    fig, ax = plt.subplots(figsize=(9, 5))
+
+    for i, (regret, label) in enumerate(zip(regrets, labels)):
+        x = np.arange(len(regret))
+        ax.plot(x, regret, label=label, color=colors[i], linewidth=2)
+        if std_devs is not None:
+            ax.fill_between(x,
+                            regret - std_devs[i],
+                            regret + std_devs[i],
+                            color=colors[i], alpha=0.15)
+
+    for idx, t in enumerate(change_points):
+        ax.axvline(x=t, color="slategray", linestyle="--", linewidth=1.2, alpha=0.7, label="Change point" if idx == 0 else None)
+        ax.text(t+1, ax.get_ylim()[1]*0.95, f"CP{idx+1}", color="slategray", fontsize=9, va="top")
+
+    ax.set_xlabel("Time Steps")
+    ax.set_ylabel("Averaged Cumulative Regret")
+    ax.set_title(f"Averaged Cumulative Regret over Horizon {T}")
+    ax.legend(framealpha=0.9)
+
+    sns.despine()
+    plt.tight_layout()
     plt.savefig(save_path, dpi=300, bbox_inches="tight")
     plt.close()
 
@@ -68,27 +80,32 @@ def plot_reset_rate_heatmap(
     plt.tight_layout()
     plt.savefig(save_path, dpi=200)
 
-
-def plot_historical_means(
+def plot_means(
     means_history: dict,
-    title: str = "Reward-means per arm over horizon T=2000",
     save_path: str = "plots/historical_means.png",
     change_points: list[int] | None = None,
 ):
-    fig, ax = plt.subplots(figsize=(12, 6))
+    sns.set_theme(style="whitegrid", context="paper", font_scale=1.3)
 
-    for arm, means in means_history.items():
-        intervention = _format_arm(arm)
-        ax.plot(means, label=f"Arm: {intervention}", linewidth=2.5, marker="o", markevery=500, markersize=8)
+    fig, ax = plt.subplots(figsize=(9, 5))
 
-    for cp in (change_points or []):
-        ax.axvline(x=cp, color="black", linestyle="--", linewidth=1.5)
+    palette = sns.color_palette("Set1", n_colors=len(means_history))
+    for (arm, means), color in zip(means_history.items(), palette):
+        ax.plot(means, label=f"Arm: {_format_arm(arm)}", linewidth=2,
+                color=color, marker="o", markevery=500, markersize=6)
 
-    ax.set_xlabel("Time steps")
-    ax.set_ylabel("Mean reward")
-    ax.set_title(title)
-    ax.legend()
-    ax.grid(True)
+    for idx, cp in enumerate(change_points or []):
+        ax.axvline(x=cp, color="slategray", linestyle="--", linewidth=1.2, alpha=0.7,
+                   label="Change point" if idx == 0 else None)
+        ax.text(cp+1, 1.0, f"CP{idx+1}", color="slategray", fontsize=9, va="top", ha="center",
+                transform=ax.get_xaxis_transform())
 
-    plt.savefig(save_path, dpi=150, bbox_inches="tight")
+    ax.set_xlabel("Time Steps")
+    ax.set_ylabel("Mean Reward")
+    ax.set_title(f"Reward-means per arm over horizon T={len(next(iter(means_history.values())))}")
+    ax.legend(framealpha=0.9)
+
+    sns.despine()
+    plt.tight_layout()
+    plt.savefig(save_path, dpi=300, bbox_inches="tight")
     plt.close(fig)

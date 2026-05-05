@@ -48,8 +48,6 @@ class OracleSrUCBAgent(PomisUCBAgent):
                 arm_index = self.arm_to_index[a]
                 self.reset_arm(arm_index)
 
-        self.t += 1
-
 
     def _structural_resets(self, detected: set[str]) -> None:
         print("Detected", detected)

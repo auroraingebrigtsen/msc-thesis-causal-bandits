@@ -25,35 +25,39 @@ def build_agent(name: str, params: dict, env):
             G=G,
             arms=env.action_space,
             c=params["c"],
-            delta=params["delta"],
-            lambda_=params["lambda"],
-            min_samples_for_detection=params["min_samples_for_detection"],
+            delta=params["arm_monitoring"]["delta"],
+            lambda_=params["arm_monitoring"]["lambda"],
+            min_samples_for_detection=params["arm_monitoring"]["min_samples_for_detection"],
             atomic=params["atomic"],
             reset_all=True,
+            alpha=params["arm_monitoring"]["alpha"],
+            seed=params["seed"]
         )
 
-    elif name == "PHT-UCB-arm":
+    elif name == "PHT-UCB-local":
         return PageHinkleyUCBAgent(
             reward_node=reward_node,
             G=G,
             arms=env.action_space,
             c=params["c"],
-            delta=params["delta"],
-            lambda_=params["lambda"],
-            min_samples_for_detection=params["min_samples_for_detection"],
+            delta=params["arm_monitoring"]["delta"],
+            lambda_=params["arm_monitoring"]["lambda"],
+            min_samples_for_detection=params["arm_monitoring"]["min_samples_for_detection"],
             atomic=params["atomic"],
             reset_all=False,
+            alpha=params["arm_monitoring"]["alpha"],
+            seed=params["arm_monitoring"]["seed"]
         )
 
-    elif name == "SR-UCB":
-        return SrUCBAgent(
+    elif name == "PHT-SR-UCB":
+        return PHTSrUCBAgent(
             reward_node=reward_node,
             G=G,
             arms=env.action_space,
             c=params["c"],
-            delta=params["delta"],
-            lambda_=params["lambda"],
-            min_samples_for_detection=params["min_samples_for_detection"],
+            delta=params["variable_monitoring"]["delta"],
+            lambda_=params["variable_monitoring"]["lambda"],
+            min_samples_for_detection=params["variable_monitoring"]["min_samples_for_detection"],
             atomic=params["atomic"],
         )
     elif name == "RBOCPD-UCB-global":
@@ -66,7 +70,7 @@ def build_agent(name: str, params: dict, env):
             gamma=params["gamma"],
             reset_all=True
         )
-    elif name == "RBOCPD-UCB-arm":
+    elif name == "RBOCPD-UCB-local":
         return RBOCPDUCBAgent(
             reward_node=reward_node,
             G=G,
@@ -95,7 +99,7 @@ def build_agent(name: str, params: dict, env):
             changed_vars=env.change_variables,
             change_points=env.change_points
         )
-    elif name == "UCB-Oracle-arm":
+    elif name == "UCB-Oracle-local":
         return OracleUCBAgent(
             reward_node=reward_node,
             G=G,

@@ -16,7 +16,9 @@ class PageHinkleyUCBAgent(PomisUCBAgent):
         delta: float,  # a small positive value (tolerance) to prevent overreacting to small fluctuations
         lambda_: float,  # the threshold for change detection
         min_samples_for_detection,
-        reset_all: bool = True  # whether to reset all arms or just the one that triggered the change point
+        reset_all: bool = True , # whether to reset all arms or just the one that triggered the change point
+        alpha:float=0.6931, # probability of exploring randomly vs using UCB 
+        seed: int = 42, # random seed for any randomization in the algorithm 
     ):
         super().__init__(reward_node=reward_node, G=G, arms=arms, c=c, atomic=atomic)
         self.means = np.zeros(self.n_arms, dtype=float)
@@ -26,17 +28,22 @@ class PageHinkleyUCBAgent(PomisUCBAgent):
         self.delta = delta
         self.lambda_ = lambda_
         self.min_samples_for_detection = min_samples_for_detection
+        self.alpha = alpha
+        self.seed = seed
 
         self.cpds = [drift.PageHinkley(delta=self.delta, threshold=self.lambda_, min_instances=self.min_samples_for_detection) for _ in range(self.n_arms)]
         self.resat_arms = {arm : [] for arm in self.arms}  # Keep track of detected change points for analysis
-
+        self.rng = np.random.default_rng(seed)
     
     @override
-    def _select_arm(self) -> int:
+    def select_arm(self) -> int:
         for i in range(self.n_arms):   # ensure each arm is tried once
             if self.arm_samples[i] == 0:
                 return self.arms[i]
 
+        if self.rng.uniform() < self.alpha: 
+            return self.rng.choice(self.arms)
+        
         ucb_values = []
         for arm in range(self.n_arms): 
             n_arm = self.arm_samples[arm]
@@ -71,9 +78,8 @@ class PageHinkleyUCBAgent(PomisUCBAgent):
                 self.cpds[arm_index] = drift.PageHinkley(delta=self.delta, threshold=self.lambda_, min_instances=self.min_samples_for_detection)
                 self.resat_arms[arm].append(self.t)
 
-        self.t += 1
-
     def reset(self) -> None:
         super().reset()
         self.cpds = [drift.PageHinkley(delta=self.delta, threshold=self.lambda_, min_instances=self.min_samples_for_detection) for _ in range(self.n_arms)]
         self.resat_arms = {arm : [] for arm in self.arms}
+        self.rng = np.random.default_rng(self.seed+1)

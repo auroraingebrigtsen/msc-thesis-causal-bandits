@@ -46,10 +46,6 @@ class OracleUCBAgent(PomisUCBAgent):
                 self.arm_samples[arm_index] =0
                 self.resat_arms[arm].append(self.t)
             
-        self.t += 1
-
-
-
     def reset(self) -> None:
         super().reset()
         self.resat_arms = {arm : [] for arm in self.arms}

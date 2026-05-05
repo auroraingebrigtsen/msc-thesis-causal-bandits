@@ -5,7 +5,7 @@ from cmab.typing import Intervention, Observation
 from river import drift
 import numpy as np
 
-class SrUCBAgent(PomisUCBAgent):
+class PHTSrUCBAgent(PomisUCBAgent):
     def __init__(self, reward_node:str, G: CausalDiagram, arms: list[Intervention], c:float=np.sqrt(2), atomic:bool=False,
                  delta:float=0.5, lambda_:float=5.0, min_samples_for_detection:int=10):
         super().__init__(reward_node=reward_node, G=G, arms=arms, c=c, atomic=atomic)
@@ -52,10 +52,6 @@ class SrUCBAgent(PomisUCBAgent):
                 arm_index = self.arm_to_index[a]
                 self.reset_arm(arm_index)
             
-        self.t += 1
-
-
-
     def _structural_resets(self, detected: set[str]) -> None:
         print("Detected", detected)
         invariant_arms = []

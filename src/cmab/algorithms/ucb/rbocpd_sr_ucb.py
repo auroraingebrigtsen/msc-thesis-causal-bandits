@@ -39,7 +39,6 @@ class RBOCPDSrUCBAgent(PomisUCBAgent):
                 for cfg in self.cpds[node]: # reset all parent contexts for this node (if one changes, the other ones do to)
                     self.cpds[node][cfg].reset()
                     # Could consider adding some of the previous observations to the new CPD state to make it more robust, but for now we just reset it.
-        self.t += 1
 
         if len(detected) > 0:
             # Add variables sharing an UC with nodes in detected, to detected, as these cannot be guaranteed invariant

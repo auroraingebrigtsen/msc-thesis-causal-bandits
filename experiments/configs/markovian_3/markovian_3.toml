@@ -22,7 +22,7 @@ updates = [0.9, 0.1, 0.9]
 every = 500
 
 [agents]
-names = ["UCB", "RBOCPD-UCB-global", "RBOCPD-UCB-arm", "RBOCPD-SR-UCB", "SR-UCB", "PHT-UCB-global", "PHT-UCB-arm"]
+names = ["UCB", "RBOCPD-UCB-global", "RBOCPD-UCB-local", "RBOCPD-SR-UCB", "SR-UCB", "PHT-UCB-global", "PHT-UCB-local"]
 
 [agents_params]
 c = 1.41421356237

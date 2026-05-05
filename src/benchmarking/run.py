@@ -1,4 +1,5 @@
-from benchmarking.plotting import  plot_regrets_and_change_points, plot_reset_rate_heatmap, plot_historical_means
+
+from benchmarking.plotting import  plot_regrets_and_change_points, plot_reset_rate_heatmap, plot_means
 from cmab.utils.utils import compute_means_history
 from cmab.metrics.dynamic_regret import DynamicRegret
 from cmab.typing import Intervention
@@ -40,10 +41,11 @@ def run(cfg):
     path.mkdir(parents=True, exist_ok=True)
     change_points = env.get_change_points()
     means_history = compute_means_history(env, T=T, effective_action_space=effective_action_space)
-    plot_historical_means(
+
+    plot_means(
         means_history=means_history,
         change_points=change_points,
-        save_path=path / "historical_means.png"
+        save_path=path / "means.png"
     )
     regret = DynamicRegret(T=T)
 
@@ -61,9 +63,7 @@ def run(cfg):
 
             agent.reset()
             regret.reset()
-            # Use a different seed for SCM for each run. Use same seed for NS to have same change points across agents
-            # If you want different change points across runs, use SEED + i for ns_seed
-            env.reset(scm_seed=seed+i, ns_seed=seed)
+            env.reset(seed=seed + i)  # Use a different seed for the SCM at each run 
             
             optimal_arm, opt_exp_reward = env.get_optimal()
             for t in range(T):
@@ -86,7 +86,6 @@ def run(cfg):
     plot_regrets_and_change_points(
         regrets=averaged_regrets.values(),
         labels=averaged_regrets.keys(),
-        title="Averaged Cumulative Regret",
         change_points=change_points,
         T=T,
         save_path=path / "regret.png"

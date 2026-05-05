@@ -1,19 +1,82 @@
 from cmab.scm.scm import SCM
-from cmab.typing import Intervention, Intervention
-from .base import BaseCausalBanditEnv
+import numpy as np
+from cmab.typing import Intervention
+import itertools
+import copy
 
-class  CausalBanditEnv(BaseCausalBanditEnv):
-    def __init__(self, scm: SCM, reward_node: str, side_observations: bool = True, seed=42, atomic: bool = False, non_intervenable: list[str] = []):
-        super().__init__(scm, reward_node, side_observations, seed, atomic, non_intervenable)
+class CausalBanditEnv():
+    def __init__(self, scm: SCM, reward_node: str, seed: int, atomic: bool, non_intervenable: list[str], include_empty: bool = True):
+        self.scm = scm
+        self.reward_node = reward_node
+        self.seed = seed
+        self._step = 0
+        self.state = None
+        self.action_space: list[Intervention] = self._init_action_space(atomic=atomic, non_intervenable=non_intervenable, include_empty=include_empty)
+
+    @staticmethod
+    def _action_sort_key(action: Intervention):
+        return (len(action), tuple(sorted(action)))
+
+    def _init_action_space(self, atomic: bool, non_intervenable: set[str], include_empty: bool) -> list[Intervention]:
+        """Adds all combinations of possible interventions except for the reward node.
+        If atomic is True, only single node interventions are added. 
+        The list of non_intervenable nodes are excluded from the action space.
+        """
+        action_space = {frozenset()} if include_empty else set()  # includes the empty intervention if include_empty is True
+        intervenable_vars = [v for v in self.scm.V if v != self.reward_node and v not in non_intervenable]
+
+        if atomic:  # add to the action set: {(var, val)} for each var and val
+            for var in intervenable_vars:
+                for val in self.scm.support(var):
+                    action_space.add(frozenset({(var, val)}))
+
+        else:  # add to the action set: {(var,1 val1), (var1, val2), ... }
+            for k in range(1, len(intervenable_vars) + 1):
+                for subset in itertools.combinations(intervenable_vars, k):
+                    assignments = [()]
+                    for var in subset:
+                        new_assignments = []
+
+                        for partial in assignments:
+                            print("Partial", partial, "Var", var)
+                            for val in self.scm.support(var):
+                                new_assignments.append(partial + ((var, val),))
+
+                        assignments = new_assignments
+
+                    for assignment in assignments:
+                        action_space.add(frozenset(assignment))
+
+        return sorted(action_space, key=self._action_sort_key)
+
+    def _get_obs(self):
+        return self.state
+    
+    def _get_info(self):
+        return {"steps": self._step}
+
+    def get_optimal(self):
+        """Returns the optimal arm, and the expected reward of that arm"""
+        expected_rewards = np.zeros(len(self.action_space))
+        for idx, action in enumerate(self.action_space):
+                expected_rewards[idx] = self.scm.expected_value(variable=self.reward_node, intervention=action)
+
+        best_arm_idx = np.argmax(expected_rewards)
+        return self.action_space[best_arm_idx], expected_rewards[best_arm_idx]
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        new_obj = cls.__new__(cls)
+        memo[id(self)] = new_obj
+        for k, v in self.__dict__.items():
+            setattr(new_obj, k, copy.deepcopy(v, memo))
+        return new_obj
 
     def step(self, action: Intervention):
         self._step += 1
         values = self.scm.sample(intervention=action)
         
-        if self.side_observations:
-            return self._get_obs(), values, False, False, self._get_info()  # observation, reward, terminated, truncated, info
-        
-        return self._get_obs(), values[self.reward_node], False, False, self._get_info()  # observation, reward, terminated, truncated, info
+        return self._get_obs(), values, False, False, self._get_info()  # observation, reward, terminated, truncated, info
 
     def reset(self, seed: int = None):
         self._step = 0
