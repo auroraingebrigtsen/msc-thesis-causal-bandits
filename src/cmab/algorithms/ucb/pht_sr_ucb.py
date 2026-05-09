@@ -32,16 +32,13 @@ class PHTSrUCBAgent(PomisUCBAgent):
             cfg = tuple(observation[parent] for parent in self.parents[node])
             if cfg not in self.cpds[node]:
                 self.cpds[node][cfg] = drift.PageHinkley(delta=self.delta, threshold=self.lambda_, min_instances=self.min_samples_for_detection)
+            cpd = self.cpds[node][cfg]
+            cpd.update(observation[node])
 
-            self.cpds[node][cfg].update(observation[node])
-            
             if self.cpds[node][cfg].drift_detected:
                 print(f"\nStep {self.t}: Change point detected for node {node}!")
+                print(f"Parent configuration: {cfg}")
                 detected.add(node)
-                # Reset all CPD's associated with this node
-                for cfg in self.cpds[node]: # reset all parent contexts for this node (if one changes, the other ones do to)
-                    self.cpds[node][cfg] = drift.PageHinkley(delta=self.delta, threshold=self.lambda_, min_instances=self.min_samples_for_detection) 
-                    # Could consider adding some of the previous observations to the new CPD state to make it more robust, but for now we just reset it.
 
         if len(detected) > 0:
             # Add variables sharing an UC with nodes in detected, to detected, as these cannot be guaranteed invariant
@@ -51,6 +48,10 @@ class PHTSrUCBAgent(PomisUCBAgent):
             for a in set(self.arms) - set(self._structural_resets(detected)):
                 arm_index = self.arm_to_index[a]
                 self.reset_arm(arm_index)
+            
+            # Reset all CPD's  of detected nodes
+            for d in detected:
+                self.cpds[d] = {}
         
     def _structural_resets(self, detected: set[str]) -> None:
         print("Detected", detected)
@@ -68,7 +69,7 @@ class PHTSrUCBAgent(PomisUCBAgent):
                     bidirected_edges=self.G.bidirected_edges.copy(),
                 )
                 D_i = D.do(intervention_set=intervention_set)
-                # Check if Y d_separated from S
+                # Check if Y d-separated from S under this intervention
                 seen_intervention_sets[intervention_set] = D_i.d_separated({self.reward_node}, set(S), set())
 
             if seen_intervention_sets[intervention_set]: 

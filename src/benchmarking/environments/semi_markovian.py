@@ -22,13 +22,13 @@ def build_semi_markovian(params, T, seed):
     mechanism_T = Mechanism(v_parents=[], u_parents=['U_T'], 
                             f=lambda v, u: u['U_T'])
     mechanism_W = Mechanism(v_parents=['S'], u_parents=['U_W', 'U_WX'],
-                            f=lambda v, u: u['U_W'] ^ v['S'])
+                            f=lambda v, u: u['U_W'] ^ v['S'] ^ u['U_WX'])
     mechanism_Z = Mechanism(v_parents=[], u_parents=['U_Z', 'U_ZY'],
                             f=lambda v, u: u['U_Z'] ^ u['U_ZY'])
     mechanism_X = Mechanism(v_parents=['T', 'Z'], u_parents=['U_X', 'U_WX'],
-                            f=lambda v, u: (u['U_X']  & v['T']) ^ v['Z'])
+                            f=lambda v, u: u['U_WX'] & (u['U_X']  |  v['T']) ^ v['Z'])
     mechanism_Y = Mechanism(v_parents=['T','W', 'X'], u_parents=['U_Y', 'U_ZY'],
-                            f=lambda v, u: 1 ^ u['U_Y'] ^ u['U_ZY'] ^ v['T'] ^ v['W'] ^ v['X'])
+                            f=lambda v, u: u['U_Y'] ^ u['U_ZY'] ^ v['T'] ^ v['W'] ^ v['X'])
 
     scm = SCM(
         U=U,

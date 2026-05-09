@@ -38,7 +38,6 @@ class CausalBanditEnv():
                         new_assignments = []
 
                         for partial in assignments:
-                            print("Partial", partial, "Var", var)
                             for val in self.scm.support(var):
                                 new_assignments.append(partial + ((var, val),))
 
