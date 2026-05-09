@@ -3,7 +3,7 @@ name = "markovian_y_changes"
 [run]
 seed = 42
 T = 2000
-n = 100
+n = 1
 
 [env_params]
 environment = "markovian"
@@ -16,19 +16,28 @@ p_y = 0.9
 
 [env_params.change_params]
 mode = "controlled"
-variables = ["U_Y", "U_Y", "U_Y"]
-updates = [0.1, 0.9, 0.1]
+variables = ["U_Y", "U_Y", "U_Y", "U_Y"]
+updates = [0.1, 0.9, 0.1, 0.9]
 every = 500
 
 [agents]
-names = [ "UCB", "RBOCPD-UCB-global", "RBOCPD-UCB-local", "RBOCPD-SR-UCB"]
+names = ["UCB", "PHT-UCB-local", "PHT-UCB-global", "PHT-UCB-sr"]
 
 [agents_params]
 c = 1.41421356237
+atomic = true
+seed = 42
+
+[agents_params.variable_monitoring]
 delta = 0.005
 lambda = 20.0
 min_samples_for_detection = 30
-atomic = true
-gamma = 0.0005
 
-[output]
+[agents_params.arm_monitoring]
+delta = 0.005
+lambda = 20.0
+min_samples_for_detection = 30
+alpha = 0.0
+seed = 42
+
+ 

@@ -3,28 +3,41 @@ from cmab.typing import Intervention
 import numpy as np
 import seaborn as sns
 
+custom_palette = [
+    "#0072B2",  # blue
+    "#E69F00",  # orange
+    "#009E73",  # green
+    "#CC79A7",  # reddish purple
+    "#D55E00",  # vermillion
+    "#56B4E9",  # sky blue
+    "#F0E442",  # yellow
+    "#000000",  # black
+    "#999999",  # gray
+    "#00429D",  # dark blue
+    "#73A2C6",  # muted blue
+    "#5A2928",  # muted red
+]
+
+agent_palette = {
+    "UCB": "#D55E00",
+    "POMIS-UCB": "#D55E00",
+    "PHT-UCB-sr": "#0072B2",
+    "UCB-oracle-sr": "#56B4E9",
+    "PHT-UCB-global": "#E69F00",
+    "UCB-oracle-global": "#F0E442",
+    "PHT-UCB-local": "#CC79A7",
+}
+
 def _format_arm(arm: Intervention) -> str:
     return "do(" + ", ".join(f"{var}={val}" for var, val in arm) + ")"
 
-def plot_regrets_and_change_points(regrets, labels, change_points: list, T: int,
+def plot_regrets_and_change_points(regrets, labels, change_points, T,
                                    std_devs=None,
                                    save_path="plots/regret_curve_with_cps.png"):
-    """
-    Plots averaged cumulative regrets with optional confidence bands and change point markers.
-
-    Args:
-        regrets (list of np.ndarray): Averaged cumulative regret arrays (shape: [T] each).
-        labels (list of str): Labels for each regret array.
-        title (str): Plot title.
-        change_points (list of int): Time steps where change points occur.
-        T (int): Total number of time steps.
-        std_devs (list of np.ndarray, optional): Std dev arrays for each agent, for shaded bands.
-        save_path (str): Output path for the saved figure.
-    """
     sns.set_theme(style="whitegrid", context="paper", font_scale=1.3)
 
-    palette = sns.color_palette("deep", n_colors=len(labels))
-    colors = [palette[i] for i in range(len(labels))]
+    # Look up colors by label name instead of using sns palette
+    colors = [agent_palette[label] for label in labels]
 
     fig, ax = plt.subplots(figsize=(9, 5))
 
@@ -38,12 +51,14 @@ def plot_regrets_and_change_points(regrets, labels, change_points: list, T: int,
                             color=colors[i], alpha=0.15)
 
     for idx, t in enumerate(change_points):
-        ax.axvline(x=t, color="slategray", linestyle="--", linewidth=1.2, alpha=0.7, label="Change point" if idx == 0 else None)
-        ax.text(t+1, ax.get_ylim()[1]*0.95, f"CP{idx+1}", color="slategray", fontsize=9, va="top")
+        ax.axvline(x=t, color="slategray", linestyle="--", linewidth=1.2,
+                   alpha=0.7, label="Change point" if idx == 0 else None)
+        ax.text(t + 1, ax.get_ylim()[1] * 0.95, f"CP{idx+1}",
+                color="slategray", fontsize=9, va="top")
 
     ax.set_xlabel("Time Steps")
     ax.set_ylabel("Averaged Cumulative Regret")
-    ax.set_title(f"Averaged Cumulative Regret over Horizon {T}")
+    ax.set_title(f"Averaged Cumulative Regret over Horizon T={T}")
     ax.legend(framealpha=0.9)
 
     sns.despine()
@@ -53,7 +68,7 @@ def plot_regrets_and_change_points(regrets, labels, change_points: list, T: int,
 
 def plot_reset_rate_heatmap(
     reset_counts: dict[Intervention, np.ndarray],
-    title: str = "Reset-rate heatmap over time (by arm)",
+    agent_name: str,
     save_path: str = "plots/reset_rate_heatmap.png"
 ):
 
@@ -63,9 +78,9 @@ def plot_reset_rate_heatmap(
     data = np.vstack(series)  # (n_arms, T)
 
     fig, ax = plt.subplots(figsize=(12, 4 + 0.25 * len(arms)))
-    im = ax.imshow(data, aspect="auto", interpolation="nearest")
+    im = ax.imshow(data, aspect="auto", interpolation="nearest", cmap="Blues")
 
-    ax.set_title(title)
+    ax.set_title(f"Reset Count by Arm Over Time for Agent {agent_name}")
     ax.set_xlabel("Time step")
     ax.set_ylabel("Arm")
 
@@ -79,6 +94,7 @@ def plot_reset_rate_heatmap(
 
     plt.tight_layout()
     plt.savefig(save_path, dpi=200)
+    plt.close(fig)
 
 def plot_means(
     means_history: dict,
@@ -89,7 +105,7 @@ def plot_means(
 
     fig, ax = plt.subplots(figsize=(9, 5))
 
-    palette = sns.color_palette("Set1", n_colors=len(means_history))
+    palette = sns.color_palette(custom_palette, n_colors=len(means_history))
     for (arm, means), color in zip(means_history.items(), palette):
         ax.plot(means, label=f"Arm: {_format_arm(arm)}", linewidth=2,
                 color=color, marker="o", markevery=500, markersize=6)
@@ -102,7 +118,7 @@ def plot_means(
 
     ax.set_xlabel("Time Steps")
     ax.set_ylabel("Mean Reward")
-    ax.set_title(f"Reward-means per arm over horizon T={len(next(iter(means_history.values())))}")
+    ax.set_title(f"Reward-means Per Arm Over Horizon T={len(next(iter(means_history.values())))}")
     ax.legend(framealpha=0.9)
 
     sns.despine()

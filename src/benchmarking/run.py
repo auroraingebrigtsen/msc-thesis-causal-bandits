@@ -33,11 +33,11 @@ def run(cfg):
             f"{env.scm.expected_value(variable=reward_node, intervention=action)}"
         )
 
-    output_path = cfg['output'].get(
-    'output_path',
+    plots_path = cfg.get('output', {}).get(
+    'plots_path',
     f"plots/{cfg['env_params']['environment']}/{cfg['name']}/"
     )
-    path = Path(output_path)
+    path = Path(plots_path)
     path.mkdir(parents=True, exist_ok=True)
     change_points = env.get_change_points()
     means_history = compute_means_history(env, T=T, effective_action_space=effective_action_space)
@@ -68,7 +68,6 @@ def run(cfg):
             optimal_arm, opt_exp_reward = env.get_optimal()
             for t in range(T):
                 action = agent.select_arm()
-
                 _, observation, _, _, _ = env.step(action)
                 agent._update(action, observation)
                 expected_reward = env.scm.expected_value(variable=reward_node, intervention=action)
@@ -94,6 +93,19 @@ def run(cfg):
     for name, cps in resat_arms.items():
         plot_reset_rate_heatmap(
             reset_counts=cps,
-            title=f"Reset rate by arm for agent {name}",
+            agent_name=name,
             save_path=path / f"reset_rate_{name}.png"
         )
+
+    # WRite the final cumulative regrets to a text file
+    results_path = cfg.get('output', {}).get(
+        'results_path',
+        f"results/{cfg['env_params']['environment']}/{cfg['name']}/"
+    )
+    results_path = Path(results_path)
+    results_path.mkdir(parents=True, exist_ok=True)
+
+    with open(results_path / "regrets.txt", "w") as f:
+        for name, regrets in averaged_regrets.items():
+            cumulative_regret =regrets[-1]
+            f.write(f"{name}: {cumulative_regret}\n")

@@ -29,4 +29,4 @@ lambda = 50.0
 min_samples_for_detection = 100
 atomic = true
 
-[output]
+ 

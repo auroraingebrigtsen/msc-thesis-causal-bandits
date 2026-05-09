@@ -51,7 +51,7 @@ class PHTSrUCBAgent(PomisUCBAgent):
             for a in set(self.arms) - set(self._structural_resets(detected)):
                 arm_index = self.arm_to_index[a]
                 self.reset_arm(arm_index)
-            
+        
     def _structural_resets(self, detected: set[str]) -> None:
         print("Detected", detected)
         invariant_arms = []

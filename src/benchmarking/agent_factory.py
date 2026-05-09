@@ -49,7 +49,7 @@ def build_agent(name: str, params: dict, env):
             seed=params["arm_monitoring"]["seed"]
         )
 
-    elif name == "PHT-SR-UCB":
+    elif name == "PHT-UCB-sr":
         return PHTSrUCBAgent(
             reward_node=reward_node,
             G=G,
@@ -80,7 +80,7 @@ def build_agent(name: str, params: dict, env):
             gamma=params["gamma"],
             reset_all=False
         )
-    elif name == "RBOCPD-SR-UCB":
+    elif name == "RBOCPD-UCB-sr":
         return RBOCPDSrUCBAgent(
             reward_node=reward_node,
             G=G,
@@ -89,7 +89,7 @@ def build_agent(name: str, params: dict, env):
             atomic=params["atomic"],
             gamma=params["gamma"],
         )
-    elif name == "SR-UCB-Oracle":
+    elif name == "UCB-oracle-sr":
         return OracleSrUCBAgent(
             reward_node=reward_node,
             G=G,
@@ -99,7 +99,7 @@ def build_agent(name: str, params: dict, env):
             changed_vars=env.change_variables,
             change_points=env.change_points
         )
-    elif name == "UCB-Oracle-local":
+    elif name == "UCB-oracle-local":
         return OracleUCBAgent(
             reward_node=reward_node,
             G=G,
@@ -110,7 +110,7 @@ def build_agent(name: str, params: dict, env):
             change_points=env.change_points,
             reset_all=False
         )
-    elif name == "UCB-Oracle-global":
+    elif name == "UCB-oracle-global":
         return OracleUCBAgent(
             reward_node=reward_node,
             G=G,

@@ -2,7 +2,7 @@ name = "markovian_2"
 
 [run]
 seed = 42
-T = 2000
+T = 2500
 n = 10
 
 [env_params]
@@ -23,18 +23,26 @@ updates = [
     "2 * v['Z'] - v['X'] + u['U_Y'] >= 3",
     "2 * v['X'] - v['Z'] + u['U_Y'] >= 3",
     "2 * v['Z'] - v['X'] + u['U_Y'] >= 3",
+    "2 * v['Z'] - v['X'] + u['U_Y'] >= 3",
 ]
 every = 500
 
 [agents]
-names = ["SR-UCB"]
+names = [ "PHT-UCB-sr"]
 
 [agents_params]
 c = 1.41421356237
-delta = 0.001
-lambda = 30.0
-min_samples_for_detection = 30
 atomic = true
-gamma = 0.0005
+seed = 42
 
-[output]
+[agents_params.variable_monitoring]
+delta = 0.01
+lambda = 35.0
+min_samples_for_detection = 30
+
+[agents_params.arm_monitoring]
+delta = 0.005
+lambda = 20.0
+min_samples_for_detection = 30
+alpha = 0.0
+seed = 42

@@ -1,9 +1,9 @@
-name = "semi_markovian"
+name = "semi_markovian_oracles"
 
 [run]
 seed = 42
 T = 2500
-n = 10
+n = 1000
 
 [env_params]
 environment = "semi_markovian"
@@ -16,24 +16,21 @@ p_w = 0.1
 p_x = 0.75
 p_z =0.9
 p_y =  0.1
-p_wx=0
 p_zy = 0.65
 
 [env_params.change_params]
 mode = "controlled"
-variables = ['U_WX', 'U_WX', 'U_WX', 'U_WX']
-#variables = ['X', 'X', 'X', 'X']
-updates = [1,0,1,0]
-# updates = [
-#     "1 ^ (u['U_X']  & v['T']) ^ v['Z']",
-#     "(u['U_X']  & v['T']) ^ v['Z']",
-#     "1 ^ (u['U_X']  & v['T']) ^ v['Z']",
-#     "(u['U_X']  & v['T']) ^ v['Z']",
-# ]
+variables = ['X', 'X', 'X', 'X']
+updates = [
+    "1 ^ (u['U_X']  & v['T']) ^ v['Z']",
+    "(u['U_X']  & v['T']) ^ v['Z']",
+    "1 ^ (u['U_X']  & v['T']) ^ v['Z']",
+    "(u['U_X']  & v['T']) ^ v['Z']",
+]
 every = 500
 
 [agents]
-names = ["POMIS-UCB", "PHT-UCB-local", "PHT-UCB-global", "PHT-UCB-sr"]
+names = ["PHT-UCB-global", "PHT-UCB-sr", "UCB-oracle-global", "UCB-oracle-sr"]
 
 [agents_params]
 c = 1.41421356237
@@ -46,7 +43,7 @@ lambda = 45.0
 min_samples_for_detection = 30
 
 [agents_params.arm_monitoring]
-delta = 0.01
+delta = 0.005
 lambda = 17.0
 min_samples_for_detection = 30
 alpha = 0.0

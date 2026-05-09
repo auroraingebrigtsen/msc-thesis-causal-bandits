@@ -1,4 +1,4 @@
-name = "markovian_large_changes"
+name = "iv"
 
 [run]
 seed = 42
@@ -6,31 +6,32 @@ T = 2500
 n = 1000
 
 [env_params]
-environment = "markovian"
+environment = "iv"
 reward_node = "Y"
-atomic = true
+atomic = false
 include_empty = false
-p_x = 0.1#0.6
-p_z = 0.7
-p_y = 0.9
+p_x = 0.1
+p_z =0.7
+p_y =  0.9
+p_zy = 0.9
 
 [env_params.change_params]
 mode = "controlled"
-variables = ["U_X", "U_X", "U_X", "U_X"]
-updates = [0.9, 0.1, 0.9, 0.1]
+variables = ['U_ZY', 'U_ZY', 'U_ZY', 'U_ZY']
+updates = [0.1, 0.9, 0.1, 0.9]
 every = 500
 
 [agents]
-names = ["UCB", "PHT-UCB-local", "PHT-UCB-global", "PHT-UCB-sr"]
+names = ["POMIS-UCB", "PHT-UCB-local", "PHT-UCB-global", "PHT-UCB-sr"]
 
 [agents_params]
 c = 1.41421356237
-atomic = true
+atomic = false
 seed = 42
 
 [agents_params.variable_monitoring]
-delta = 0.005
-lambda = 20.0
+delta = 0.01
+lambda = 17.0
 min_samples_for_detection = 30
 
 [agents_params.arm_monitoring]

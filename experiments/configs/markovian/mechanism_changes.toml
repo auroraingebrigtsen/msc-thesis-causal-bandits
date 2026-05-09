@@ -2,8 +2,8 @@ name = "markovian_mechanism_changes"
 
 [run]
 seed = 42
-T = 2000
-n = 100
+T = 2500
+n = 1000
 
 [env_params]
 environment = "markovian"
@@ -16,20 +16,33 @@ p_y = 0.9
 
 [env_params.change_params]
 mode = "controlled"
-variables = ["Y", "Y", "Y"]
+variables = ["Y", "Y", "Y", "Y"]
 updates= [
     "1 ^ v['X'] ^ v['Z'] ^ u['U_Y']",
     "v['X'] ^ v['Z'] ^ u['U_Y']",
     "1 ^ v['X'] ^ v['Z'] ^ u['U_Y']",
+    "v['X'] ^ v['Z'] ^ u['U_Y']",
 ]
 every = 500
 
 [agents]
-names = ["UCB", "RBOCPD-UCB-global", "RBOCPD-UCB-local", "RBOCPD-SR-UCB"]
+names = ["UCB", "PHT-UCB-local", "PHT-UCB-global", "PHT-UCB-sr"]
 
 [agents_params]
 c = 1.41421356237
 atomic = true
-gamma = 0.0005
+seed = 42
 
-[output]
+[agents_params.variable_monitoring]
+delta = 0.005
+lambda = 20.0
+min_samples_for_detection = 30
+
+[agents_params.arm_monitoring]
+delta = 0.005
+lambda = 20.0
+min_samples_for_detection = 30
+alpha = 0.0
+seed = 42
+
+ 

@@ -33,5 +33,6 @@ alpha = 0.099
 gamma = 0.0001
 seed = 42
 
-
 [output]
+plots_path = "plots/test_experiment/"
+results_path = "results/test_experiment/"
