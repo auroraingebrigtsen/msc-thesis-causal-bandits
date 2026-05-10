@@ -4,18 +4,22 @@ import numpy as np
 import seaborn as sns
 
 custom_palette = [
-    "#0072B2",  # blue
-    "#E69F00",  # orange
-    "#009E73",  # green
-    "#CC79A7",  # reddish purple
-    "#D55E00",  # vermillion
-    "#56B4E9",  # sky blue
-    "#F0E442",  # yellow
-    "#000000",  # black
-    "#999999",  # gray
-    "#00429D",  # dark blue
-    "#73A2C6",  # muted blue
-    "#5A2928",  # muted red
+    "#0072B2",  
+    "#E69F00",  
+    "#009E73",  
+    "#CC79A7", 
+    "#D55E00", 
+    "#56B4E9", 
+    "#F0E442",  
+    "#000000", 
+    "#999999", 
+    "#00429D",  
+    "#73A2C6", 
+    "#5A2928",  
+    "#470142" ,
+    "#025A02",  
+    "#A59DEE",  
+    "#AD6244"  
 ]
 
 agent_palette = {

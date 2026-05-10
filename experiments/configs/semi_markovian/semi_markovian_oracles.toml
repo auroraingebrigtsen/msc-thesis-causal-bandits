@@ -10,41 +10,44 @@ environment = "semi_markovian"
 reward_node = "Y"
 atomic = false
 include_empty = false
-p_s = 0.1
-p_t = 0.65
-p_w = 0.1
-p_x = 0.75
-p_z =0.9
-p_y =  0.1
-p_zy = 0.65
+p_s = 0.9
+p_t = 0.85
+p_w = 0.4
+p_x = 0.9
+p_z =0.88
+p_y =  0.9
+p_wx=0.9
+p_zy = 0.61
 
 [env_params.change_params]
 mode = "controlled"
-variables = ['X', 'X', 'X', 'X']
-updates = [
-    "1 ^ (u['U_X']  & v['T']) ^ v['Z']",
-    "(u['U_X']  & v['T']) ^ v['Z']",
-    "1 ^ (u['U_X']  & v['T']) ^ v['Z']",
-    "(u['U_X']  & v['T']) ^ v['Z']",
-]
+variables = ['U_WX', 'U_WX', 'U_WX', 'U_WX']
+#variables = ['X', 'X', 'X', 'X']
+updates = [0.1,0.9,0.1,0.9]
+# updates = [
+#     "1 ^ (u['U_X']  & v['T']) ^ v['Z']",
+#     "(u['U_X']  & v['T']) ^ v['Z']",
+#     "1 ^ (u['U_X']  & v['T']) ^ v['Z']",
+#     "(u['U_X']  & v['T']) ^ v['Z']",
+# ]
 every = 500
 
 [agents]
 names = ["PHT-UCB-global", "PHT-UCB-sr", "UCB-oracle-global", "UCB-oracle-sr"]
 
 [agents_params]
-c = 1.41421356237
+c = 1.41421356237 
 atomic = false
 seed = 42
 
 [agents_params.variable_monitoring]
-delta = 0.005
-lambda = 45.0
+delta = 0.01
+lambda = 35.0
 min_samples_for_detection = 30
 
 [agents_params.arm_monitoring]
-delta = 0.005
-lambda = 17.0
+delta = 0.01
+lambda = 12.0
 min_samples_for_detection = 30
 alpha = 0.0
 seed = 42
