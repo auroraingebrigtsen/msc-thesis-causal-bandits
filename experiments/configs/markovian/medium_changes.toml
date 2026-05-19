@@ -1,9 +1,9 @@
-name = "markovian_medium_changes"
+name = "markovian_medium_changes_vlr_test"
 
 [run]
 seed = 42
-T = 2500
-n = 1000
+T = 10000
+n = 100
 
 [env_params]
 environment = "markovian"
@@ -18,10 +18,10 @@ p_y = 0.9
 mode = "controlled"
 variables = ["U_X", "U_X", "U_X", "U_X"]
 updates = [0.9, 0.5, 0.9, 0.5]
-every = 500
+every = 2000
 
 [agents]
-names = ["UCB", "PHT-UCB-global", "PHT-UCB-local", "PHT-UCB-sr"]
+names = ["UCB", "PHT-UCB-global", "PHT-UCB-local", "PHT-UCB-sr", "PHT-VLR-UCB"]
 
 [agents_params]
 c = 1.41421356237
@@ -29,13 +29,13 @@ atomic = true
 seed = 42
 
 [agents_params.variable_monitoring]
-delta = 0.001
-lambda = 27.0
+delta = 0.1
+lambda = 10.0
 min_samples_for_detection = 30
 
 [agents_params.arm_monitoring]
-delta = 0.001
-lambda = 27.0
+delta = 0.1
+lambda = 14.0
 min_samples_for_detection = 30
 alpha = 0.0
 seed = 42

@@ -37,7 +37,7 @@ class NSCausalBanditEnv(CausalBanditEnv):
     @override
     def step(self, action: Intervention):
 
-        if self._step in self.change_points and self._idx < len(self.change_variables):
+        if (self._step+1) in self.change_points and self._idx < len(self.change_variables):
             self._change_point()
 
         self._step += 1

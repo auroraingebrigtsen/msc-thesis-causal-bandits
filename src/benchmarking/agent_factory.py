@@ -1,4 +1,6 @@
 from cmab.algorithms.ucb import *
+from cmab.algorithms.ucb.pht_vlr_ucb import PHTVlrUCBAgent
+from cmab.algorithms.ucb.vlr_ucb_oracle import OracleVlrUCBAgent
 
 def build_agent(name: str, params: dict, env):
     G = env.scm.get_causal_diagram()
@@ -60,6 +62,19 @@ def build_agent(name: str, params: dict, env):
             min_samples_for_detection=params["variable_monitoring"]["min_samples_for_detection"],
             atomic=params["atomic"],
         )
+    elif name == "PHT-VLR-UCB":
+        return PHTVlrUCBAgent(
+            reward_node=reward_node,
+            G=G,
+            arms=env.action_space,
+            c=params["c"],
+            delta=params["arm_monitoring"]["delta"],
+            lambda_=params["arm_monitoring"]["lambda"],
+            min_samples_for_detection=params["arm_monitoring"]["min_samples_for_detection"],
+            atomic=params["atomic"],
+            alpha=params["arm_monitoring"]["alpha"],
+            seed=params["arm_monitoring"]["seed"]
+        )
     elif name == "RBOCPD-UCB-global":
         return RBOCPDUCBAgent(
             reward_node=reward_node,
@@ -120,6 +135,16 @@ def build_agent(name: str, params: dict, env):
             changed_vars=env.change_variables,
             change_points=env.change_points,
             reset_all=True
+        )
+    elif name == "UCB-oracle-vlr":
+        return OracleVlrUCBAgent(
+            reward_node=reward_node,
+            G=G,
+            arms=env.action_space,
+            c=params["c"],
+            atomic=params["atomic"],
+            changed_vars=env.change_variables,
+            change_points=env.change_points,
         )
     else:
         raise ValueError(f"Unknown agent: {name}")

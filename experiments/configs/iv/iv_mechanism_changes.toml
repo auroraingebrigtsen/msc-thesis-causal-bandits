@@ -2,8 +2,8 @@ name = "iv_mechanism_changes"
 
 [run]
 seed = 42
-T = 2500
-n = 1000
+T = 10000
+n = 100
 
 [env_params]
 environment = "iv"
@@ -20,15 +20,15 @@ mode = "controlled"
 
 variables = ['Z', 'Z', 'Z', 'Z']
 updates = [
-    "v['X'] ^ u['U_ZY'] & u['U_Z']",
     "v['X'] ^ u['U_ZY'] ^ u['U_Z']",
     "v['X'] ^ u['U_ZY'] & u['U_Z']",
     "v['X'] ^ u['U_ZY'] ^ u['U_Z']",
+    "v['X'] ^ u['U_ZY'] & u['U_Z']",
 ]
-every = 500
+every = 2000
 
 [agents]
-names = ["POMIS-UCB", "PHT-UCB-local", "PHT-UCB-global", "PHT-UCB-sr", "UCB-oracle-global"]
+names = ["POMIS-UCB", "PHT-UCB-local", "PHT-UCB-global","PHT-UCB-sr", "UCB-oracle-global"]
 
 [agents_params]
 c = 1.41421356237
@@ -36,13 +36,13 @@ atomic = false
 seed = 42
 
 [agents_params.variable_monitoring]
-delta = 0.005
-lambda = 20.0
+delta = 0.1
+lambda = 11.0
 min_samples_for_detection = 30
 
 [agents_params.arm_monitoring]
-delta = 0.01
-lambda = 12.0
+delta = 0.1
+lambda = 11.0
 min_samples_for_detection = 30
 alpha = 0.0
 seed = 42

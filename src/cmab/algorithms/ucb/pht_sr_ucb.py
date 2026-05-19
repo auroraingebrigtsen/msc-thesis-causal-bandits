@@ -4,9 +4,10 @@ from cmab.scm.causal_diagram import CausalDiagram
 from cmab.typing import Intervention, Observation
 from river import drift
 import numpy as np
+from cmab.algorithms.pomis.pomis_sets import MUCT
 
 class PHTSrUCBAgent(PomisUCBAgent):
-    def __init__(self, reward_node:str, G: CausalDiagram, arms: list[Intervention], c:float=np.sqrt(2), atomic:bool=False,
+    def __init__(self, reward_node:str, G: CausalDiagram, arms: list[Intervention], c:float=np.sqrt(2), atomic:bool=False, 
                  delta:float=0.5, lambda_:float=5.0, min_samples_for_detection:int=10):
         super().__init__(reward_node=reward_node, G=G, arms=arms, c=c, atomic=atomic)
         self.G = G
@@ -19,6 +20,7 @@ class PHTSrUCBAgent(PomisUCBAgent):
 
         self.cpds = {node: {} for node in self.nodes} # cpds[node][parent_cfg] gives the drift detector for that node and parent configuration
         self.resat_arms = {arm: [] for arm in self.arms}  # Keep track of detected change points for analysis 
+        self.detected_nodes = {node : [] for node in self.nodes} # Keep track of detected change points for each node for analysis
 
     @override
     def _update(self, arm: Intervention, observation: Observation) -> None:
@@ -39,11 +41,13 @@ class PHTSrUCBAgent(PomisUCBAgent):
                 print(f"\nStep {self.t}: Change point detected for node {node}!")
                 print(f"Parent configuration: {cfg}")
                 detected.add(node)
+                self.detected_nodes[node].append(self.t)
 
         if len(detected) > 0:
             # Add variables sharing an UC with nodes in detected, to detected, as these cannot be guaranteed invariant
             for v in list(detected):
-                detected.update(self.G.bidirected_neighbors[v])
+                detected.update(MUCT(self.G, v))
+                print(f"After adding MUCT nodes, detected set is {detected}"  )
             # Reset the arms that are not guaranteed to be invariant to this change
             for a in set(self.arms) - set(self._structural_resets(detected)):
                 arm_index = self.arm_to_index[a]
@@ -89,3 +93,4 @@ class PHTSrUCBAgent(PomisUCBAgent):
         super().reset()
         self.cpds = {node: {} for node in self.nodes} 
         self.resat_arms = {arm: [] for arm in self.arms}
+        self.detected_nodes = {node : [] for node in self.nodes}

@@ -30,6 +30,8 @@ agent_palette = {
     "PHT-UCB-global": "#E69F00",
     "UCB-oracle-global": "#F0E442",
     "PHT-UCB-local": "#CC79A7",
+    "PHT-VLR-UCB": "#33AA3D",
+    "UCB-oracle-vlr": "#0B4410",
 }
 
 def _format_arm(arm: Intervention) -> str:
@@ -69,6 +71,36 @@ def plot_regrets_and_change_points(regrets, labels, change_points, T,
     plt.tight_layout()
     plt.savefig(save_path, dpi=300, bbox_inches="tight")
     plt.close()
+
+
+def plot_detected_nodes_heatmap(
+    detected_nodes: dict[str, np.ndarray],
+    agent_name: str,
+    save_path: str = "plots/detected_nodes_heatmap.png"
+):
+    nodes = list(detected_nodes.keys())
+    series = [np.asarray(detected_nodes[node]).ravel() for node in nodes]
+
+    data = np.vstack(series)  # (n_nodes, T)
+
+    fig, ax = plt.subplots(figsize=(12, 4 + 0.25 * len(nodes)))
+    im = ax.imshow(data, aspect="auto", interpolation="nearest", cmap="BuPu")
+
+    ax.set_title(f"Detected Change Points by Node Over Time for Agent {agent_name}")
+    ax.set_xlabel("Time step")
+    ax.set_ylabel("Node")
+
+    # Label nodes on y-axis
+    ax.set_yticks(np.arange(len(nodes)))
+    ax.set_yticklabels(nodes)
+
+    # Colorbar
+    cbar = fig.colorbar(im, ax=ax)
+    cbar.set_label("Detection count")
+
+    plt.tight_layout()
+    plt.savefig(save_path, dpi=200)
+    plt.close(fig)
 
 def plot_reset_rate_heatmap(
     reset_counts: dict[Intervention, np.ndarray],

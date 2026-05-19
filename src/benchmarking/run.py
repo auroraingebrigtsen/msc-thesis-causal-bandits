@@ -1,5 +1,5 @@
 
-from benchmarking.plotting import  plot_regrets_and_change_points, plot_reset_rate_heatmap, plot_means
+from benchmarking.plotting import  plot_detected_nodes_heatmap, plot_regrets_and_change_points, plot_reset_rate_heatmap, plot_means
 from cmab.utils.utils import compute_means_history
 from cmab.metrics.dynamic_regret import DynamicRegret
 from cmab.typing import Intervention
@@ -54,6 +54,7 @@ def run(cfg):
         name: {arm: np.zeros(T, dtype=int) for arm in effective_action_space} 
         for name in agents.keys()
     }
+    averaged_detected_nodes = {node: np.zeros(T, dtype=int) for node in env.scm.V}
 
     for name, agent in agents.items():
         print(f"Running agent: {name}")
@@ -66,7 +67,7 @@ def run(cfg):
             env.reset(seed=seed + i)  # Use a different seed for the SCM at each run 
             
             optimal_arm, opt_exp_reward = env.get_optimal()
-            for t in range(T):
+            for t in range(1, T + 1):
                 action = agent.select_arm()
                 _, observation, _, _, _ = env.step(action)
                 agent._update(action, observation)
@@ -80,7 +81,19 @@ def run(cfg):
                     for cp in cps:
                         resat_arms[name][arm][cp-1] += 1  # cp-1 because time steps are 1-indexed in the agent but we want 0-indexed for the array
 
+            if hasattr(agent, 'detected_nodes'):
+                print("Agent detected nodes:", agent.detected_nodes)
+                for node, cps in agent.detected_nodes.items():
+                    for cp in cps:
+                        averaged_detected_nodes[node][cp-1] += 1
+
             averaged_regrets[name] += regret.get_regrets() / n
+
+    plot_detected_nodes_heatmap(
+        detected_nodes=averaged_detected_nodes,
+        agent_name="PHT-SR-UCB",
+        save_path=path / "detected_nodes_heatmap.png"
+    )
 
     plot_regrets_and_change_points(
         regrets=averaged_regrets.values(),

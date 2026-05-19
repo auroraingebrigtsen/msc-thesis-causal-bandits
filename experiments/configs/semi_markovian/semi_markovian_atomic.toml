@@ -1,0 +1,56 @@
+name = "semi_markovian_atomic"
+
+[run]
+seed = 42
+T = 10000
+n = 100
+
+[env_params]
+environment = "semi_markovian"
+reward_node = "Y"
+atomic = true
+include_empty = false
+p_s = 0.9
+p_t = 0.83
+p_w = 0.16
+p_x = 0.88
+p_z =0.61
+p_y =  0.95
+p_wt=0.05
+p_zy = 0.93
+
+
+[env_params.change_params]
+mode = "controlled"
+variables = ['U_S', 'U_S', 'U_S', 'U_S']
+#variables = ['X', 'X', 'X', 'X']
+updates = [0.1,0.9,0.1,0.9]
+# updates = [
+#     "1 ^ u['U_WX'] ^((u['U_X']  |  v['T']) ^ v['Z'])",
+#     "u['U_WX'] ^((u['U_X']  |  v['T']) ^ v['Z'])",
+#     "1 ^ u['U_WX'] ^((u['U_X']  |  v['T']) ^ v['Z'])",
+#     "u['U_WX'] ^((u['U_X']  |  v['T']) ^ v['Z'])",
+# ]
+every = 2000
+
+[agents]
+names = ["UCB", "PHT-UCB-local", "PHT-UCB-global", "PHT-UCB-sr"]
+
+[agents_params]
+c = 1.41421356237 
+atomic = true
+seed = 42
+
+[agents_params.variable_monitoring]
+delta = 0.1
+lambda = 20.0
+min_samples_for_detection = 30
+
+[agents_params.arm_monitoring]
+delta = 0.1
+lambda = 11.0
+min_samples_for_detection = 30
+alpha = 0.0
+seed = 42
+
+ 

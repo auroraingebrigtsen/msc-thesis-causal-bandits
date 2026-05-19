@@ -18,6 +18,7 @@ configs = [
     #"configs/iv/iv_mechanism_changes.toml",
     "configs/semi_markovian/semi_markovian.toml",
     #"configs/semi_markovian/semi_markovian_oracles.toml",
+    #"configs/semi_markovian/semi_markovian_atomic.toml",
 ]
 
 def main():
