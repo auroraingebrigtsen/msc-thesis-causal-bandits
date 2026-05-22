@@ -3,7 +3,7 @@ name = "semi_markovian"
 [run]
 seed = 42
 T = 10000
-n = 100
+n = 1000
 
 [env_params]
 environment = "semi_markovian"
@@ -31,7 +31,7 @@ updates = [
 every = 2000
 
 [agents]
-names = ["POMIS-UCB", "PHT-UCB-local", "PHT-UCB-global", "PHT-UCB-sr", "UCB-oracle-global"]
+names = ["POMIS-UCB", "PHT-UCB-local", "PHT-UCB-global", "PHT-UCB-sr"]
 
 [agents_params]
 c = 1.41421356237 
@@ -40,14 +40,13 @@ seed = 42
 
 [agents_params.variable_monitoring]
 delta = 0.1
-lambda = 15.0
+lambda = 20.0
 min_samples_for_detection = 30
 
 [agents_params.arm_monitoring]
 delta = 0.1
-lambda = 12.0
+lambda = 10.0
 min_samples_for_detection = 30
 alpha = 0.0
 seed = 42
-
  

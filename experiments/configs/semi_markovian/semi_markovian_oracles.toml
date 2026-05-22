@@ -2,7 +2,7 @@ name = "semi_markovian_oracles"
 
 [run]
 seed = 42
-T = 2500
+T = 10000
 n = 1000
 
 [env_params]
@@ -16,21 +16,19 @@ p_w = 0.4
 p_x = 0.9
 p_z =0.88
 p_y =  0.9
-p_wx=0.9
+p_wt=0.9
 p_zy = 0.61
 
 [env_params.change_params]
 mode = "controlled"
-variables = ['U_WX', 'U_WX', 'U_WX', 'U_WX']
-#variables = ['X', 'X', 'X', 'X']
-updates = [0.1,0.9,0.1,0.9]
-# updates = [
-#     "1 ^ (u['U_X']  & v['T']) ^ v['Z']",
-#     "(u['U_X']  & v['T']) ^ v['Z']",
-#     "1 ^ (u['U_X']  & v['T']) ^ v['Z']",
-#     "(u['U_X']  & v['T']) ^ v['Z']",
-# ]
-every = 500
+variables = ['X', 'X', 'X', 'X']
+updates = [
+    "1 ^ (u['U_X']  & v['T']) ^ v['Z']",
+    "(u['U_X']  & v['T']) ^ v['Z']",
+    "1 ^ (u['U_X']  & v['T']) ^ v['Z']",
+    "(u['U_X']  & v['T']) ^ v['Z']",
+]
+every = 2000
 
 [agents]
 names = ["PHT-UCB-global", "PHT-UCB-sr", "UCB-oracle-global", "UCB-oracle-sr"]
@@ -41,15 +39,14 @@ atomic = false
 seed = 42
 
 [agents_params.variable_monitoring]
-delta = 0.01
-lambda = 35.0
+delta = 0.1
+lambda = 20.0
 min_samples_for_detection = 30
 
 [agents_params.arm_monitoring]
-delta = 0.01
-lambda = 12.0
+delta = 0.1
+lambda = 10.0
 min_samples_for_detection = 30
 alpha = 0.0
 seed = 42
-
  

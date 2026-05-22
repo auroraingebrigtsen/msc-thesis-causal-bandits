@@ -22,6 +22,17 @@ class PHTSrUCBAgent(PomisUCBAgent):
         self.resat_arms = {arm: [] for arm in self.arms}  # Keep track of detected change points for analysis 
         self.detected_nodes = {node : [] for node in self.nodes} # Keep track of detected change points for each node for analysis
 
+        #self.mucts = self._compute_mucts()
+        #print(f"Initialized PHT-SR UCB with MUCTs: {self.mucts}")
+
+    # def _compute_mucts(self):
+    #     mucts = {node: set(MUCT(self.G, node)) for node in self.nodes}
+    #     for node in self.nodes:
+    #         for other_node in self.nodes:
+    #             if node != other_node and node in mucts[other_node]:
+    #                 mucts[node] |= mucts[other_node]
+    #     return mucts
+
     @override
     def _update(self, arm: Intervention, observation: Observation) -> None:
         super()._update(arm, observation)
@@ -47,16 +58,19 @@ class PHTSrUCBAgent(PomisUCBAgent):
             # Add variables sharing an UC with nodes in detected, to detected, as these cannot be guaranteed invariant
             for v in list(detected):
                 detected.update(MUCT(self.G, v))
+                detected.update(self.G.c_component(v)) # add C-components too
                 print(f"After adding MUCT nodes, detected set is {detected}"  )
             # Reset the arms that are not guaranteed to be invariant to this change
             for a in set(self.arms) - set(self._structural_resets(detected)):
                 arm_index = self.arm_to_index[a]
                 self.reset_arm(arm_index)
             
-            # Reset all CPD's  of detected nodes
-            for d in detected:
-                self.cpds[d] = {}
-        
+            # Reset all CPD's  of detected nodes and their MUCTs
+            for v in self.nodes:
+                if any(d in MUCT(self.G, v) for d in detected):
+                    self.cpds[v] = {}
+                    print(f"Reset CPDs for node {v} due to change detected in its MUCT nodes {MUCT(self.G, v) & detected}")
+
     def _structural_resets(self, detected: set[str]) -> None:
         print("Detected", detected)
         invariant_arms = []
