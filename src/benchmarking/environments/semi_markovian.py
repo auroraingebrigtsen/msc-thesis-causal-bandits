@@ -26,7 +26,7 @@ def build_semi_markovian(params, T, seed):
     mechanism_Z = Mechanism(v_parents=[], u_parents=['U_Z', 'U_ZY'],
                             f=lambda v, u: u['U_Z'] ^ u['U_ZY'])
     mechanism_X = Mechanism(v_parents=['T', 'Z'], u_parents=['U_X'],
-                            f=lambda v, u: u['U_X'] & (v['T'] ^ v['Z']))
+                            f=lambda v, u: (u['U_X'] & (v['T']) ^ v['Z']))
     mechanism_Y = Mechanism(v_parents=['T','W', 'X'], u_parents=['U_Y', 'U_ZY'],
                             f=lambda v, u: u['U_Y'] ^ u['U_ZY'] ^ v['T'] ^ v['W'] ^ v['X'])
 
