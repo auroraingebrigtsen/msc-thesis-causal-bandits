@@ -40,7 +40,7 @@ seed = 42
 
 [agents_params.variable_monitoring]
 delta = 0.1
-lambda = 20.0
+lambda = 30.0
 min_samples_for_detection = 30
 
 [agents_params.arm_monitoring]
@@ -49,4 +49,3 @@ lambda = 10.0
 min_samples_for_detection = 30
 alpha = 0.0
 seed = 42
- 

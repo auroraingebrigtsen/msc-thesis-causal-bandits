@@ -51,10 +51,13 @@ def plot_regrets_and_change_points(regrets, labels, change_points, T,
         x = np.arange(len(regret))
         ax.plot(x, regret, label=label, color=colors[i], linewidth=2)
         if std_devs is not None:
-            ax.fill_between(x,
-                            regret - std_devs[i],
-                            regret + std_devs[i],
-                            color=colors[i], alpha=0.15)
+            ax.fill_between(
+                x,
+                regret - std_devs[label],
+                regret + std_devs[label],
+                color=colors[i],
+                alpha=0.15
+            )
 
     for idx, t in enumerate(change_points):
         ax.axvline(x=t, color="slategray", linestyle="--", linewidth=1.2,
@@ -84,7 +87,7 @@ def plot_detected_nodes_heatmap(
     data = np.vstack(series)  # (n_nodes, T)
 
     fig, ax = plt.subplots(figsize=(12, 4 + 0.25 * len(nodes)))
-    im = ax.imshow(data, aspect="auto", interpolation="nearest", cmap="BuPu")
+    im = ax.imshow(data, aspect="auto", interpolation="nearest", cmap="turbo")
 
     ax.set_title(f"Detected Change Points by Node Over Time for Agent {agent_name}")
     ax.set_xlabel("Time step")
@@ -114,7 +117,7 @@ def plot_reset_rate_heatmap(
     data = np.vstack(series)  # (n_arms, T)
 
     fig, ax = plt.subplots(figsize=(12, 4 + 0.25 * len(arms)))
-    im = ax.imshow(data, aspect="auto", interpolation="nearest", cmap="Blues")
+    im = ax.imshow(data, aspect="auto", interpolation="nearest", cmap="turbo")
 
     ax.set_title(f"Reset Count by Arm Over Time for Agent {agent_name}")
     ax.set_xlabel("Time step")

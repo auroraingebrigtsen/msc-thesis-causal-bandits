@@ -31,7 +31,7 @@ updates = [
 every = 2000
 
 [agents]
-names = ["POMIS-UCB", "PHT-UCB-local", "PHT-UCB-global", "PHT-UCB-sr"]
+names = ["POMIS-UCB", "PHT-UCB-sr"]
 
 [agents_params]
 c = 1.41421356237 
@@ -40,7 +40,7 @@ seed = 42
 
 [agents_params.variable_monitoring]
 delta = 0.1
-lambda = 20.0
+lambda = 30.0
 min_samples_for_detection = 30
 
 [agents_params.arm_monitoring]

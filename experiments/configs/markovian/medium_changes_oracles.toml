@@ -3,7 +3,7 @@ name = "markovian_medium_changes_oracles"
 [run]
 seed = 42
 T = 10000
-n = 100
+n = 1000
 
 [env_params]
 environment = "markovian"

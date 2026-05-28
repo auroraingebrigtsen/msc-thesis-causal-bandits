@@ -1,0 +1,4 @@
+PHT-UCB-global: 500.633 ± 39.203
+PHT-UCB-sr: 431.408 ± 77.403
+UCB-oracle-global: 455.476 ± 30.650
+UCB-oracle-sr: 354.028 ± 31.571

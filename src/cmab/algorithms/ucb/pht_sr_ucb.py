@@ -22,16 +22,10 @@ class PHTSrUCBAgent(PomisUCBAgent):
         self.resat_arms = {arm: [] for arm in self.arms}  # Keep track of detected change points for analysis 
         self.detected_nodes = {node : [] for node in self.nodes} # Keep track of detected change points for each node for analysis
 
-        #self.mucts = self._compute_mucts()
-        #print(f"Initialized PHT-SR UCB with MUCTs: {self.mucts}")
-
-    # def _compute_mucts(self):
-    #     mucts = {node: set(MUCT(self.G, node)) for node in self.nodes}
-    #     for node in self.nodes:
-    #         for other_node in self.nodes:
-    #             if node != other_node and node in mucts[other_node]:
-    #                 mucts[node] |= mucts[other_node]
-    #     return mucts
+        self.mucts = {node: set(MUCT(self.G, node)) for node in self.nodes}
+        self.ibs = {node: set(G.Pa(self.mucts[node], include_self=False)) for node in self.nodes}
+        print(f"Initialized PHT-SR UCB with MUCTs: {self.mucts}")
+        print(f"Initialized PHT-SR UCB with IBs: {self.ibs}")
 
     @override
     def _update(self, arm: Intervention, observation: Observation) -> None:
@@ -39,10 +33,11 @@ class PHTSrUCBAgent(PomisUCBAgent):
 
         detected = set()
         for node in self.nodes:
-            if any(var == node for var, _ in arm): # Dont update cpd for intervened nodes
+            # Dont update the cpd for any node in the muct, and dont update cpd for variables that cannot affect the means
+            if any(var in self.mucts[node] for var, _ in arm) or (not self.atomic and node not in self.mucts[self.reward_node]) : 
                 continue
 
-            cfg = tuple(observation[parent] for parent in self.parents[node])
+            cfg = tuple(observation[v] for v in self.ibs[node])
             if cfg not in self.cpds[node]:
                 self.cpds[node][cfg] = drift.PageHinkley(delta=self.delta, threshold=self.lambda_, min_instances=self.min_samples_for_detection)
             cpd = self.cpds[node][cfg]
@@ -51,13 +46,17 @@ class PHTSrUCBAgent(PomisUCBAgent):
             if self.cpds[node][cfg].drift_detected:
                 print(f"\nStep {self.t}: Change point detected for node {node}!")
                 print(f"Parent configuration: {cfg}")
-                detected.add(node)
+                muct_set = self.mucts[node]
+                detected.update(muct_set)
+
+                for v in muct_set:
+                    detected.update(self.G.bidirected_neighbors[v])
                 self.detected_nodes[node].append(self.t)
 
         if len(detected) > 0:
             # Add variables sharing an UC with nodes in detected, to detected, as these cannot be guaranteed invariant
             for v in list(detected):
-                detected.update(MUCT(self.G, v))
+                detected.update(self.mucts[v])
                 detected.update(self.G.c_component(v)) # add C-components too
                 print(f"After adding MUCT nodes, detected set is {detected}"  )
             # Reset the arms that are not guaranteed to be invariant to this change
@@ -67,9 +66,9 @@ class PHTSrUCBAgent(PomisUCBAgent):
             
             # Reset all CPD's  of detected nodes and their MUCTs
             for v in self.nodes:
-                if any(d in MUCT(self.G, v) for d in detected):
+                if any(d in self.mucts[v] for d in detected):
                     self.cpds[v] = {}
-                    print(f"Reset CPDs for node {v} due to change detected in its MUCT nodes {MUCT(self.G, v) & detected}")
+                    print(f"Reset CPDs for node {v} due to change detected in its MUCT nodes {self.mucts[v]}")
 
     def _structural_resets(self, detected: set[str]) -> None:
         print("Detected", detected)

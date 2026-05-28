@@ -19,6 +19,7 @@ def build_agent(name: str, params: dict, env):
             G=G,
             arms=env.action_space,
             c=params["c"],
+            atomic=params["atomic"]
         )
 
     elif name == "PHT-UCB-global":

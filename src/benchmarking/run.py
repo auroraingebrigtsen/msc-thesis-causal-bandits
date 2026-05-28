@@ -49,7 +49,7 @@ def run(cfg):
     )
     regret = DynamicRegret(T=T)
 
-    averaged_regrets = {name: np.zeros(T) for name in agents.keys()}
+    all_regrets = {name: np.zeros((n, T)) for name in agents.keys()}
     resat_arms = {
         name: {arm: np.zeros(T, dtype=int) for arm in effective_action_space} 
         for name in agents.keys()
@@ -61,7 +61,6 @@ def run(cfg):
         for i in range(n):
             if i % 10 == 0:
                 print(f"  Run {i}/{n}")
-
             agent.reset()
             regret.reset()
             env.reset(seed=seed + i)  # Use a different seed for the SCM at each run 
@@ -87,7 +86,17 @@ def run(cfg):
                     for cp in cps:
                         averaged_detected_nodes[node][cp-1] += 1
 
-            averaged_regrets[name] += regret.get_regrets() / n
+            all_regrets[name][i] = regret.get_regrets()
+
+    regret_means = {
+        name: regrets.mean(axis=0)
+        for name, regrets in all_regrets.items()
+    }
+
+    regret_std = {
+        name: regrets.std(axis=0, ddof=1)
+        for name, regrets in all_regrets.items()
+    }
 
     plot_detected_nodes_heatmap(
         detected_nodes=averaged_detected_nodes,
@@ -96,10 +105,11 @@ def run(cfg):
     )
 
     plot_regrets_and_change_points(
-        regrets=averaged_regrets.values(),
-        labels=averaged_regrets.keys(),
+        regrets=regret_means.values(),
+        labels=regret_means.keys(),
         change_points=change_points,
         T=T,
+        std_devs=regret_std,
         save_path=path / "regret.png"
     )
 
@@ -118,7 +128,7 @@ def run(cfg):
     results_path = Path(results_path)
     results_path.mkdir(parents=True, exist_ok=True)
 
-    with open(results_path / "regrets.txt", "w") as f:
-        for name, regrets in averaged_regrets.items():
+    with open(results_path / "results.txt", "w") as f:
+        for name, regrets in regret_means.items():
             cumulative_regret =regrets[-1]
-            f.write(f"{name}: {cumulative_regret}\n")
+            f.write(f"{name}: {cumulative_regret:.3f} ± {regret_std[name][-1]:.3f}\n")

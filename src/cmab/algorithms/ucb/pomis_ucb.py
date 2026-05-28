@@ -2,7 +2,9 @@ from cmab.algorithms.ucb.ucb_base import UCBAgent
 from cmab.scm.causal_diagram import CausalDiagram
 from cmab.algorithms.pomis.pomis_sets import POMISs
 from cmab.typing import Intervention
+from cmab.algorithms.mgiss.c4_algo import C4_on_target
 import numpy as np
+from pgmpy.models import DiscreteBayesianNetwork
 
 class PomisUCBAgent(UCBAgent):
     def __init__(self, reward_node:str, G: CausalDiagram, arms: list[Intervention], c: float=np.sqrt(2), atomic:bool=False):
@@ -14,8 +16,18 @@ class PomisUCBAgent(UCBAgent):
         print("Pomis arms:", self.arms)
 
     def _get_pomis_arms(self, all_arms: list[Intervention], reward_node: str, atomic: bool) -> list[Intervention]:
-        """Select only arms that correspond to POMISs."""
-        if atomic:
+        """Select only arms that correspond to POMISs/ mGISS."""
+
+        # Atomic interventions in semi-Markovian graphs: no reduction
+        if atomic and self.G.bidirected_edges:
             return all_arms
+
+        # Atomic interventions in Markovian scm: reduce to mGISS
+        if atomic:
+            bn = DiscreteBayesianNetwork(self.G.directed_edges)
+            mgiss = C4_on_target(bn, reward_node)  #  frozenset[Tuple[str, float]
+            return [arm for arm in all_arms if any(var in mgiss for var, _ in arm)]
+        
+        # Combinatorial : reduce to POMIS
         pomis_sets = set(POMISs(self.G, reward_node))
         return [arm for arm in all_arms if frozenset(var for var, _ in arm) in pomis_sets]
