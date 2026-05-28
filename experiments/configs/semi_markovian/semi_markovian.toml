@@ -31,7 +31,7 @@ updates = [
 every = 2000
 
 [agents]
-names = ["POMIS-UCB", "PHT-UCB-sr"]
+names = ["POMIS-UCB", "PHT-UCB-global", "PHT-UCB-local", "PHT-UCB-sr"]
 
 [agents_params]
 c = 1.41421356237 
